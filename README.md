@@ -33,11 +33,13 @@ DB_PASSWORD=
 Setelah `.env` diatur, jalankan script setup untuk menginstal semua dependency, generate key, migrasi database, dan menyalakan server.
 ```bash
 ./setup.bat
-```### 4. Jalankan Setup
-Setelah `.env` diatur, jalankan script setup untuk menginstal semua dependency, generate key, migrasi database, dan menyalakan server.
-```bash
-./setup.bat
 ```
 
 ### 5. Buka Aplikasi
 Setelah proses selesai, akan muncul terminal baru. **Buka link** tersebut untuk menjalankan web secara local.
+
+Jika sudah pernah menjalankan `./setup.bat` satu kali, berikutnya cukup jalankan perintah berikut.
+```bash
+./run-serve.bat
+```
+
