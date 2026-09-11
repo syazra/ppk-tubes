@@ -22,8 +22,8 @@ use Illuminate\Support\Str;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-#[Fillable(['name', 'email', 'password'])]
-#[Hidden(['password', 'remember_token'])]
+#[Fillable(['account', 'password'])]
+#[Hidden(['password', ])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
@@ -37,20 +37,8 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
     }
 
-    /**
-     * Get the user's initials
-     */
-    public function initials(): string
-    {
-        $initials = Str::initials($this->name, true);
-
-        return Str::length($initials) > 1
-            ? Str::substr($initials, 0, 1).Str::substr($initials, -1)
-            : $initials;
-    }
 }
