@@ -17,4 +17,19 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
+// Route untuk User (Mahasiswa/Dosen)
+Route::get('/user/dashboard', function () {
+    return view('user.dashboard');
+})->middleware(['auth', 'verified'])->name('user.dashboard');
+
+// Route untuk Admin
+Route::get('/admin/dashboard', function () {
+    return view('admin.dashboard');
+})->middleware(['auth', 'verified'])->name('admin.dashboard');
+
+// Route untuk Operator
+Route::get('/operator/dashboard', function () {
+    return view('operator.dashboard');
+})->middleware(['auth', 'verified'])->name('operator.dashboard');
+
 require __DIR__.'/auth.php';

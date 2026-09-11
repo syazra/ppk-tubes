@@ -28,7 +28,44 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        $user = Auth::user(); 
+
+        $email = $user->email;
+
+        // Lakukan pengecekan domain email atau tentukan rolenya
+        // mahasiswa atau dosen
+        if (str_ends_with($email, '@students.kampus.ac.id') || str_ends_with($email, '@lecturer.kampus.ac.id')) {
+            return redirect()->intended(route('user.dashboard', absolute: false));
+        } 
+        // admin
+        if (str_ends_with($email, '@admin.kampus.ac.id')) {
+            return redirect()->intended(route('admin.dashboard', absolute: false));
+        } 
+        // petugas
+        if (str_ends_with($email, '@operator.kampus.ac.id')) {
+            return redirect()->intended(route('operator.dashboard', absolute: false));
+        }
+
+        // kalau database sudah ada role (gausah $email = $user->email; langsung pakai kode di bawah)
+        // if ($user->role === 'user') {
+        //     return redirect()->intended(route('user.dashboard', absolute: false));
+        // } elseif ($user->role === 'operator') {
+        //     return redirect()->intended(route('operator.dashboard', absolute: false));
+        // } elseif ($user->role === 'admin') {
+        //     return redirect()->intended(route('admin.dashboard', absolute: false));
+        // }
+
+        // Paksa logout dan kembalikan ke halaman login dengan pesan error!
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return back()->withErrors([
+            'email' => 'Domain email kamu tidak diizinkan untuk mengakses sistem ini.',
+        ])->onlyInput('email');
+
+        // Default redirect jika tidak masuk kriteria di atas (pengunjung pakai tombol)
+        // return redirect()->intended(route('dashboard', absolute: false));
     }
 
     /**
