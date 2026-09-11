@@ -16,13 +16,15 @@ use Illuminate\Support\Str;
  * @property int $id
  * @property string $name
  * @property string $email
+ * @property string $role
+ * @property string $akun
  * @property Carbon|null $email_verified_at
  * @property string $password
  * @property string|null $remember_token
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-#[Fillable(['name', 'email', 'password'])]
+#[Fillable(['name', 'email', 'role', 'password'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -52,5 +54,53 @@ class User extends Authenticatable
         return Str::length($initials) > 1
             ? Str::substr($initials, 0, 1).Str::substr($initials, -1)
             : $initials;
+    }
+
+    /**
+     * Accessor for akun (alias for email)
+     */
+    public function getAkunAttribute(): string
+    {
+        return $this->email;
+    }
+
+    /**
+     * Mutator for akun (alias for email)
+     */
+    public function setAkunAttribute(string $value): void
+    {
+        $this->attributes['email'] = $value;
+    }
+
+    /**
+     * Check if user is an operator
+     */
+    public function isOperator(): bool
+    {
+        return $this->role === 'operator';
+    }
+
+    /**
+     * Check if user is an admin
+     */
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
+    }
+
+    /**
+     * Check if user is a regular user / pengguna
+     */
+    public function isUser(): bool
+    {
+        return in_array($this->role, ['user', 'pengguna']);
+    }
+
+    /**
+     * Alias for isUser()
+     */
+    public function isPengguna(): bool
+    {
+        return $this->isUser();
     }
 }
