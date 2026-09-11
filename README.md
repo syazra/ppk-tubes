@@ -21,7 +21,7 @@ code .
 ```
 Cari dan buka file `.env`, lalu ubah bagian konfigurasi database:
 ```env
-DB_CONNECTION=sqlite
+DB_CONNECTION=mysql
 DB_HOST=<host-koneksi-anda>
 DB_PORT=<port-koneksi-anda>
 DB_DATABASE=ppk_db      # jangan ubah nama db
