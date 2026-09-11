@@ -14,6 +14,40 @@ export default {
             fontFamily: {
                 sans: ['Figtree', ...defaultTheme.fontFamily.sans],
             },
+            colors: {
+                teal: {
+                    'light-01': '#EBF8F6',
+                    'light-02': '#D9F2EF',
+                    'light-03': '#B0E4DD',
+                    'normal-01': '#00A991',
+                    'normal-02': '#009883',
+                    'normal-03': '#008774',
+                    'dark-01': '#007F6D',
+                    'dark-02': '#006557',
+                    'dark-03': '#004C41',
+                    'darker': '#003B33',
+                },
+                green: {
+                    'light-01': '#F7FBEF',
+                    'light-02': '#F3F9E7',
+                    'light-03': '#E7F3CE',
+                    'normal-01': '#B1D760',
+                    'normal-02': '#9FC256',
+                    'normal-03': '#8EAC4D',
+                    'dark-01': '#85A148',
+                    'dark-02': '#6A813A',
+                    'dark-03': '#50612B',
+                    'darker': '#3E4B22',
+                },
+                white: {
+                    '01': '#FFFFFF',
+                    '02': '#FBFCFD',
+                    '03': '#F2F4F7',
+                    '04': '#FBFCFD',
+                    'blue': '#C4D9DA',
+                    'green': '#CCDAC4',
+                }
+            },
         },
     },
 
