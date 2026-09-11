@@ -1,17 +1,6 @@
 @echo off
 
-:: koneksi database
-echo === Menyalin .env...
-copy .env.example .env
-echo === Menambahkan konfigurasi tambahan ke .env...
-echo.>> .env
-echo DB_CONNECTION=mysql>> .env
-echo DB_HOST=localhost>> .env
-echo DB_PORT=3306>> .env
-echo DB_DATABASE=ppk_db>> .env
-echo DB_USERNAME=root>> .env
-echo DB_PASSWORD= >> .env
-echo === Konfigurasi .env selesai.
+echo === Selamat datang ! ===
 
 :: modul back-end
 echo === Mengunduh vendor...
