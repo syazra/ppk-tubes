@@ -18,13 +18,14 @@ use Illuminate\Support\Str;
  * @property string $email
  * @property string $role
  * @property string $akun
+ * @property string $account
  * @property Carbon|null $email_verified_at
  * @property string $password
  * @property string|null $remember_token
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-#[Fillable(['name', 'email', 'role', 'password'])]
+#[Fillable(['name', 'email', 'role', 'password', 'account', 'akun'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -68,6 +69,22 @@ class User extends Authenticatable
      * Mutator for akun (alias for email)
      */
     public function setAkunAttribute(string $value): void
+    {
+        $this->attributes['email'] = $value;
+    }
+
+    /**
+     * Accessor for account (alias for email)
+     */
+    public function getAccountAttribute(): string
+    {
+        return $this->email;
+    }
+
+    /**
+     * Mutator for account (alias for email)
+     */
+    public function setAccountAttribute(string $value): void
     {
         $this->attributes['email'] = $value;
     }
