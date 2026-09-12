@@ -7,7 +7,7 @@
         font-semibold text-xs text-white-01
          uppercase tracking-widest 
         hover:bg-teal-dark-02 focus:bg-teal-dark-02 active:bg-teal-dark-02
-        focus:outline-none 
+        focus:outline-none focus:ring-2 focus:ring-teal-normal-01 focus:ring-offset-2 
         transition ease-in-out duration-150
     ']) }}>
     {{ $slot }}
