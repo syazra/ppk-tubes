@@ -46,7 +46,22 @@ export default {
                     '04': '#FBFCFD',
                     'blue': '#C4D9DA',
                     'green': '#CCDAC4',
-                }
+                },
+                grad: {
+                    'teal-01': 'linear-gradient(to bottom right, #00A991, #11695D)',
+                },
+            },
+            backgroundImage: {
+                'grad-teal-01': 'linear-gradient(-45deg, #00A991, #11695D, #00A991)',
+            },
+            keyframes: {
+                gradientMove: {
+                '0%, 100%': { 'background-position': '0% 50%' },
+                '50%': { 'background-position': '100% 50%' },
+                },
+            },
+            animation: {
+                'gradasi-loop': 'gradientMove 25s ease-in-out infinite',
             },
         },
     },

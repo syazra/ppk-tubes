@@ -32,20 +32,20 @@
             </label>
         </div> -->
 
-        <div class="flex flex-col items-center justify-center mt-4">
-            <!-- @if (Route::has('password.request'))
-                <a class="underline text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800" href="{{ route('password.request') }}">
-                    {{ __('Forgot your password?') }}
-                </a>
-            @endif -->
+        <div class="flex items-center justify-end mt-10">
+            @if (Route::has('password.request'))
+                <x-anchor href="{{ route('password.request') }}">
+                    {{ __('Lanjut Sebagai Pengunjung.') }}
+                </x-anchor>
+            @endif
 
-            <x-primary-button class="ms-3 mt-8">
-                {{ __('Log in') }}
+            <!-- <x-secondary-button class="ms-3">
+                {{ __('Lanjunkan sebagai pengunjung') }}
+            </x-secondary-button> -->
+
+            <x-primary-button class="ms-3">
+                {{ __('Masuk') }}
             </x-primary-button>
-
-            <x-secondary-button class="ms-3 mt-5">
-                {{ __('Continue as Guest') }}
-            </x-secondary-button>
         </div>
     </form>
 </x-guest-layout>
