@@ -33,8 +33,8 @@
         </div> -->
 
         <div class="flex items-center justify-end mt-10">
-            @if (Route::has('password.request'))
-                <x-anchor href="{{ route('password.request') }}">
+            @if (Route::has('guest.dashboard'))
+                <x-anchor href="{{ route('guest.dashboard') }}">
                     {{ __('Lanjut Sebagai Pengunjung.') }}
                 </x-anchor>
             @endif

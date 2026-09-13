@@ -17,6 +17,11 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
+// Route untuk Guest
+Route::get('/guest/dashboard', function () {
+    return view('guest.dashboard');
+})->name('guest.dashboard');
+
 // Route untuk User (Mahasiswa/Dosen)
 Route::get('/user/dashboard', function () {
     return view('user.dashboard');
