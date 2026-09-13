@@ -53,6 +53,7 @@ export default {
             },
             backgroundImage: {
                 'grad-teal-01': 'linear-gradient(-45deg, #00A991, #11695D, #00A991)',
+                'grad-teal-02': 'linear-gradient(0deg, #11695D, #00A991)',
             },
             keyframes: {
                 gradientMove: {

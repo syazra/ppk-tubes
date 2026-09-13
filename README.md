@@ -1,6 +1,13 @@
 # TUBES PPK/PBP
 
-## Panduan Menjalankan Project
+## Daftar Isi
+- [Penjelasan Umum](#penjelasan-umum)
+- [Panduan Menjalankan Proyek](#panduan-menjalankan-proyek)
+- [Akun Pengguna Siap Pakai](#akun-pengguna-siap-pakai)
+
+---
+
+## Panduan Menjalankan Proyek
 
 ### 1. Clone Repository & Masuk ke Direktori
 Clone repo ini dan masuk ke dalam direktorinya.
@@ -43,3 +50,16 @@ Jika sudah pernah menjalankan `./setup.bat` satu kali, berikutnya cukup jalankan
 ./run-serve.bat
 ```
 
+## Akun Pengguna Siap Pakai
+
+Berikut adalah daftar akun siap pakai untuk kebutuhan pengujian (*testing*) dan demonstrasi sistem berdasarkan peran (*role*) masing-masing:
+
+| No | Nama | Email | Role | Password Default |
+|---|---|---|---|---|
+| 1 | **Admin Kampus** | `admin@admin.kampus.ac.id` | `admin` | `password` |
+| 2 | **Operator Kampus** | `operator@operator.kampus.ac.id` | `operator` | `password` |
+| 3 | **Mahasiswa Kampus** | `student@students.kampus.ac.id` | `user` | `password` | 
+| 4 | **Dosen Kampus** | `lecturer@lecturer.kampus.ac.id` | `user` | `password` |
+| 5 | **Pengunjung (Guest)** | *Tanpa Akun (Publik)* | `guest` | — |
+
+---
