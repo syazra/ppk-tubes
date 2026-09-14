@@ -1,4 +1,10 @@
 <x-app-layout>
+    <!-- Left Sidebar -->
+    <x-slot name="sidebar">
+        @include('user.navbar')
+    </x-slot>
+
+    <!-- Right main content -->
     <x-title-bar 
         title="Dashboard Mahasiswa / Dosen" 
         subtitle="Keterangan Dashboard Mahasiswa / Dosen" 

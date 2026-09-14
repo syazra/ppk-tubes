@@ -1,4 +1,10 @@
 <x-app-layout>
+    <!-- Left Sidebar -->
+    <x-slot name="sidebar">
+        @include('operator.navbar')
+    </x-slot>
+
+    <!-- Right main content -->
     <x-title-bar 
         title="Dashboard Operator" 
         subtitle="Keterangan Dashboard Operator" 

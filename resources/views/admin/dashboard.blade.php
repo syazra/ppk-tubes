@@ -1,4 +1,10 @@
 <x-app-layout>
+    <!-- Left Sidebar -->
+    <x-slot name="sidebar">
+        @include('admin.navbar')
+    </x-slot>
+
+    <!-- Right main content -->
     <x-title-bar 
         title="Dashboard Admin" 
         subtitle="Keterangan Dashboard Admin" 

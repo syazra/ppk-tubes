@@ -1,4 +1,10 @@
 <x-app-layout>
+    <!-- Left Sidebar -->
+    <x-slot name="sidebar">
+        @include('guest.navbar')
+    </x-slot>
+
+    <!-- Right main content -->
     <x-title-bar 
         title="Dashboard Pengunjung" 
         subtitle="Keterangan Dashboard Pengunjung" 
