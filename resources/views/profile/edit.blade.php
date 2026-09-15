@@ -1,29 +1,41 @@
 <x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-            {{ __('Profile') }}
-        </h2>
+    <!-- Left Sidebar -->
+    <x-slot name="sidebar">
+        @if(auth()->check() && auth()->user()->role == 'admin')
+            <!-- Jika role user adalah admin -->
+            @include('admin.navbar')
+            
+        @elseif(auth()->check() && auth()->user()->role == 'user')
+            <!-- Jika role user adalah user biasa -->
+            @include('user.navbar')
+            
+        @else
+            <!-- Jika belum login atau role tidak dikenali (opsional) -->
+            @include('default.navbar')
+        @endif
     </x-slot>
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
-            <div class="p-4 sm:p-8 bg-white dark:bg-gray-800 shadow sm:rounded-lg">
-                <div class="max-w-xl">
-                    @include('profile.partials.update-profile-information-form')
-                </div>
-            </div>
+    <!-- Right main content -->
+    <x-title-bar 
+        title="Edit Profil" 
+        subtitle="Halaman untuk mengubah informasi profil" 
+    />
 
-            <div class="p-4 sm:p-8 bg-white dark:bg-gray-800 shadow sm:rounded-lg">
-                <div class="max-w-xl">
-                    @include('profile.partials.update-password-form')
-                </div>
-            </div>
-
-            <div class="p-4 sm:p-8 bg-white dark:bg-gray-800 shadow sm:rounded-lg">
-                <div class="max-w-xl">
-                    @include('profile.partials.delete-user-form')
-                </div>
-            </div>
+    <x-white-card>
+        <div class="max-w-xl">
+            @include('profile.partials.update-profile-information-form')
         </div>
-    </div>
+    </x-white-card>
+
+    <x-white-card>
+        <div class="max-w-xl">
+            @include('profile.partials.update-password-form')
+        </div>
+    </x-white-card>
+
+    <x-white-card>
+        <div class="max-w-xl">
+            @include('profile.partials.delete-user-form')
+        </div>
+    </x-white-card>
 </x-app-layout>

@@ -11,7 +11,7 @@
     />
 
     <x-white-card>
-        <div class="p-6 text-teal-dark-01">
+        <div class="text-teal-dark-01">
             Selamat datang, Admin!
         </div>
     </x-white-card>
