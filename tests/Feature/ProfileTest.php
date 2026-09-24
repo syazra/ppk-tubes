@@ -21,6 +21,18 @@ class ProfileTest extends TestCase
         $response->assertOk();
     }
 
+    public function test_profile_page_is_displayed_for_admin_and_operator(): void
+    {
+        foreach (['admin', 'operator'] as $role) {
+            $user = User::factory()->create(['role' => $role]);
+
+            $this->actingAs($user)
+                ->get('/profile')
+                ->assertOk()
+                ->assertSee('Profile');
+        }
+    }
+
     public function test_profile_information_can_be_updated(): void
     {
         $user = User::factory()->create();
