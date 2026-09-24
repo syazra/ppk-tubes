@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ReportController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -36,5 +37,8 @@ Route::get('/admin/dashboard', function () {
 Route::get('/operator/dashboard', function () {
     return view('operator.dashboard');
 })->middleware(['auth', 'verified'])->name('operator.dashboard');
+
+// Route untuk Form Report
+Route::get('/report/form', [ReportController::class, 'create'])->name('users.reports-form');
 
 require __DIR__.'/auth.php';
