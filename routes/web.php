@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ReservationController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -26,6 +27,32 @@ Route::get('/guest/dashboard', function () {
 Route::get('/user/dashboard', function () {
     return view('user.dashboard');
 })->middleware(['auth', 'verified'])->name('user.dashboard');
+
+// Route::get('/reservations', [ReservationController::class, 'index'])
+//     ->name('reservations.index');
+
+// Route::post('/reservations', [ReservationController::class, 'store'])
+//     ->name('reservations.store');
+Route::middleware('auth')->group(function () {
+
+    Route::get('/reservations', 
+        [ReservationController::class, 'index']
+    )->name('reservations.index');
+
+    Route::get('/reservations/form',
+    [ReservationController::class, 'create']
+    )->name('reservations.form');
+    
+    // Mengambil slot waktu tersedia berdasarkan room dan tanggal
+    Route::get('/reservations/slots',
+        [ReservationController::class, 'availableSlots']
+    )->name('reservations.slots');
+    
+    Route::post('/reservations',
+        [ReservationController::class, 'store']
+    )->name('reservations.store');
+
+});
 
 // Route untuk Admin
 Route::get('/admin/dashboard', function () {
