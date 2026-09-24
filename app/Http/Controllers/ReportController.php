@@ -52,7 +52,7 @@ class ReportController extends Controller
     {
         $reports = Report::with('room')
                     ->where('user_id', Auth::id())
-                    ->latest()
+                    ->oldest()
                     ->get();
 
         return view('user.my-reports', compact('reports'));
