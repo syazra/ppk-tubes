@@ -23,7 +23,7 @@
                 <h3 class="text-xl font-bold text-gray-800">Daftar Pengaduan Kerusakan</h3>
                 <p class="text-sm text-gray-500 mt-1">Daftar riwayat laporan yang telah diurutkan dari yang terlama.</p>
             </div>
-            <a href="{{ route('reports.create') }}" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-4 py-2 rounded-lg text-sm shadow-sm transition">
+            <a href="{{ route('reports.create') }}" class="bg-teal-600 hover:bg-teal-800 text-white font-medium px-4 py-2 rounded-lg text-sm shadow-sm transition">
                 + Buat Laporan Baru
             </a>
         </div>
