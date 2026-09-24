@@ -4,28 +4,16 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
-
-        <title>{{ config('app.name', 'Laravel') }}</title>
-
-        <!-- Fonts -->
+        <title>{{ config('app.name', 'Pinjamin') }}</title>
         <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
-
-        <!-- Scripts -->
+        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700&display=swap" rel="stylesheet" />
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body class="font-sans text-teal-darker antialiased">
-        <div class="min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0 
-            bg-grad-teal-01 animate-gradasi-loop bg-[length:400%_400%]">
-            <div>
-                <a href="/">
-                    <x-application-logo class="w-20 h-20 fill-current text-teal-light-02" />
-                </a>
-            </div>
-
-            <div class="w-full sm:max-w-md mt-6 px-6 py-4 bg-white-02 shadow-md overflow-hidden sm:rounded-lg">
+        <main class="auth-page {{ request()->routeIs('login') ? 'auth-page-artboard' : '' }} flex min-h-screen items-center px-4 py-6 sm:px-8 sm:py-10 lg:px-[5vw]">
+            <div class="auth-card flex w-full max-w-[574px] flex-col justify-center rounded-[28px] bg-white-02 px-6 py-10 shadow-xl sm:px-12 sm:py-12 lg:px-[72px]">
                 {{ $slot }}
             </div>
-        </div>
+        </main>
     </body>
 </html>

@@ -1,3 +1,5 @@
+@props(['navigation'])
+
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
@@ -7,32 +9,23 @@
 
         <title>{{ config('app.name', 'Laravel') }}</title>
 
-        <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
-        <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
+
     <body class="font-sans antialiased">
         <div class="min-h-screen bg-green-light-01 flex">
-            <!-- Sidebar -->
-            @include('layouts.navigation')
+            <!-- Left Sidebar -->
+            <x-navigation>
+                {{ $sidebar ?? '' }}
+            </x-navigation>
 
-            <!-- Konten Kanan (Header + Body) -->
-            <div class="flex-1 flex flex-col min-w-0 overflow-y-auto">
-                @if (isset($header))
-                    <header class="bg-white-01 shadow">
-                        <div class="py-6 px-4 sm:px-6 lg:px-8">
-                            {{ $header }}
-                        </div>
-                    </header>
-                @endif
-
-                <main class="flex-1">
-                    {{ $slot }}
-                </main>
-            </div>
+            <!-- Main content -->
+            <main class="flex-1 flex flex-col min-w-0 overflow-y-auto">
+                {{ $slot }}
+            </main>
         </div>
     </body>
 </html>

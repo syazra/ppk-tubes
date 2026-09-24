@@ -1,3 +1,36 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.auth-page {
+    background: linear-gradient(135deg, #009e8d 0%, #007e73 53%, #155c57 100%);
+}
+
+.auth-page-artboard {
+    position: relative;
+    overflow: hidden;
+
+    background: linear-gradient(135deg, #009e8d 0%, #007e73 53%, #155c57 100%);
+}
+
+.auth-page-artboard::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+
+    background: url('../images/login-background.svg') center / cover no-repeat;
+
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.auth-page-artboard > * {
+    position: relative;
+    z-index: 1;
+}
+
+@media (min-width: 1024px) {
+    .auth-card {
+        min-height: 660px;
+    }
+}

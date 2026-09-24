@@ -1,6 +1,6 @@
 @props(['title', 'subtitle' => null])
 
-<div class="px-6 py-4 mb-6">
+<div class="px-6 py-4 mb-2">
     <h2 class="font-semibold text-xl pb-1 text-teal-darker leading-tight">
         {{ $title ?? $slot }}
     </h2>
