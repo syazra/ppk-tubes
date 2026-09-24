@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReservationController;
+use App\Http\Controllers\Admin\StudentController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -57,7 +58,11 @@ Route::middleware('auth')->group(function () {
 // Route untuk Admin
 Route::get('/admin/dashboard', function () {
     return view('admin.dashboard');
-})->middleware(['auth', 'verified'])->name('admin.dashboard');
+})->middleware(['auth', 'verified', 'admin'])->name('admin.dashboard');
+
+Route::post('/admin/students', [StudentController::class, 'store'])
+    ->middleware(['auth', 'verified', 'admin'])
+    ->name('admin.students.store');
 
 // Route untuk Operator
 Route::get('/operator/dashboard', function () {
