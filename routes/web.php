@@ -70,7 +70,17 @@ Route::get('/operator/dashboard', function () {
     return view('operator.dashboard');
 })->middleware(['auth', 'verified'])->name('operator.dashboard');
 
-// Route untuk Form Report
-Route::get('/report/form', [ReportController::class, 'create'])->name('users.reports-form');
+// Bungkus route pelaporan ke dalam group middleware auth
+Route::middleware(['auth'])->group(function () {
+    // Form pelaporan
+    Route::get('/report/create', [ReportController::class, 'create'])->name('reports.create');
+    Route::post('/report/store', [ReportController::class, 'store'])->name('reports.store');
+    
+    // Riwayat laporan
+    Route::get('/my-reports', [ReportController::class, 'index'])->name('reports.index');
+    
+    // Pembatalan laporan
+    Route::patch('/reports/{report}/cancel', [ReportController::class, 'cancel'])->name('reports.cancel');
+});
 
 require __DIR__.'/auth.php';
