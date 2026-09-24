@@ -1,17 +1,28 @@
 <?php
 
+use App\Http\Controllers\Admin\StudentController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ReservationController;
-use App\Http\Controllers\Admin\StudentController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
 
 Route::get('/', function () {
     return view('auth.login');
 });
 
-Route::get('/dashboard', function () {
-    return view('guest.dashboard');
+Route::get('/dashboard', function (Request $request) {
+    $user = $request->user();
+
+    $destination = match (true) {
+        $user->isAdmin() => 'admin.dashboard',
+        $user->isOperator() => 'operator.dashboard',
+        $user->isUser() => 'user.dashboard',
+        default => 'guest.dashboard',
+    };
+
+    return redirect()->route($destination, $request->query());
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
@@ -30,40 +41,34 @@ Route::get('/user/dashboard', function () {
     return view('user.dashboard');
 })->middleware(['auth', 'verified'])->name('user.dashboard');
 
-// Route::get('/reservations', [ReservationController::class, 'index'])
-//     ->name('reservations.index');
-
-// Route::post('/reservations', [ReservationController::class, 'store'])
-//     ->name('reservations.store');
 Route::middleware('auth')->group(function () {
+    Route::get('/reservations', [ReservationController::class, 'index'])->name('reservations.index');
+    Route::get('/reservations/form', [ReservationController::class, 'create'])->name('reservations.form');
 
-    Route::get('/reservations', 
-        [ReservationController::class, 'index']
-    )->name('reservations.index');
-
-    Route::get('/reservations/form',
-    [ReservationController::class, 'create']
-    )->name('reservations.form');
-    
     // Mengambil slot waktu tersedia berdasarkan room dan tanggal
-    Route::get('/reservations/slots',
-        [ReservationController::class, 'availableSlots']
-    )->name('reservations.slots');
-    
-    Route::post('/reservations',
-        [ReservationController::class, 'store']
-    )->name('reservations.store');
-
+    Route::get('/reservations/slots', [ReservationController::class, 'availableSlots'])->name('reservations.slots');
+    Route::post('/reservations', [ReservationController::class, 'store'])->name('reservations.store');
 });
 
 // Route untuk Admin
-Route::get('/admin/dashboard', function () {
-    return view('admin.dashboard');
-})->middleware(['auth', 'verified', 'admin'])->name('admin.dashboard');
+Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/dashboard', function () {
+        return Inertia::render('Admin/Dashboard', [
+            'admin' => request()->user()->only('name', 'email'),
+            'status' => session('status'),
+            'csrfToken' => csrf_token(),
+            'urls' => [
+                'dashboard' => route('admin.dashboard'),
+                'students' => route('admin.students.store'),
+                'profile' => route('profile.edit'),
+                'guest' => route('guest.dashboard'),
+                'logout' => route('logout'),
+            ],
+        ]);
+    })->name('dashboard');
 
-Route::post('/admin/students', [StudentController::class, 'store'])
-    ->middleware(['auth', 'verified', 'admin'])
-    ->name('admin.students.store');
+    Route::post('/students', [StudentController::class, 'store'])->name('students.store');
+});
 
 // Route untuk Operator
 Route::get('/operator/dashboard', function () {
