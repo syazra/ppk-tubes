@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class ProfileTest extends TestCase
@@ -21,14 +22,30 @@ class ProfileTest extends TestCase
         $response->assertOk();
     }
 
-    public function test_profile_page_is_displayed_for_admin_and_operator(): void
+    public function test_admin_profile_uses_inertia_and_other_roles_keep_the_blade_view(): void
     {
-        foreach (['admin', 'operator'] as $role) {
+        $admin = User::factory()->create(['role' => 'admin']);
+
+        $this->actingAs($admin)
+            ->get('/profile')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Admin/Profile')
+                ->where('admin.name', $admin->name)
+                ->where('admin.email', $admin->email)
+                ->where('urls.dashboard', route('admin.dashboard'))
+                ->where('urls.profileUpdate', route('profile.update'))
+                ->where('urls.passwordUpdate', route('password.update'))
+                ->where('urls.profileDestroy', route('profile.destroy'))
+                ->etc());
+
+        foreach (['operator', 'user'] as $role) {
             $user = User::factory()->create(['role' => $role]);
 
             $this->actingAs($user)
                 ->get('/profile')
                 ->assertOk()
+                ->assertViewIs('profile.edit')
                 ->assertSee('Profile');
         }
     }

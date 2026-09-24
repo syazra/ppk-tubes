@@ -30,30 +30,17 @@ class AuthenticatedSessionController extends Controller
 
         $user = Auth::user(); 
 
-        $email = $user->email;
-
-        // Lakukan pengecekan domain email atau tentukan rolenya
-        // mahasiswa atau dosen
-        if (str_ends_with($email, '@students.kampus.ac.id') || str_ends_with($email, '@lecturer.kampus.ac.id')) {
-            return redirect()->intended(route('user.dashboard', absolute: false));
-        } 
-        // admin
-        if (str_ends_with($email, '@admin.kampus.ac.id')) {
+        if ($user->isAdmin()) {
             return redirect()->intended(route('admin.dashboard', absolute: false));
-        } 
-        // petugas
-        if (str_ends_with($email, '@operator.kampus.ac.id')) {
+        }
+
+        if ($user->isOperator()) {
             return redirect()->intended(route('operator.dashboard', absolute: false));
         }
 
-        // kalau database sudah ada role (gausah $email = $user->email; langsung pakai kode di bawah)
-        // if ($user->role === 'user') {
-        //     return redirect()->intended(route('user.dashboard', absolute: false));
-        // } elseif ($user->role === 'operator') {
-        //     return redirect()->intended(route('operator.dashboard', absolute: false));
-        // } elseif ($user->role === 'admin') {
-        //     return redirect()->intended(route('admin.dashboard', absolute: false));
-        // }
+        if ($user->isUser()) {
+            return redirect()->intended(route('user.dashboard', absolute: false));
+        }
 
         // Paksa logout dan kembalikan ke halaman login dengan pesan error!
         Auth::logout();
@@ -61,7 +48,7 @@ class AuthenticatedSessionController extends Controller
         $request->session()->regenerateToken();
 
         return back()->withErrors([
-            'email' => 'Domain email kamu tidak diizinkan untuk mengakses sistem ini.',
+            'email' => 'Akun ini tidak memiliki peran yang diizinkan untuk mengakses sistem.',
         ])->onlyInput('email');
 
         // Default redirect jika tidak masuk kriteria di atas (pengunjung pakai tombol)

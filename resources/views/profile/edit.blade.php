@@ -1,9 +1,7 @@
 <x-app-layout>
     <!-- Left Sidebar -->
     <x-slot name="sidebar">
-        @if($user->isAdmin())
-            @include('admin.navbar')
-        @elseif($user->isOperator())
+        @if($user->isOperator())
             @include('operator.navbar')
         @elseif($user->isUser())
             @include('user.navbar')

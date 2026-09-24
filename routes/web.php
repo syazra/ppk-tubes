@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\Admin\StudentController;
+use App\Http\Controllers\Admin\RegistrationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ReservationController;
@@ -59,7 +59,7 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
             'csrfToken' => csrf_token(),
             'urls' => [
                 'dashboard' => route('admin.dashboard'),
-                'students' => route('admin.students.store'),
+                'registrations' => route('admin.registrations.index'),
                 'profile' => route('profile.edit'),
                 'guest' => route('guest.dashboard'),
                 'logout' => route('logout'),
@@ -67,7 +67,10 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
         ]);
     })->name('dashboard');
 
-    Route::post('/students', [StudentController::class, 'store'])->name('students.store');
+    Route::get('/registrations', [RegistrationController::class, 'index'])->name('registrations.index');
+    Route::post('/registrations', [RegistrationController::class, 'store'])->name('registrations.store');
+    Route::put('/registrations/{user}', [RegistrationController::class, 'update'])->name('registrations.update');
+    Route::delete('/registrations/{user}', [RegistrationController::class, 'destroy'])->name('registrations.destroy');
 });
 
 // Route untuk Operator
