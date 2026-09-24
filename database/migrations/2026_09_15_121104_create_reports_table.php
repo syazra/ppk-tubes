@@ -12,13 +12,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('reports', function (Blueprint $table) {
-            $table->id(); // Kolom id (Primary Key)
-            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete(); // Relasi ke tabel users
-            $table->foreignId('room_id')->constrained('rooms')->cascadeOnDelete(); // Relasi ke tabel rooms
-            $table->text('desc'); // Deskripsi kerusakan fasilitas
-            $table->string('image')->nullable(); // Foto bukti kerusakan (opsional/boleh kosong)
-            $table->timestamps(); // Kolom created_at dan updated_at otomatis
-            $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
+            $table->id();
+            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+            $table->foreignId('room_id')->constrained('rooms')->cascadeOnDelete();
+            $table->text('desc');
+            $table->string('image');
+            $table->timestamps();
+            $table->enum('status', ['menunggu', 'disetujui', 'ditolak', 'dibatalkan'])->default('menunggu');
         });
     }
 
