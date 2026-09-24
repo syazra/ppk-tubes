@@ -18,6 +18,7 @@ class Report extends Model
         'room_id',
         'desc',
         'image',
+        'status',
     ];
 
     /**

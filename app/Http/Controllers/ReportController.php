@@ -7,12 +7,12 @@ use App\Models\Room; // Panggil model Room
 
 class ReportController extends Controller
 {
-    public function form()
+    public function create()
     {
         // Ambil semua data ruangan dari database
         $rooms = Room::all();
         
         // Kirim data ruangan ke view
-        return view('reports.form', compact('rooms'));
+        return view('user.report-form', compact('rooms'));
     }
 }

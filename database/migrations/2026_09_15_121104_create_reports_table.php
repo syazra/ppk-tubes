@@ -18,6 +18,7 @@ return new class extends Migration
             $table->text('desc'); // Deskripsi kerusakan fasilitas
             $table->string('image')->nullable(); // Foto bukti kerusakan (opsional/boleh kosong)
             $table->timestamps(); // Kolom created_at dan updated_at otomatis
+            $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
         });
     }
 
