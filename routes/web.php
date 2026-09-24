@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ReservationController;
 use App\Http\Controllers\Admin\StudentController;
 use Illuminate\Support\Facades\Route;
@@ -68,5 +69,8 @@ Route::post('/admin/students', [StudentController::class, 'store'])
 Route::get('/operator/dashboard', function () {
     return view('operator.dashboard');
 })->middleware(['auth', 'verified'])->name('operator.dashboard');
+
+// Route untuk Form Report
+Route::get('/report/form', [ReportController::class, 'create'])->name('users.reports-form');
 
 require __DIR__.'/auth.php';
