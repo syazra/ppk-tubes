@@ -10,7 +10,10 @@ class Reservation extends Model
         'user_id',
         'room_id',
         'desc',
-        'date_to_reserv'
+        'date_to_reserv',
+        'start_time',
+        'end_time',
+        'status'
     ];
 
 
