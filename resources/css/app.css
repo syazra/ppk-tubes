@@ -2,6 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
 .auth-page {
     background: linear-gradient(135deg, #009e8d 0%, #007e73 53%, #155c57 100%);
 }

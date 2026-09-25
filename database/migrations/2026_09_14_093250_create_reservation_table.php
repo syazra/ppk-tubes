@@ -33,10 +33,11 @@ return new class extends Migration
 
 
             $table->enum('status', [
-                'pending',
-                'approved',
-                'rejected'
-            ])->default('pending');
+                'menunggu',
+                'disetujui',
+                'ditolak',
+                'dibatalkan'
+            ])->default('menunggu');
 
 
             $table->timestamps();

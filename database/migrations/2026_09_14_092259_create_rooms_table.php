@@ -18,10 +18,10 @@ return new class extends Migration
             $table->text('desc')->nullable();
 
             $table->enum('type', [
-                'classroom',
-                'hall',
-                'laboratory',
-                'court'
+                'Ruang Kelas',
+                'Aula',
+                'Laboratorium',
+                'Lapangan'
             ]);
 
             $table->integer('capacity');
