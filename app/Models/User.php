@@ -17,6 +17,8 @@ use Illuminate\Support\Str;
  * @property string $name
  * @property string $email
  * @property string $role
+ * @property string|null $account_type
+ * @property string|null $identity_number
  * @property string $akun
  * @property string $account
  * @property Carbon|null $email_verified_at
@@ -25,7 +27,7 @@ use Illuminate\Support\Str;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-#[Fillable(['name', 'email', 'role', 'password', 'account', 'akun'])]
+#[Fillable(['name', 'email', 'role', 'account_type', 'identity_number', 'password', 'account', 'akun'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {

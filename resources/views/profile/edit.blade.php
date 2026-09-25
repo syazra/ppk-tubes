@@ -1,17 +1,12 @@
 <x-app-layout>
     <!-- Left Sidebar -->
     <x-slot name="sidebar">
-        @if(auth()->check() && auth()->user()->role == 'admin')
-            <!-- Jika role user adalah admin -->
-            @include('admin.navbar')
-            
-        @elseif(auth()->check() && auth()->user()->role == 'user')
-            <!-- Jika role user adalah user biasa -->
+        @if($user->isOperator())
+            @include('operator.navbar')
+        @elseif($user->isUser())
             @include('user.navbar')
-            
         @else
-            <!-- Jika belum login atau role tidak dikenali (opsional) -->
-            @include('default.navbar')
+            @include('guest.navbar')
         @endif
     </x-slot>
 
