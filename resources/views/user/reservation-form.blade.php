@@ -1,754 +1,916 @@
-<!DOCTYPE html>
-<html lang="en">
+<x-app-layout>
 
-<head>
+    <x-title-bar
+        title="Form Reservasi"
+        subtitle="Ajukan peminjaman fasilitas sesuai kebutuhan kamu."
+    />
 
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <x-white-card>
+        <div class="p-6">
 
-    <title>Buat Reservasi</title>
-
-    <script src="https://cdn.tailwindcss.com"></script>
-
-</head>
-
-
-<body class="bg-[#f5f8ee] min-h-screen">
-
-
-<div class="flex min-h-screen">
-
-
-    <!-- Sidebar -->
-
-    <aside class="w-52 bg-gradient-to-b from-teal-500 to-teal-700 text-white p-5 flex flex-col justify-between">
-
-
-        <div>
-
-
-            <div class="mb-10">
-
-                <h1 class="text-xl font-bold">
-                    PINJAMIN
-                </h1>
-
-                <p class="text-xs">
-                    Portal peminjaman fasilitas kampus
-                </p>
-
-            </div>
-
-
-
-
-            <div class="bg-lime-300 text-teal-900 rounded-lg px-4 py-3 mb-5 text-sm">
-
-                ▦ &nbsp; Katalog Fasilitas
-
-            </div>
-
-
-
-
-            <nav class="space-y-3 text-sm">
-
-
-                <div class="px-3 py-2">
-                    Beranda
-                </div>
-
-
-                <a href="{{ route('reservations.index') }}"
-                class="bg-teal-800 rounded-lg px-3 py-2 block">
-
-                    Reservasi Saya
-
-                </a>
-
-
-
-                <div class="px-3 py-2">
-                    Laporan Saya
-                </div>
-
-
-            </nav>
-
-
-        </div>
-
-
-
-
-
-
-        <!-- User -->
-
-        <div class="bg-teal-800 rounded-xl p-4">
-
-
-            <p class="font-semibold text-sm">
-
-                {{ Auth::user()->name }}
-
-            </p>
-
-
-            <p class="text-xs">
-
-                Mahasiswa
-
-            </p>
-
-
-        </div>
-
-
-    </aside>
-
-
-
-
-
-
-
-
-
-    <!-- CONTENT -->
-
-
-    <main class="flex-1 p-10 flex justify-center">
-
-
-
-        <div class="bg-white rounded-xl shadow w-[600px] p-10">
-
-
-
-            <h1 class="text-3xl font-bold text-teal-900 mb-8">
-
-                Buat Reservasi
-
-            </h1>
-
-
-
-
-
-
-            <form action="{{ route('reservations.store') }}"
-                  method="POST">
-
+            <form action="{{ route('reservations.store') }}" method="POST">
                 @csrf
 
-
-
-
-
-
-
-                <!-- Ruangan -->
-
-
+                {{-- RUANGAN --}}
                 <div class="mb-5">
-
-
-                    <label class="block text-sm mb-2">
-
-                        Ruangan
-
-                    </label>
-
-
+                    <x-input-label for="room_id" value="Ruangan" />
 
                     <select
-                    name="room_id"
-                    id="room_id"
-                    class="w-full bg-gray-100 rounded-lg p-3">
-
-
-                        <option value="">
-                            Pilih Ruangan
-                        </option>
-
-
+                        name="room_id"
+                        id="room_id"
+                        class="block mt-1 w-full rounded-lg border-gray-300"
+                    >
+                        <option value="">Pilih Ruangan</option>
 
                         @foreach($rooms as $room)
-
-
                             <option value="{{ $room->id }}">
-
-                                {{ $room->name }}
-                                -
-                                {{ $room->location }}
-
+                                {{ $room->name }} - {{ $room->location }}
                             </option>
-
-
                         @endforeach
-
-
                     </select>
 
-
-
+                    <x-input-error :messages="$errors->get('room_id')" class="mt-2" />
                 </div>
 
-
-
-
-
-
-
-
-
-                <!-- Tanggal -->
-
-
+                {{-- TANGGAL --}}
                 <div class="mb-5">
+                    <x-input-label for="date_to_reserv" value="Hari / Tanggal" />
 
+                    <x-text-input
+                        id="date_to_reserv"
+                        class="block mt-1 w-full"
+                        type="date"
+                        name="date_to_reserv"
+                        min="{{ date('Y-m-d') }}"
+                    />
 
-                    <label class="block text-sm mb-2">
-
-                        Hari / Tanggal
-
-                    </label>
-
-
-
-                    <input
-                    type="date"
-                    name="date_to_reserv"
-                    id="date_to_reserv"
-                    min="{{ date('Y-m-d') }}"
-                    class="w-full bg-gray-100 rounded-lg p-3">
-
-
-
+                    <x-input-error :messages="$errors->get('date_to_reserv')" class="mt-2" />
                 </div>
 
-
-
-
-
-
-
-
-                <!-- Tujuan -->
-
-
+                {{-- TUJUAN --}}
                 <div class="mb-5">
-
-
-                    <label class="block text-sm mb-2">
-
-                        Tujuan Penggunaan
-
-                    </label>
-
-
+                    <x-input-label for="desc" value="Tujuan Penggunaan" />
 
                     <textarea
+                        id="desc"
+                        name="desc"
+                        rows="4"
+                        class="block mt-1 w-full rounded-lg border-gray-300"
+                        placeholder="Masukkan tujuan penggunaan ruangan"
+                    ></textarea>
 
-                    name="desc"
-
-                    rows="4"
-
-                    placeholder="Masukkan tujuan penggunaan ruangan"
-
-                    class="w-full bg-gray-100 rounded-lg p-3"></textarea>
-
-
-
+                    <x-input-error :messages="$errors->get('desc')" class="mt-2" />
                 </div>
 
-
-
-
-
-
-
-
-
-                <!-- BOOKING TIME -->
-
+                {{-- BOOKING TIME --}}
                 <div class="mb-6">
+                    <div class="flex items-center justify-between mb-3">
+                        <label class="block text-sm font-semibold">
+                            Ketersediaan Waktu
+                        </label>
 
+                        <div class="flex items-center gap-4 text-xs text-gray-500">
+                            <span class="flex items-center gap-1">
+                                <span class="w-3 h-3 rounded bg-white border inline-block"></span>
+                                Kosong
+                            </span>
+                            <span class="flex items-center gap-1">
+                                <span class="w-3 h-3 rounded bg-teal-600 inline-block"></span>
+                                Dipilih
+                            </span>
+                            <span class="flex items-center gap-1">
+                                <span class="w-3 h-3 rounded bg-gray-400 inline-block"></span>
+                                Sudah dibooking
+                            </span>
+                        </div>
+                    </div>
 
-                    <label class="block text-sm font-semibold mb-3">
+                    <div class="border rounded-xl bg-gray-50 p-5">
 
-                        Booking Time
+                        <p id="time-grid-hint" class="text-sm text-gray-400 italic mb-3">
+                            Pilih ruangan &amp; tanggal terlebih dahulu untuk melihat jadwal.
+                        </p>
 
-                    </label>
+                        {{--
+                            PENTING: layout kolom "jam | slot" di bawah SENGAJA pakai
+                            inline <style> (bukan class Tailwind grid-cols-[70px_1fr]).
+                            Sebelumnya class arbitrary itu tidak ke-generate karena CSS
+                            belum di-rebuild (npm run build / npm run dev), jadi jam dan
+                            kotak slot numpuk vertikal bukannya sebelahan. Dengan inline
+                            style ini, layout dijamin tampil benar tanpa tergantung proses
+                            build Tailwind.
+                        --}}
+                        <style>
+                            .time-grid-layout {
+                                display: grid;
+                                grid-template-columns: 70px 1fr;
+                                gap: 0.75rem;
+                            }
+                            .time-grid-layout.hidden {
+                                display: none;
+                            }
+                        </style>
 
+                        <div id="time-grid-wrapper" class="time-grid-layout hidden">
+                            <!-- LABEL JAM -->
+                            <div id="time-labels" class="text-xs text-gray-500"></div>
 
-
-                    <div class="border rounded-xl p-5 bg-gray-50">
-
-
-                        <div class="flex justify-between items-center mb-4">
-
-
-                            <p class="text-sm text-gray-500">
-
-                                Pilih waktu reservasi
-
-                            </p>
-
-
-                            <p class="text-xs text-gray-400">
-
-                                Slot 30 menit (07.00 - 20.00)
-
-                            </p>
-
-
+                            <!-- GRID SLOT -->
+                            <div id="time-grid"></div>
                         </div>
 
-
-
-
-                        <!-- Slot muncul di sini -->
-
-                        <div
-                        id="slots"
-                        class="grid grid-cols-3 gap-3">
-
-
-                            <p class="text-gray-400 text-sm col-span-3">
-
-                                Pilih ruangan dan tanggal terlebih dahulu
-
-                            </p>
-
-
-                        </div>
-
-
+                        <p class="text-xs text-gray-400 mt-3">
+                            Klik slot awal, lalu klik slot akhir untuk memblok rentang waktu.
+                            Klik salah satu slot terpilih lagi untuk membatalkan pilihan.
+                        </p>
 
                     </div>
 
-
-
+                    <p id="selected-range-text" class="text-sm text-teal-700 font-medium mt-2"></p>
                 </div>
 
+                {{-- Hidden Time --}}
+                <input type="hidden" name="start_time" id="start_time">
+                <input type="hidden" name="end_time" id="end_time">
 
-
-
-
-
-
-
-
-                <!-- Hidden waktu -->
-
-
-                <input
-                type="hidden"
-                name="start_time"
-                id="start_time">
-
-
-
-                <input
-                type="hidden"
-                name="end_time"
-                id="end_time">
-
-
-
-
-
-
-
-                <!-- Button -->
-
-
+                {{-- BUTTON --}}
                 <div class="flex justify-end gap-3">
-
-
-                    <a href="{{ route('reservations.index') }}"
-                    class="border px-5 py-2 rounded-lg">
-
-
+                    <a href="{{ route('reservations.index') }}" class="px-5 py-2 border rounded-lg">
                         Batal
-
-
                     </a>
 
-
-
-
-                    <button
-                    type="submit"
-                    class="bg-teal-600 text-white px-6 py-2 rounded-lg">
-
-
+                    <x-primary-button>
                         Submit
-
-
-                    </button>
-
-
-
+                    </x-primary-button>
                 </div>
-
-
 
             </form>
 
-
-
-
         </div>
+    </x-white-card>
 
+    <script>
+        (function () {
 
+            const roomSelect = document.getElementById('room_id');
+            const dateInput = document.getElementById('date_to_reserv');
 
-    </main>
+            const hint = document.getElementById('time-grid-hint');
+            const wrapper = document.getElementById('time-grid-wrapper');
 
+            const grid = document.getElementById('time-grid');
+            const labels = document.getElementById('time-labels');
 
+            const startInput = document.getElementById('start_time');
+            const endInput = document.getElementById('end_time');
 
-</div>
+            const rangeText = document.getElementById('selected-range-text');
 
 
+            const OPEN_MINUTES = 7 * 60;
+            const CLOSE_MINUTES = 20 * 60;
+            const STEP = 30;
 
 
+            const AVAILABILITY_URL = "{{ route('reservations.slots') }}";
 
 
+            let bookedRanges = [];
 
+            let anchorMinutes = null;
 
 
-<script>
 
-const room = document.getElementById('room_id');
-const date = document.getElementById('date_to_reserv');
-const slots = document.getElementById('slots');
 
-const startTimeInput = document.getElementById('start_time');
-const endTimeInput = document.getElementById('end_time');
+            function toMinutes(time){
 
+                const [hour, minute] = time.split(':').map(Number);
 
-let selectedSlots = [];
+                return hour * 60 + minute;
 
+            }
 
-// Load slot ketika room atau tanggal berubah
-room.addEventListener('change', loadSlots);
-date.addEventListener('change', loadSlots);
 
 
 
-function loadSlots() {
+            function toHHMM(minutes){
 
+                const hour = Math.floor(minutes / 60);
 
-    if (
-        room.value === '' ||
-        date.value === ''
-    ) {
+                const minute = minutes % 60;
 
-        return;
 
-    }
+                return `${String(hour).padStart(2,'0')}:${String(minute).padStart(2,'0')}`;
 
+            }
 
 
-    fetch(
-        `/reservations/slots?room_id=${room.value}&date=${date.value}`
-    )
 
 
-    .then(response => response.json())
 
+            function resetSelection(){
 
-    .then(data => {
+                anchorMinutes = null;
 
+                startInput.value = '';
 
-        slots.innerHTML = '';
+                endInput.value = '';
 
-        selectedSlots = [];
+                rangeText.textContent = '';
 
-        startTimeInput.value = '';
-        endTimeInput.value = '';
+            }
 
 
 
-        data.forEach(slot => {
 
 
-            let button = document.createElement('button');
 
+            function isBooked(minutes){
 
-            button.type = 'button';
 
+                return bookedRanges.find(range => {
 
-            button.innerHTML = `
-                ${slot.start} - ${slot.end}
-            `;
 
-
-
-            button.className =
-            "p-3 rounded-lg text-sm border";
-
-
-
-
-
-            // Jika slot tersedia
-
-            if(slot.available){
-
-
-                button.classList.add(
-                    'bg-green-100',
-                    'text-green-700'
-                );
-
-
-
-                button.onclick = function(){
-
-
-                    selectSlot(
-                        slot,
-                        button
+                    return (
+                        minutes >= range.startMin &&
+                        minutes < range.endMin
                     );
 
 
-                };
-
-
-
-            }
-
-
-            // Jika sudah dibooking
-
-            else{
-
-
-                button.disabled = true;
-
-
-                button.classList.add(
-                    'bg-gray-300',
-                    'text-gray-500',
-                    'cursor-not-allowed'
-                );
+                });
 
 
             }
 
 
 
-            slots.appendChild(button);
-
-
-
-        });
-
-
-    })
-
-    .catch(error => {
-
-        console.error(
-            'Error load slot:',
-            error
-        );
-
-    });
-
-
-}
 
 
 
 
 
 
-function selectSlot(slot, button){
+            function buildGrid(){
 
 
+                grid.innerHTML = '';
 
-    let exists = selectedSlots.find(
-        item =>
-        item.start === slot.start
-    );
-
-
-
-
-
-    // Jika klik ulang -> hapus
-
-    if(exists){
-
-
-        selectedSlots =
-        selectedSlots.filter(
-            item =>
-            item.start !== slot.start
-        );
-
-
-        button.classList.remove(
-            'ring-2',
-            'ring-teal-600'
-        );
-
-
-
-        updateBookingTime();
-
-
-        return;
-
-    }
+                labels.innerHTML = '';
 
 
 
 
-
-    // Cek slot harus berurutan
-
-    if(selectedSlots.length > 0){
-
-
-        selectedSlots.sort(
-            (a,b)=>
-            a.start.localeCompare(b.start)
-        );
+                for(
+                    let m = OPEN_MINUTES;
+                    m < CLOSE_MINUTES;
+                    m += STEP
+                ){
 
 
 
-        let lastSlot =
-        selectedSlots[selectedSlots.length - 1];
+                    const value = toHHMM(m);
 
 
 
-        if(lastSlot.end !== slot.start){
+
+                    // LABEL JAM
+
+                    if(m % 60 === 0){
+
+                        labels.innerHTML += `
+                            <div class="h-10 flex items-start pt-1 text-xs text-gray-500">
+                                ${value}
+                            </div>
+                        `;
+
+                    }
+                    else{
+
+                        labels.innerHTML += `
+                            <div class="h-10"></div>
+                        `;
+
+                    }
 
 
-            alert(
-                'Pilih waktu secara berurutan'
+
+
+
+                    const slot = document.createElement('div');
+
+
+                    slot.dataset.minutes = m;
+
+
+
+                    slot.className = `
+                        h-10
+                        border-b
+                        border-gray-200
+                        bg-white
+                        transition
+                    `;
+
+
+
+
+
+                    const booking = isBooked(m);
+
+
+
+
+
+
+                    // SUDAH DIBOOKING
+
+                    if(booking){
+
+
+                        slot.classList.remove(
+                            'bg-white'
+                        );
+
+
+                        slot.classList.add(
+                            'bg-gray-400',
+                            'cursor-not-allowed'
+                        );
+
+
+                        slot.style.pointerEvents = 'none';
+
+
+                    }
+
+
+
+
+
+
+                    // MASIH KOSONG
+
+                    else{
+
+
+                        slot.classList.add(
+                            'cursor-pointer'
+                        );
+
+
+
+
+                        slot.addEventListener(
+                            'mouseenter',
+                            function(){
+
+
+                                if(
+                                    !slot.classList.contains('bg-teal-600')
+                                ){
+
+                                    slot.classList.add(
+                                        'bg-teal-100'
+                                    );
+
+                                }
+
+
+                            }
+                        );
+
+
+
+
+
+
+                        slot.addEventListener(
+                            'mouseleave',
+                            function(){
+
+
+                                if(
+                                    !slot.classList.contains('bg-teal-600')
+                                ){
+
+                                    slot.classList.remove(
+                                        'bg-teal-100'
+                                    );
+
+                                }
+
+
+                            }
+                        );
+
+
+
+
+
+
+                        slot.addEventListener(
+                            'click',
+                            function(){
+
+                                onSlotClick(m);
+
+                            }
+                        );
+
+
+                    }
+
+
+
+
+
+                    grid.appendChild(slot);
+
+
+
+                }
+
+
+
+
+
+                labels.innerHTML += `
+
+                    <div class="h-10 flex items-start pt-1 text-xs text-gray-500">
+
+                        20:00
+
+                    </div>
+
+                `;
+
+
+
+
+                paintSelection();
+
+
+            }
+
+
+
+
+
+
+
+
+
+            function paintSelection(){
+
+
+
+                [...grid.children].forEach(slot => {
+
+
+
+                    const minutes =
+                        Number(slot.dataset.minutes);
+
+
+
+
+                    const booked =
+                        isBooked(minutes);
+
+
+
+
+                    const selected =
+                        startInput.value !== '' &&
+                        minutes >= toMinutes(startInput.value) &&
+                        minutes < toMinutes(endInput.value);
+
+
+
+
+
+
+                    // BOOKING TETAP ABU
+
+                    if(booked){
+
+
+                        slot.classList.remove(
+                            'bg-teal-600',
+                            'bg-teal-100',
+                            'text-white'
+                        );
+
+
+                        slot.classList.add(
+                            'bg-gray-400'
+                        );
+
+
+                        return;
+
+
+                    }
+
+
+
+
+
+
+
+
+                    // DIPILIH USER
+
+                    if(selected){
+
+
+
+                        slot.classList.remove(
+                            'bg-white',
+                            'bg-teal-100'
+                        );
+
+
+                        slot.classList.add(
+                            'bg-teal-600',
+                            'text-white'
+                        );
+
+
+
+                    }
+
+
+
+
+
+
+
+                    // KOSONG
+
+                    else{
+
+
+                        slot.classList.remove(
+                            'bg-teal-600',
+                            'text-white'
+                        );
+
+
+                        slot.classList.add(
+                            'bg-white'
+                        );
+
+
+                    }
+
+
+
+                });
+
+
+            }
+
+            function onSlotClick(minutes){
+
+
+
+
+
+                if(anchorMinutes === null){
+
+
+                    anchorMinutes = minutes;
+
+
+                    startInput.value =
+                        toHHMM(minutes);
+
+
+                    endInput.value =
+                        toHHMM(minutes + STEP);
+
+
+
+                    paintSelection();
+
+
+                    updateRangeText();
+
+
+                    return;
+
+
+                }
+
+
+
+
+
+
+                const start =
+                    Math.min(
+                        anchorMinutes,
+                        minutes
+                    );
+
+
+
+                const end =
+                    Math.max(
+                        anchorMinutes,
+                        minutes
+                    ) + STEP;
+
+
+
+
+
+
+
+                for(
+                    let m = start;
+                    m < end;
+                    m += STEP
+                ){
+
+
+                    if(isBooked(m)){
+
+
+                        alert(
+                            'Waktu tersebut sudah dibooking'
+                        );
+
+
+                        resetSelection();
+
+                        paintSelection();
+
+                        return;
+
+
+                    }
+
+
+                }
+
+
+
+
+
+
+
+                startInput.value =
+                    toHHMM(start);
+
+
+
+                endInput.value =
+                    toHHMM(end);
+
+
+
+                anchorMinutes = null;
+
+
+
+                paintSelection();
+
+
+                updateRangeText();
+
+
+
+            }
+
+
+
+
+
+
+
+
+            function updateRangeText(){
+
+
+
+                if(
+                    startInput.value === ''
+                ){
+
+                    rangeText.textContent = '';
+
+                    return;
+
+                }
+
+
+
+
+                rangeText.textContent =
+                    `Waktu terpilih: ${startInput.value} - ${endInput.value}`;
+
+
+
+            }
+
+
+
+
+
+
+
+
+
+            async function loadAvailabilityAndBuildGrid(){
+
+
+
+                const roomId =
+                    roomSelect.value;
+
+
+
+                const date =
+                    dateInput.value;
+
+
+
+
+
+                bookedRanges = [];
+
+                resetSelection();
+
+
+
+
+
+
+
+                if(
+                    !roomId ||
+                    !date
+                ){
+
+
+                    hint.classList.remove('hidden');
+
+                    wrapper.classList.add('hidden');
+
+
+                    return;
+
+
+                }
+
+
+
+
+
+
+
+                try{
+
+
+                    const url =
+                        `${AVAILABILITY_URL}?room_id=${roomId}&date=${date}`;
+
+
+
+
+                    const response =
+                        await fetch(url);
+
+
+
+
+
+                    const data =
+                        await response.json();
+
+
+
+
+                    console.log(data);
+
+
+
+
+
+
+                    bookedRanges =
+                        data.map(item => ({
+
+
+                            startMin:
+                                toMinutes(
+                                    item.start_time
+                                ),
+
+
+
+                            endMin:
+                                toMinutes(
+                                    item.end_time
+                                )
+
+
+                        }));
+
+
+
+
+
+
+
+                    hint.classList.add('hidden');
+
+
+                    wrapper.classList.remove('hidden');
+
+
+
+                    buildGrid();
+
+
+
+
+                }
+
+                catch(error){
+
+
+                    console.error(error);
+
+
+                    hint.textContent =
+                        'Gagal memuat jadwal, silakan coba lagi.';
+
+
+                }
+
+
+
+            }
+
+
+
+
+
+
+
+
+            roomSelect.addEventListener(
+                'change',
+                loadAvailabilityAndBuildGrid
             );
 
 
-            return;
 
-        }
-
-
-    }
-
-
-
-
-
-    selectedSlots.push(slot);
-
-
-
-    button.classList.add(
-        'ring-2',
-        'ring-teal-600'
-    );
-
-
-
-    updateBookingTime();
-
-
-
-}
-
-
-
-
-
-
-
-
-function updateBookingTime(){
-
-
-
-    if(selectedSlots.length === 0){
-
-
-        startTimeInput.value = '';
-
-        endTimeInput.value = '';
-
-
-        return;
-
-    }
-
-
-
-
-
-    selectedSlots.sort(
-        (a,b)=>
-        a.start.localeCompare(b.start)
-    );
-
-
-
-
-
-    startTimeInput.value =
-    selectedSlots[0].start;
-
-
-
-    endTimeInput.value =
-    selectedSlots[selectedSlots.length - 1].end;
-
-
-
-}
-
-
-
-// Validasi sebelum submit
-
-document
-.querySelector('form')
-.addEventListener(
-    'submit',
-    function(e){
-
-
-        if(
-
-            startTimeInput.value === '' ||
-
-            endTimeInput.value === ''
-
-        ){
-
-
-            e.preventDefault();
-
-
-            alert(
-                'Silakan pilih Booking Time terlebih dahulu'
+            dateInput.addEventListener(
+                'change',
+                loadAvailabilityAndBuildGrid
             );
 
 
-        }
-
-
-    }
-);
 
 
 
-</script>
 
-</body>
 
-</html>
+
+            document
+            .querySelector('form')
+            .addEventListener(
+                'submit',
+                function(e){
+
+
+                    if(
+                        startInput.value === '' ||
+                        endInput.value === ''
+                    ){
+
+
+                        e.preventDefault();
+
+
+                        alert(
+                            'Silakan pilih waktu reservasi terlebih dahulu'
+                        );
+
+
+                    }
+
+
+                }
+            );
+
+
+
+        })();
+    </script>
+
+</x-app-layout>
