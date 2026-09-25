@@ -13,7 +13,7 @@ class ReportController extends Controller
     public function create()
     {
         // Ambil semua data ruangan dari database[cite: 1]
-        $rooms = Room::all();
+        $rooms = Room::where('is_avail', true)->get();
         
         // Kirim data ruangan ke view
         return view('user.report-form', compact('rooms'));
@@ -21,11 +21,21 @@ class ReportController extends Controller
 
     public function store(Request $request)
     {
-        // Validasi input dari form
+        // Validasi input dari form dengan pesan kustom bahasa Indonesia
         $request->validate([
             'room_id' => 'required|exists:rooms,id',
             'desc'    => 'required|string',
-            'image'   => 'required|image|mimes:jpeg,png,jpg,gif|max:2048', // Maksimal 2MB
+            'image'   => 'required|image|mimes:jpeg,png,jpg,gif|max:2048', 
+        ], [
+            // Pesan error kustom
+            'room_id.required' => 'Silakan pilih fasilitas atau ruangan terlebih dahulu.',
+            'room_id.exists'   => 'Fasilitas yang dipilih tidak valid.',
+            'desc.required'    => 'Deskripsi kerusakan wajib diisi.',
+            'desc.string'      => 'Deskripsi kerusakan harus berupa teks.',
+            'image.required'   => 'Bukti kerusakan (foto) wajib dilampirkan.',
+            'image.image'      => 'File yang diunggah harus berupa file gambar.',
+            'image.mimes'      => 'Format foto harus berjenis jpeg, png, jpg, atau gif.',
+            'image.max'        => 'Ukuran foto maksimal adalah 2MB.',
         ]);
 
         $imagePath = null;
@@ -45,7 +55,7 @@ class ReportController extends Controller
         ]);
 
         // Redirect kembali ke halaman form dengan pesan sukses
-        return redirect()->route('reports.index')->with('success', 'Laporan kerusakan berhasil dikirim dan masuk ke daftar riwayat!');
+        return redirect()->route('reports.index')->with('success', 'Laporan kerusakan berhasil dikirim dan masuk ke daftar riwayat.');
     }
 
     public function index()

@@ -65,12 +65,6 @@ class ReservationController extends Controller
         );
     }
 
-
-
-
-
-
-
     /**
      * Membatalkan reservasi
      */
@@ -82,19 +76,15 @@ class ReservationController extends Controller
             403
         );
 
-
-
         if($reservation->status != 'menunggu'){
 
             return back()
                 ->with(
                     'error',
-                    'Reservasi tidak dapat dibatalkan'
+                    'Reservasi tidak dapat dibatalkan.'
                 );
 
         }
-
-
 
         $reservation->update([
 
@@ -107,41 +97,31 @@ class ReservationController extends Controller
         return back()
             ->with(
                 'success',
-                'Reservasi berhasil dibatalkan'
+                'Reservasi berhasil dibatalkan.'
             );
 
     }
-
-
-
-
-
-
-
 
     /**
      * Mengambil jadwal booking ruangan
      */
     public function availableSlots(Request $request)
     {
-
         $request->validate([
-
             'room_id' => [
                 'required',
                 'exists:rooms,id'
             ],
-
-
             'date' => [
                 'required',
                 'date'
             ]
-
+        ], [
+            'room_id.required' => 'Silakan pilih ruangan terlebih dahulu.',
+            'room_id.exists'   => 'Ruangan yang dipilih tidak valid.',
+            'date.required'    => 'Tanggal wajib diisi.',
+            'date.date'        => 'Format tanggal tidak valid.',
         ]);
-
-
-
 
         $reservations = Reservation::where(
                 'room_id',
@@ -188,14 +168,6 @@ class ReservationController extends Controller
 
     }
 
-
-
-
-
-
-
-
-
     /**
      * Simpan reservasi
      */
@@ -239,14 +211,19 @@ class ReservationController extends Controller
                 'date_format:H:i'
             ]
 
+        ], [
+            // Pesan error kustom bahasa Indonesia
+            'room_id.required'        => 'Silakan pilih ruangan terlebih dahulu.',
+            'room_id.exists'          => 'Ruangan yang dipilih tidak valid.',
+            'desc.required'           => 'Tujuan penggunaan ruangan wajib diisi.',
+            'desc.string'             => 'Tujuan penggunaan harus berupa teks.',
+            'date_to_reserv.required' => 'Hari dan tanggal reservasi wajib diisi.',
+            'date_to_reserv.date'     => 'Format tanggal tidak valid.',
+            'start_time.required'     => 'Waktu mulai belum dipilih.',
+            'start_time.date_format'  => 'Format waktu mulai tidak valid.',
+            'end_time.required'       => 'Waktu selesai belum dipilih.',
+            'end_time.date_format'    => 'Format waktu selesai tidak valid.',
         ]);
-
-
-
-
-
-
-
 
         /*
          * Cek jam operasional
@@ -265,14 +242,6 @@ class ReservationController extends Controller
                 ->withInput();
 
         }
-
-
-
-
-
-
-
-
 
         /*
          * Cek durasi kelipatan 30 menit
@@ -432,7 +401,7 @@ class ReservationController extends Controller
 
             ->with(
                 'success',
-                'Reservasi berhasil dibuat'
+                'Reservasi berhasil dibuat dan masuk ke daftar riwayat reservasi.'
             );
 
     }

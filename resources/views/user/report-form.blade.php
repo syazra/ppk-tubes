@@ -1,13 +1,7 @@
 <x-app-layout>
     <!-- Left Sidebar -->
     <x-slot name="sidebar">
-        @if(auth()->check() && auth()->user()->role == 'admin')
-            @include('admin.navbar')
-        @elseif(auth()->check() && auth()->user()->role == 'user')
-            @include('user.navbar')
-        @else
-            @include('default.navbar')
-        @endif
+        @include('user.navbar')
     </x-slot>
 
     <x-title-bar 
@@ -31,7 +25,7 @@
                     <option value="">Pilih Ruangan / Fasilitas</option>
                     @foreach($rooms as $room)
                         <option value="{{ $room->id }}" {{ old('room_id') == $room->id ? 'selected' : '' }}>
-                            {{ $room->name }} — Lokasi: {{ $room->location }} ({{ ucfirst($room->type) }})
+                            {{ $room->name }} - Lokasi: {{ $room->location }} ({{ ucfirst($room->type) }})
                         </option>
                     @endforeach
                 </select>
