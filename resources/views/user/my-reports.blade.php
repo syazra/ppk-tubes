@@ -84,8 +84,27 @@
                 </td>
                 
                 <!-- Deskripsi -->
-                <td class="px-5 py-4 text-gray-600 max-w-xs break-words whitespace-normal">
-                    {{ $report->desc }}
+                <td class="px-5 py-4 text-gray-600 max-w-xs break-words whitespace-normal" 
+                    x-data="{ expanded: false, isLongText: false }" 
+                    x-init="$nextTick(() => { 
+                        isLongText = $refs.descText.scrollHeight > $refs.descText.clientHeight; 
+                    })">
+                    
+                    <!-- Teks Deskripsi -->
+                    <div class="relative">
+                        <p x-ref="descText" 
+                        :class="expanded ? '' : 'line-clamp-3 overflow-hidden'" 
+                        class="transition-all duration-200">
+                            {{ $report->desc }}
+                        </p>
+                    </div>
+
+                    <!-- Tombol hanya muncul (v-show / x-show) jika isLongText bernilai true -->
+                    <button x-show="isLongText" 
+                            @click="expanded = !expanded" 
+                            class="text-xs text-teal-normal-01 hover:text-teal-normal-02 font-medium mt-1 focus:outline-none inline-block">
+                        <span x-text="expanded ? 'Tampilkan Lebih Sedikit' : 'Lihat Selengkapnya'"></span>
+                    </button>
                 </td>
                 
                 <!-- Bukti Foto -->
