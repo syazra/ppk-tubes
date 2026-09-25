@@ -19,18 +19,29 @@ require __DIR__.'/auth.php';
 
 // 2. Route Utama (Wajib Login: Mahasiswa, Dosen, Operator)
 Route::middleware(['auth'])->group(function () {
-    
     // -- Dashboards --
     Route::middleware('verified')->group(function () {
+        // guest dashboard
         Route::get('/dashboard', function () { return view('guest.dashboard'); })->name('dashboard');
+
+        // user dashboard
         Route::get('/user/dashboard', function () { 
             $user = auth()->user();
             $recentReservations = \App\Models\Reservation::with('room')->where('user_id', $user->id)->latest()->take(3)->get();
             $recentReports = \App\Models\Report::with('room')->where('user_id', $user->id)->latest()->take(3)->get();
-            
             return view('user.dashboard', compact('recentReservations', 'recentReports')); 
         })->name('user.dashboard');
+
+        // operator dashboard
         Route::get('/operator/dashboard', function () { return view('operator.dashboard'); })->name('operator.dashboard');
+        Route::get('/operator/reservations', function () { 
+            $reservations = \App\Models\Reservation::with('room')->latest()->get();
+            return view('operator.reservations', compact('reservations')); 
+        })->name('operator.reservations');
+        Route::get('/operator/reports', function () { 
+            $rooms = \App\Models\Room::all();
+            return view('operator.reports', compact('rooms')); 
+        })->name('operator.reports');
     });
 
     // -- Profile --
@@ -40,7 +51,7 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/', 'destroy')->name('destroy');
     });
 
-    // -- Reservations --
+    // -- User Reservations --
     Route::controller(ReservationController::class)->prefix('reservations')->name('reservations.')->group(function () {
         Route::get('/', 'index')->name('index');
         Route::get('/form', 'create')->name('form');
@@ -51,7 +62,7 @@ Route::middleware(['auth'])->group(function () {
         Route::patch('/{reservation}/cancel', 'cancel')->name('cancel');
     });
 
-    // -- Reports --
+    // -- User Reports --
     Route::controller(ReportController::class)->group(function () {
         Route::get('/my-reports', 'index')->name('reports.index');
         Route::get('/report/create', 'create')->name('reports.create');

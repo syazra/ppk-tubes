@@ -1,25 +1,37 @@
 <x-app-layout>
     <!-- Left Sidebar -->
     <x-slot name="sidebar">
-        @include('user.navbar')
+        @include('operator.navbar')
     </x-slot>
 
+    <!-- Main content -->
     <x-title-bar 
-        title="Reservasi Saya" 
-        subtitle="Lihat daftar fasilitas yang pernah kamu pinjam." 
+        title="Semua Reservasi" 
+        subtitle="Lihat semua daftar reservasi fasilitas." 
     />
 
-    <div>
+    <!-- Ringkasan reservasi -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 m-8 mt-0">
+        <x-white-small-card>
+            <div class="text-sm text-gray-500">Total Reservasi</div>
+            <div class="text-2xl font-bold text-teal-900">dummy</div>
+        </x-white-small-card>
 
-    <!-- Tombol Tambah Reservasi -->
-    <x-white-card>
-        <div class="flex justify-end">
-            <a href="{{ route('reservations.form') }}"
-            class="bg-teal-normal-01 text-white-01 px-5 py-2 rounded-lg hover:bg-teal-normal-02">
-                + Tambah Reservasi
-            </a>
-        </div>
-    </x-white-card>
+        <x-white-small-card>
+            <div class="text-sm text-gray-500">Sudah diproses</div>
+            <div class="text-2xl font-bold text-teal-900">dummy</div>
+        </x-white-small-card>
+
+        <x-white-small-card>
+            <div class="text-sm text-gray-500">Sedang diproses</div>
+            <div class="text-2xl font-bold text-teal-900">dummy</div>
+        </x-white-small-card>
+
+        <x-white-small-card>
+            <div class="text-sm text-gray-500">Belum diproses</div>
+            <div class="text-2xl font-bold text-teal-900">dummy</div>
+        </x-white-small-card>
+    </div>
 
     <!-- Table Reservasi -->
     <x-table>
