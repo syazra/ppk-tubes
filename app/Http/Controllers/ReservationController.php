@@ -11,7 +11,6 @@ use Illuminate\Support\Facades\Auth;
 class ReservationController extends Controller
 {
 
-
     /**
      * Menampilkan reservasi user
      */
@@ -24,35 +23,45 @@ class ReservationController extends Controller
 
 
         return view(
-            'user.reservation',
+            'user.my-reservations',
             compact('reservations')
         );
     }
 
 
 
-
-
     /**
-     * Menampilkan form reservasi
+     * Form reservasi
      */
     public function create()
     {
         $rooms = Room::where('is_avail', true)->get();
 
 
-        $reservations = Reservation::with('room')
-            ->where('user_id', Auth::id())
-            ->latest()
-            ->get();
+        return view(
+            'user.reservation-form',
+            compact('rooms')
+        );
+    }
+
+
+
+
+
+    /**
+     * Detail tiket reservasi
+     */
+    public function ticket(Reservation $reservation)
+    {
+        abort_if(
+            $reservation->user_id != Auth::id(),
+            403
+        );
 
 
         return view(
-            'user.reservation-form',
-            compact(
-                'rooms',
-                'reservations'
-            )
+            'user.reservation-ticket',
+            compact('reservation')
         );
     }
 
@@ -63,7 +72,55 @@ class ReservationController extends Controller
 
 
     /**
-     * Mengambil slot waktu yang tersedia
+     * Membatalkan reservasi
+     */
+    public function cancel(Reservation $reservation)
+    {
+
+        abort_if(
+            $reservation->user_id != Auth::id(),
+            403
+        );
+
+
+
+        if($reservation->status != 'menunggu'){
+
+            return back()
+                ->with(
+                    'error',
+                    'Reservasi tidak dapat dibatalkan'
+                );
+
+        }
+
+
+
+        $reservation->update([
+
+            'status' => 'dibatalkan'
+
+        ]);
+
+
+
+        return back()
+            ->with(
+                'success',
+                'Reservasi berhasil dibatalkan'
+            );
+
+    }
+
+
+
+
+
+
+
+
+    /**
+     * Mengambil jadwal booking ruangan
      */
     public function availableSlots(Request $request)
     {
@@ -86,12 +143,25 @@ class ReservationController extends Controller
 
 
 
-        // Ambil reservasi yang sudah ada
-        $reservations = Reservation::where('room_id', $request->room_id)
+        $reservations = Reservation::where(
+                'room_id',
+                $request->room_id
+            )
 
-            ->where('date_to_reserv', $request->date)
+            ->where(
+                'date_to_reserv',
+                $request->date
+            )
 
-            ->where('status', '!=', 'rejected')
+
+            // yang masih dianggap memakai ruangan
+            ->whereNotIn(
+                'status',
+                [
+                    'ditolak',
+                    'dibatalkan'
+                ]
+            )
 
             ->get();
 
@@ -99,108 +169,22 @@ class ReservationController extends Controller
 
 
 
-        $slots = [];
 
+        return response()->json(
 
+            $reservations->map(function($reservation){
 
-        // Mulai jam 07.00
-        $time = strtotime('07:00');
+                return [
 
+                    'start_time' => $reservation->start_time,
 
-        // Selesai jam 20.00
-        $end = strtotime('20:00');
+                    'end_time' => $reservation->end_time
 
+                ];
 
+            })
 
-
-
-        while ($time < $end) {
-
-
-            $slotStart = date('H:i', $time);
-
-
-            $slotEnd = date(
-                'H:i',
-                strtotime('+30 minutes', $time)
-            );
-
-
-
-            $available = true;
-
-
-
-
-
-            foreach ($reservations as $reservation) {
-
-
-                /*
-                 * Cek apakah slot bentrok
-                 *
-                 * Contoh:
-                 * Reservasi 09:00 - 10:30
-                 *
-                 * Maka:
-                 * 09:30 - 10:00 => blocked
-                 */
-
-
-                if (
-
-                    $slotStart < $reservation->end_time
-
-                    &&
-
-                    $slotEnd > $reservation->start_time
-
-                ) {
-
-
-                    $available = false;
-
-
-                    break;
-
-                }
-
-
-            }
-
-
-
-
-
-
-            $slots[] = [
-
-                'start' => $slotStart,
-
-                'end' => $slotEnd,
-
-                'available' => $available
-
-            ];
-
-
-
-
-
-
-            // tambah 30 menit
-
-            $time = strtotime('+30 minutes', $time);
-
-
-        }
-
-
-
-
-
-        return response()->json($slots);
-
+        );
 
     }
 
@@ -211,8 +195,9 @@ class ReservationController extends Controller
 
 
 
+
     /**
-     * Menyimpan reservasi baru
+     * Simpan reservasi
      */
     public function store(Request $request)
     {
@@ -222,53 +207,37 @@ class ReservationController extends Controller
 
 
             'room_id' => [
-
                 'required',
-
                 'exists:rooms,id'
-
             ],
 
 
 
             'desc' => [
-
                 'required',
-
                 'string'
-
             ],
 
 
 
             'date_to_reserv' => [
-
                 'required',
-
                 'date'
-
             ],
 
 
 
             'start_time' => [
-
                 'required',
-
                 'date_format:H:i'
-
             ],
 
 
 
             'end_time' => [
-
                 'required',
-
                 'date_format:H:i'
-
-            ],
-
+            ]
 
         ]);
 
@@ -280,30 +249,20 @@ class ReservationController extends Controller
 
 
         /*
-         * Validasi jam operasional
+         * Cek jam operasional
          */
 
-        if (
-
+        if(
             $validated['start_time'] < '07:00'
-
             ||
-
             $validated['end_time'] > '20:00'
-
-        ) {
-
+        ){
 
             return back()
-
                 ->withErrors([
-
                     'time' => 'Jam reservasi hanya 07.00 - 20.00'
-
                 ])
-
                 ->withInput();
-
 
         }
 
@@ -316,37 +275,31 @@ class ReservationController extends Controller
 
 
         /*
-         * Validasi kelipatan 30 menit
+         * Cek durasi kelipatan 30 menit
          */
 
-
-        $start = strtotime($validated['start_time']);
-
-        $end = strtotime($validated['end_time']);
-
+        $start = strtotime(
+            $validated['start_time']
+        );
 
 
-        if (
+        $end = strtotime(
+            $validated['end_time']
+        );
 
+
+
+        if(
             ($end - $start) <= 0
-
             ||
-
-            (($end - $start) % 1800 != 0)
-
-        ) {
-
+            (($end-$start)%1800 !=0)
+        ){
 
             return back()
-
                 ->withErrors([
-
-                    'time' => 'Durasi reservasi harus kelipatan 30 menit'
-
+                    'time' => 'Durasi harus kelipatan 30 menit'
                 ])
-
                 ->withInput();
-
 
         }
 
@@ -359,11 +312,15 @@ class ReservationController extends Controller
 
 
         /*
-         * Cek bentrok reservasi
+         * Cek bentrok
          */
 
 
-        $conflict = Reservation::where('room_id', $validated['room_id'])
+        $conflict = Reservation::where(
+                'room_id',
+                $validated['room_id']
+            )
+
 
             ->where(
                 'date_to_reserv',
@@ -371,14 +328,16 @@ class ReservationController extends Controller
             )
 
 
-            ->where(
+            ->whereNotIn(
                 'status',
-                '!=',
-                'rejected'
+                [
+                    'ditolak',
+                    'dibatalkan'
+                ]
             )
 
 
-            ->where(function ($query) use ($validated) {
+            ->where(function($query) use ($validated){
 
 
                 $query
@@ -399,7 +358,6 @@ class ReservationController extends Controller
 
             })
 
-
             ->exists();
 
 
@@ -407,7 +365,8 @@ class ReservationController extends Controller
 
 
 
-        if ($conflict) {
+
+        if($conflict){
 
 
             return back()
@@ -432,9 +391,8 @@ class ReservationController extends Controller
 
 
         /*
-         * Simpan reservasi
+         * Simpan
          */
-
 
         Reservation::create([
 
@@ -457,7 +415,7 @@ class ReservationController extends Controller
             'end_time' => $validated['end_time'],
 
 
-            'status' => 'pending'
+            'status' => 'menunggu'
 
 
         ]);
@@ -477,9 +435,6 @@ class ReservationController extends Controller
                 'Reservasi berhasil dibuat'
             );
 
-
     }
-
-
 
 }
