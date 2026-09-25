@@ -23,7 +23,7 @@ class ReservationController extends Controller
 
 
         return view(
-            'user.reservation',
+            'user.my-reservations',
             compact('reservations')
         );
     }

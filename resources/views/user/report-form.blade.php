@@ -10,21 +10,24 @@
         @endif
     </x-slot>
 
-    <!-- Right main content: Menggunakan Title Bar Kustom -->
     <x-title-bar 
         title="Pelaporan Fasilitas" 
         subtitle="Silakan pilih ruangan dan lampirkan foto bukti kerusakan dengan jelas." 
     />
 
-    <!-- Menggunakan White Card untuk membungkus form -->
     <x-white-card>
-        <form action="{{ route('reports.store') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
+        <form action="{{ route('reports.store') }}" method="POST" enctype="multipart/form-data">
             @csrf
 
             {{-- Pilihan Ruangan / Fasilitas --}}
-            <div>
-                <label for="room_id" class="block font-medium text-sm text-gray-700 mb-2">Pilih Fasilitas / Ruangan</label>
-                <select name="room_id" id="room_id" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200 text-sm py-3 px-4 bg-gray-50/50">
+            <div class="mb-5">
+                <x-input-label for="room_id" value="Pilih Fasilitas / Ruangan" />
+
+                <select 
+                    name="room_id" 
+                    id="room_id" 
+                    class="block mt-1 w-full rounded-lg border-gray-300"
+                >
                     <option value="">Pilih Ruangan / Fasilitas</option>
                     @foreach($rooms as $room)
                         <option value="{{ $room->id }}" {{ old('room_id') == $room->id ? 'selected' : '' }}>
@@ -32,24 +35,30 @@
                         </option>
                     @endforeach
                 </select>
-                @error('room_id')
-                    <p class="text-red-500 text-xs mt-1 font-medium">Silakan pilih ruangan atau fasilitas terlebih dahulu.</p>
-                @enderror
+
+                <x-input-error :messages="$errors->get('room_id')" class="mt-2" />
             </div>
 
             {{-- Deskripsi Kerusakan --}}
-            <div>
-                <label for="desc" class="block font-medium text-sm text-gray-700 mb-2">Deskripsi Kerusakan</label>
-                <textarea class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200 text-sm py-3 px-4 bg-gray-50/50" id="desc" name="desc" rows="6" placeholder="Jelaskan detail kerusakan fasilitas yang terjadi...">{{ old('desc') }}</textarea>
-                @error('desc')
-                    <p class="text-red-500 text-xs mt-1 font-medium">Deskripsi kerusakan wajib diisi dengan detail.</p>
-                @enderror
+            <div class="mb-5">
+                <x-input-label for="desc" value="Deskripsi Kerusakan" />
+
+                <textarea 
+                    id="desc" 
+                    name="desc" 
+                    rows="6" 
+                    class="block mt-1 w-full rounded-lg border-gray-300" 
+                    placeholder="Jelaskan detail kerusakan fasilitas yang terjadi..."
+                >{{ old('desc') }}</textarea>
+
+                <x-input-error :messages="$errors->get('desc')" class="mt-2" />
             </div>
 
             {{-- Upload Bukti Kerusakan --}}
-            <div>
-                <label for="image" class="block font-medium text-sm text-gray-700 mb-2">Bukti Kerusakan (Foto)</label>
-                <div class="mt-1 flex flex-col items-center justify-center px-6 pt-6 pb-6 border-2 border-gray-300 border-dashed rounded-xl hover:border-indigo-400 transition-colors duration-200 bg-gray-50/50">
+            <div class="mb-5">
+                <x-input-label for="image" value="Bukti Kerusakan (Foto)" />
+                
+                <div class="mt-1 flex flex-col items-center justify-center px-6 pt-6 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-gray-400 transition-colors duration-200">
                     
                     {{-- Area Preview Gambar --}}
                     <div id="preview-container" class="mb-3 hidden flex flex-col items-center">
@@ -67,7 +76,7 @@
 
                     {{-- Tombol Pilih File & Keterangan --}}
                     <div class="flex items-center justify-center gap-3 w-full my-2">
-                        <label for="image" class="cursor-pointer py-2 px-4 rounded-md text-sm font-semibold bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition shadow-sm shrink-0">
+                        <label for="image" class="cursor-pointer py-2 px-4 rounded-md text-xs font-semibold bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 uppercase tracking-widest transition shadow-sm shrink-0">
                             Pilih File
                         </label>
                         <span id="default-text" class="text-xs text-gray-500 truncate max-w-xs">Belum ada file yang dipilih</span>
@@ -76,41 +85,45 @@
                     <p class="text-xs text-gray-400 mt-1">PNG, JPG, JPEG (Maks. 2MB)</p>
                 </div>
 
-                @error('image')
-                    <p class="text-red-500 text-xs mt-1 font-medium">Wajib melampirkan foto bukti berupa gambar (maks. 2MB).</p>
-                @enderror
+                <x-input-error :messages="$errors->get('image')" class="mt-2" />
             </div>
-
-            {{-- Script untuk menampilkan preview gambar secara instan --}}
-            <script>
-                document.getElementById('image').addEventListener('change', function(event) {
-                    let file = event.target.files[0];
-                    let previewContainer = document.getElementById('preview-container');
-                    let imagePreview = document.getElementById('image-preview');
-                    let fileNameSpan = document.getElementById('file-name');
-                    let uploadIcon = document.getElementById('upload-icon');
-                    let defaultText = document.getElementById('default-text');
-
-                    if (file) {
-                        let reader = new FileReader();
-                        reader.onload = function(e) {
-                            imagePreview.src = e.target.result;
-                            previewContainer.classList.remove('hidden');
-                            uploadIcon.classList.add('hidden');
-                            defaultText.classList.add('hidden');
-                            fileNameSpan.textContent = file.name;
-                        }
-                        reader.readAsDataURL(file);
-                    }
-                });
-            </script>
 
             {{-- Tombol Aksi --}}
-            <div class="flex justify-end gap-3 pt-4 border-t">
-                <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-6 py-2.5 rounded-lg shadow-sm hover:shadow transition-all duration-200 transform active:scale-95 text-sm">
+            <div class="flex justify-end gap-3 mt-6">
+                <x-secondary-button>
+                    <a href="{{ route('reports.index') }}">
+                        Batal
+                    </a>
+                </x-secondary-button>
+
+                <x-primary-button>
                     Kirim Laporan
-                </button>
+                </x-primary-button>
             </div>
         </form>
+
+        {{-- Script untuk menampilkan preview gambar secara instan --}}
+        <script>
+            document.getElementById('image').addEventListener('change', function(event) {
+                let file = event.target.files[0];
+                let previewContainer = document.getElementById('preview-container');
+                let imagePreview = document.getElementById('image-preview');
+                let fileNameSpan = document.getElementById('file-name');
+                let uploadIcon = document.getElementById('upload-icon');
+                let defaultText = document.getElementById('default-text');
+
+                if (file) {
+                    let reader = new FileReader();
+                    reader.onload = function(e) {
+                        imagePreview.src = e.target.result;
+                        previewContainer.classList.remove('hidden');
+                        uploadIcon.classList.add('hidden');
+                        defaultText.classList.add('hidden');
+                        fileNameSpan.textContent = file.name;
+                    }
+                    reader.readAsDataURL(file);
+                }
+            });
+        </script>
     </x-white-card>
 </x-app-layout>
