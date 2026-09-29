@@ -120,13 +120,17 @@
                 
                 <!-- Status -->
                 <td class="px-5 py-4">
-                    @if($report->status === 'menunggu')
+                    @if($report->status === 'baru')
                         <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-700">
-                            Menunggu
+                            Menunggu Diproses
                         </span>
-                    @elseif($report->status === 'disetujui')
+                    @elseif($report->status === 'selesai')
                         <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-700">
-                            Disetujui
+                            Selesai
+                        </span>
+                    @elseif($report->status === 'diproses')
+                        <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-700">
+                            Sedang Diproses
                         </span>
                     @elseif($report->status === 'dibatalkan')
                         <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-700">
@@ -146,7 +150,7 @@
                 
                 <!-- Aksi -->
                 <td class="px-5 py-4 text-center">
-                    @if($report->status === 'menunggu')
+                    @if($report->status === 'baru')
                         <form action="{{ route('reports.cancel', $report->id) }}" method="POST" onsubmit="return confirm('Apakah kamu yakin ingin membatalkan laporan ini?')">
                             @csrf
                             @method('PATCH')

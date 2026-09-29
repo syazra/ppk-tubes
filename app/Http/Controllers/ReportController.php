@@ -51,7 +51,7 @@ class ReportController extends Controller
             'room_id' => $request->room_id,      // Pilihan ruangan dari form
             'desc'    => $request->desc,         // Deskripsi kerusakan
             'image'   => $imagePath,             // Path foto di storage (jika ada)
-            'status'  => 'menunggu',             // Status awal laporan
+            'status'  => 'baru',                 // Status awal laporan
         ]);
 
         // Redirect kembali ke halaman form dengan pesan sukses
@@ -70,8 +70,8 @@ class ReportController extends Controller
 
     public function cancel(Report $report)
     {
-        // Validasi: pastikan milik user yang login dan statusnya masih 'menunggu'
-        if ($report->user_id !== auth()->id() || $report->status !== 'menunggu') {
+        // Validasi: pastikan milik user yang login dan statusnya masih 'baru'
+        if ($report->user_id !== auth()->id() || $report->status !== 'baru') {
             return redirect()->route('reports.index')->with('error', 'Laporan tidak dapat dibatalkan.');
         }
 
