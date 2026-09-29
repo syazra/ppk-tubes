@@ -78,20 +78,28 @@
                     @endif
                 </td>
 
-                <!-- Aksi -->
-                <td class="px-5 py-4">
-                    @if($reservation->status == 'disetujui')
-                        <a href="{{ route('reservations.ticket', $reservation->id) }}" class="border border-blue-400 text-blue-500 rounded-lg px-3 py-1 text-xs">Lihat tiket</a>
-                    @elseif($reservation->status == 'menunggu')
-                        <form action="{{ route('reservations.cancel', $reservation->id) }}" method="POST">
+                <!-- Aksi untuk Operator -->
+                <td class="px-5 py-4 flex gap-2">
+                    @if($reservation->status == 'menunggu')
+                        <!-- Tombol Setujui -->
+                        <form action="{{ route('operator.reservations.approve', $reservation->id) }}" method="POST">
                             @csrf
                             @method('PATCH')
-                            <button type="submit" onclick="return confirm('Yakin ingin membatalkan reservasi ini?')" class="border border-red-500 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg px-3 py-1 text-xs">
-                                Batalkan
+                            <button type="submit" class="bg-green-500 text-white px-3 py-1 rounded-lg text-xs hover:bg-green-600">
+                                Setujui
+                            </button>
+                        </form>
+
+                        <!-- Tombol Tolak -->
+                        <form action="{{ route('operator.reservations.reject', $reservation->id) }}" method="POST">
+                            @csrf
+                            @method('PATCH')
+                            <button type="submit" class="bg-red-500 text-white px-3 py-1 rounded-lg text-xs hover:bg-red-600">
+                                Tolak
                             </button>
                         </form>
                     @else
-                        <span class="text-gray-400 text-xs">Tidak tersedia</span>
+                        <span class="text-gray-400 text-xs">Selesai / Aksi tidak tersedia</span>
                     @endif
                 </td>
                 
@@ -99,7 +107,7 @@
         @empty
             <tr>
                 <td colspan="5" class="text-center py-10 text-gray-400">
-                    Belum ada reservasi
+                    Belum ada reservasi yang masuk.
                 </td>
             </tr>
         @endforelse

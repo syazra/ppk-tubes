@@ -1,17 +1,12 @@
 <x-app-layout>
     <!-- Left Sidebar -->
     <x-slot name="sidebar">
-        @if(auth()->check() && auth()->user()->role == 'admin')
-            @include('admin.navbar')
-            
-        @elseif(auth()->check() && auth()->user()->role == 'user')
-            @include('user.navbar')
-            
-        @elseif(auth()->check() && auth()->user()->role == 'operator')
+        @if($user->isOperator())
             @include('operator.navbar')
-
+        @elseif($user->isUser())
+            @include('user.navbar')
         @else
-            @include('default.navbar')
+            @include('guest.navbar')
         @endif
     </x-slot>
 

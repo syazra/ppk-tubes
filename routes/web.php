@@ -1,10 +1,12 @@
 <?php
 
+use App\Http\Controllers\Admin\RegistrationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ReservationController;
-use App\Http\Controllers\Admin\StudentController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
 
 // 1. Route Publik & Guest
 Route::get('/', function () {
@@ -42,6 +44,8 @@ Route::middleware(['auth'])->group(function () {
             $rooms = \App\Models\Room::all();
             return view('operator.reports', compact('rooms')); 
         })->name('operator.reports');
+        Route::patch('/operator/reservations/{id}/approve', [OperatorController::class, 'approve'])->name('operator.reservations.approve');
+        Route::patch('/operator/reservations/{id}/reject', [OperatorController::class, 'reject'])->name('operator.reservations.reject');
     });
 
     // -- Profile --
@@ -77,6 +81,7 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     Route::get('/dashboard', function () { 
         return view('admin.dashboard'); 
     })->name('dashboard');
+
 
     Route::post('/students', [StudentController::class, 'store'])->name('students.store');
     

@@ -47,7 +47,6 @@
         </x-slot>
 
         <!-- Slot Body -->
-
     </x-table>
 
 </x-app-layout>
