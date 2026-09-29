@@ -24,6 +24,11 @@ function formatCreatedAt(value) {
         : '—';
 }
 
+function paginationLabel(label) {
+    const text = label.replace('&laquo; ', '').replace(' &raquo;', '').trim();
+    return { Previous: 'Sebelumnya', Next: 'Berikutnya' }[text] ?? text;
+}
+
 export default function Registrations({ admin, csrfToken, urls, createdAccount, status, accounts, filters }) {
     const [copied, setCopied] = useState(false);
     const [editing, setEditing] = useState(null);
@@ -82,12 +87,12 @@ export default function Registrations({ admin, csrfToken, urls, createdAccount, 
                     {createdAccount && (
                         <div role="status" className="mb-5 rounded-lg border border-teal-light-03 bg-teal-light-01 p-5 text-teal-darker">
                             <h2 className="font-semibold">Akun berhasil dibuat</h2>
-                            <p className="mt-1 text-sm">Simpan password ini dan berikan kepada {createdAccount.name}. Password hanya ditampilkan setelah pembuatan akun.</p>
+                            <p className="mt-1 text-sm">Simpan kata sandi ini dan berikan kepada {createdAccount.name}. Kata sandi hanya ditampilkan setelah pembuatan akun.</p>
                             <dl className="mt-4 grid gap-2 text-sm sm:grid-cols-2">
                                 <div><dt className="font-medium">Jenis akun</dt><dd>{accountTypeLabel(createdAccount.account_type)}</dd></div>
                                 <div><dt className="font-medium">Nomor induk</dt><dd>{createdAccount.identity_number}</dd></div>
                                 <div><dt className="font-medium">Email</dt><dd>{createdAccount.email}</dd></div>
-                                <div><dt className="font-medium">Password sementara</dt><dd className="flex items-center gap-2"><code className="rounded bg-white px-2 py-1 font-mono">{createdAccount.password}</code><button type="button" onClick={copyPassword} className="underline">{copied ? 'Tersalin' : 'Salin'}</button></dd></div>
+                                <div><dt className="font-medium">Kata sandi sementara</dt><dd className="flex items-center gap-2"><code className="rounded bg-white px-2 py-1 font-mono">{createdAccount.password}</code><button type="button" onClick={copyPassword} className="underline">{copied ? 'Tersalin' : 'Salin'}</button></dd></div>
                             </dl>
                         </div>
                     )}
@@ -95,7 +100,7 @@ export default function Registrations({ admin, csrfToken, urls, createdAccount, 
 
                     <div className="rounded-lg border border-green-light-03 bg-white-01 p-6 shadow-sm sm:p-8">
                         <h2 className="text-xl font-bold text-teal-darker">Buat akun</h2>
-                        <p className="mt-1 text-sm text-gray-600">Password dibuat otomatis oleh sistem setelah formulir disimpan.</p>
+                        <p className="mt-1 text-sm text-gray-600">Kata sandi dibuat otomatis oleh sistem setelah formulir disimpan.</p>
 
                         <form onSubmit={submit} className="mt-6 space-y-5">
                             <div>
@@ -173,7 +178,7 @@ export default function Registrations({ admin, csrfToken, urls, createdAccount, 
                                             <td className="whitespace-nowrap px-4 py-3">{formatCreatedAt(account.created_at)}</td>
                                             <td className="whitespace-nowrap px-4 py-3">
                                                 <div className="flex gap-3">
-                                                    <button type="button" onClick={() => openEdit(account)} className="font-medium text-teal-dark-01 underline">Edit</button>
+                                                    <button type="button" onClick={() => openEdit(account)} className="font-medium text-teal-dark-01 underline">Ubah</button>
                                                     <button type="button" onClick={() => deleteAccount(account)} disabled={deleteForm.processing} className="font-medium text-red-600 underline disabled:opacity-60">Hapus</button>
                                                 </div>
                                             </td>
@@ -188,8 +193,8 @@ export default function Registrations({ admin, csrfToken, urls, createdAccount, 
                             <p className="text-gray-600">Menampilkan {accounts.from ?? 0}–{accounts.to ?? 0} dari {accounts.total} akun</p>
                             <nav aria-label="Navigasi halaman akun" className="flex flex-wrap gap-1">
                                 {accounts.links.map((link, index) => link.url
-                                    ? <Link key={index} href={link.url} preserveState preserveScroll className={`rounded border px-3 py-1.5 ${link.active ? 'border-teal-dark-01 bg-teal-dark-01 text-white-01' : 'border-gray-300 text-teal-darker hover:bg-teal-light-01'}`}>{link.label.replace('&laquo; ', '').replace(' &raquo;', '')}</Link>
-                                    : <span key={index} className="rounded border border-gray-200 px-3 py-1.5 text-gray-400">{link.label.replace('&laquo; ', '').replace(' &raquo;', '')}</span>)}
+                                    ? <Link key={index} href={link.url} preserveState preserveScroll className={`rounded border px-3 py-1.5 ${link.active ? 'border-teal-dark-01 bg-teal-dark-01 text-white-01' : 'border-gray-300 text-teal-darker hover:bg-teal-light-01'}`}>{paginationLabel(link.label)}</Link>
+                                    : <span key={index} className="rounded border border-gray-200 px-3 py-1.5 text-gray-400">{paginationLabel(link.label)}</span>)}
                             </nav>
                         </div>
                     </div>
@@ -199,7 +204,7 @@ export default function Registrations({ admin, csrfToken, urls, createdAccount, 
             {editing && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onKeyDown={event => { if (event.key === 'Escape') setEditing(null); }}>
                     <div role="dialog" aria-modal="true" aria-labelledby="edit-account-title" className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-lg bg-white-01 p-6 shadow-xl">
-                        <h2 id="edit-account-title" className="text-xl font-bold text-teal-darker">Edit akun</h2>
+                        <h2 id="edit-account-title" className="text-xl font-bold text-teal-darker">Ubah akun</h2>
                         <form onSubmit={saveEdit} className="mt-5 space-y-4">
                             <div>
                                 <label htmlFor="edit-account-type" className="block text-sm font-semibold text-teal-darker">Jenis akun</label>

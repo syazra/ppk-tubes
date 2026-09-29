@@ -37,8 +37,15 @@ class ReservationController extends Controller
      */
     public function ticket(Reservation $reservation)
     {
-        abort_if($reservation->user_id != Auth::id(), 403);
-        return view('user.reservation-ticket', compact('reservation'));
+        abort_if(
+            $reservation->user_id != Auth::id(),
+            403
+        );
+
+        return view(
+            'user.reservation-ticket',
+            compact('reservation')
+        );
     }
 
     /**
@@ -46,14 +53,28 @@ class ReservationController extends Controller
      */
     public function cancel(Reservation $reservation)
     {
-        abort_if($reservation->user_id != Auth::id(), 403);
+        abort_if(
+            $reservation->user_id != Auth::id(),
+            403
+        );
 
-        if ($reservation->status != 'menunggu') {
-            return back()->with('error', 'Reservasi tidak dapat dibatalkan.');
+        if($reservation->status != 'menunggu'){
+            return back()
+                ->with(
+                    'error',
+                    'Reservasi tidak dapat dibatalkan'
+                );
         }
 
-        $reservation->update(['status' => 'dibatalkan']);
-        return back()->with('success', 'Reservasi berhasil dibatalkan.');
+        $reservation->update([
+            'status' => 'dibatalkan'
+        ]);
+
+        return back()
+            ->with(
+                'success',
+                'Reservasi berhasil dibatalkan'
+            );
     }
 
     /**
@@ -64,18 +85,35 @@ class ReservationController extends Controller
     public function availableSlots(Request $request)
     {
         $request->validate([
-            'room_id' => ['required', 'exists:rooms,id'],
-            'date' => ['required', 'date']
-        ], [
-            'room_id.required' => 'Silakan pilih ruangan terlebih dahulu.',
-            'room_id.exists'   => 'Ruangan yang dipilih tidak valid.',
-            'date.required'    => 'Tanggal wajib diisi.',
-            'date.date'        => 'Format tanggal tidak valid.',
+            'room_id' => [
+                'required',
+                'exists:rooms,id'
+            ],
+
+            'date' => [
+                'required',
+                'date'
+            ]
         ]);
 
-        $reservations = Reservation::where('room_id', $request->room_id)
-            ->where('date_to_reserv', $request->date)
-            ->whereIn('status', ['menunggu', 'disetujui']) // Hanya menunggu & disetujui yang ngeblock
+        $reservations = Reservation::where(
+                'room_id',
+                $request->room_id
+            )
+            ->where(
+                'date_to_reserv',
+                $request->date
+            )
+
+            // yang masih dianggap memakai ruangan
+            ->whereNotIn(
+                'status',
+                [
+                    'ditolak',
+                    'dibatalkan'
+                ]
+            )
+
             ->get();
 
         return response()->json(
@@ -93,61 +131,112 @@ class ReservationController extends Controller
      */
     public function store(Request $request)
     {
+
         $validated = $request->validate([
-            'room_id' => ['required', 'exists:rooms,id'],
-            'desc' => ['required', 'string'],
-            'date_to_reserv' => ['required', 'date'],
-            'start_time' => ['required', 'date_format:H:i'],
-            'end_time' => ['required', 'date_format:H:i']
-        ], [
-            'room_id.required'        => 'Silakan pilih ruangan terlebih dahulu.',
-            'room_id.exists'          => 'Ruangan yang dipilih tidak valid.',
-            'desc.required'           => 'Tujuan penggunaan ruangan wajib diisi.',
-            'desc.string'             => 'Tujuan penggunaan harus berupa teks.',
-            'date_to_reserv.required' => 'Hari dan tanggal reservasi wajib diisi.',
-            'date_to_reserv.date'     => 'Format tanggal tidak valid.',
-            'start_time.required'     => 'Waktu mulai belum dipilih.',
-            'start_time.date_format'  => 'Format waktu mulai tidak valid.',
-            'end_time.required'       => 'Waktu selesai belum dipilih.',
-            'end_time.date_format'    => 'Format waktu selesai tidak valid.',
+            'room_id' => [
+                'required',
+                'exists:rooms,id'
+            ],
+            'desc' => [
+                'required',
+                'string'
+            ],
+            'date_to_reserv' => [
+                'required',
+                'date'
+            ],
+            'start_time' => [
+                'required',
+                'date_format:H:i'
+            ],
+            'end_time' => [
+                'required',
+                'date_format:H:i'
+            ]
         ]);
 
-        // Cek batas minimal waktu reservasi (Minimal 3 jam dari waktu sekarang)
-        $reservationDateTime = Carbon::parse($validated['date_to_reserv'] . ' ' . $validated['start_time']);
-        $minAllowedTime = Carbon::now()->addHours(3); // H-BERAPA JAM GANTI DI SINI
-
-        if ($reservationDateTime->lt($minAllowedTime)) {
-            return back()->withErrors(['time' => 'Reservasi harus dilakukan minimal 3 jam sebelum waktu penggunaan.'])->withInput();
+        /*
+         * Cek jam operasional
+         */
+        if(
+            $validated['start_time'] < '07:00'
+            ||
+            $validated['end_time'] > '20:00'
+        ){
+            return back()
+                ->withErrors([
+                    'time' => 'Jam reservasi hanya 07.00 - 20.00'
+                ])
+                ->withInput();
         }
 
-        // Cek jam operasional (07:00 - 20:00)
-        if ($validated['start_time'] < '07:00' || $validated['end_time'] > '20:00') {
-            return back()->withErrors(['time' => 'Jam reservasi hanya 07.00 - 20.00'])->withInput();
+        /*
+         * Cek durasi kelipatan 30 menit
+         */
+        $start = strtotime(
+            $validated['start_time']
+        );
+        $end = strtotime(
+            $validated['end_time']
+        );
+
+        if(
+            ($end - $start) <= 0
+            ||
+            (($end-$start)%1800 !=0)
+        ){
+            return back()
+                ->withErrors([
+                    'time' => 'Durasi harus kelipatan 30 menit'
+                ])
+                ->withInput();
         }
 
-        // Cek durasi kelipatan 30 menit
-        $start = strtotime($validated['start_time']);
-        $end = strtotime($validated['end_time']);
+        /*
+         * Cek bentrok
+         */
+        $conflict = Reservation::where(
+                'room_id',
+                $validated['room_id']
+            )
+            ->where(
+                'date_to_reserv',
+                $validated['date_to_reserv']
+            )
+            ->whereNotIn(
+                'status',
+                [
+                    'ditolak',
+                    'dibatalkan'
+                ]
+            )
 
-        if (($end - $start) <= 0 || (($end - $start) % 1800 != 0)) {
-            return back()->withErrors(['time' => 'Durasi harus kelipatan 30 menit'])->withInput();
-        }
-
-        // Cek bentrok (Hanya status menunggu & disetujui yang dianggap bentrok) (NANTI MENUNGGU DIHAPUS)
-        $conflict = Reservation::where('room_id', $validated['room_id'])
-            ->where('date_to_reserv', $validated['date_to_reserv'])
-            ->whereIn('status', ['menunggu', 'disetujui'])
             ->where(function($query) use ($validated){
-                $query->where('start_time', '<', $validated['end_time'])
-                      ->where('end_time', '>', $validated['start_time']);
+                $query
+                    ->where(
+                        'start_time',
+                        '<',
+                        $validated['end_time']
+                    )
+                    ->where(
+                        'end_time',
+                        '>',
+                        $validated['start_time']
+                    );
             })
             ->exists();
 
-        if ($conflict) {
-            return back()->withErrors(['time' => 'Waktu tersebut sudah digunakan'])->withInput();
+        if($conflict){
+            return back()
+                ->withErrors([
+                    'time' => 'Waktu tersebut sudah digunakan'
+                ])
+                ->withInput();
         }
 
-        // Simpan reservasi baru
+        /*
+         * Simpan
+         */
         Reservation::create([
             'user_id' => Auth::id(),
             'room_id' => $validated['room_id'],
@@ -160,6 +249,9 @@ class ReservationController extends Controller
 
         return redirect()
             ->route('reservations.index')
-            ->with('success', 'Reservasi berhasil dibuat dan masuk ke daftar riwayat reservasi.');
+            ->with(
+                'success',
+                'Reservasi berhasil dibuat'
+            );
     }
 }
