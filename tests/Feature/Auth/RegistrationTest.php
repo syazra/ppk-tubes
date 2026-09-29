@@ -5,6 +5,7 @@ namespace Tests\Feature\Auth;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class RegistrationTest extends TestCase
@@ -45,7 +46,14 @@ class RegistrationTest extends TestCase
     {
         $admin = User::factory()->create(['role' => 'admin', 'email' => 'admin@admin.kampus.ac.id']);
 
-        $this->actingAs($admin)->get('/admin/dashboard')->assertOk();
+        $this->actingAs($admin)->get('/admin/dashboard')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Admin/Dashboard')
+                ->where('admin.name', $admin->name)
+                ->where('admin.email', $admin->email)
+                ->where('urls.students', route('admin.students.store'))
+                ->etc());
 
         $response = $this->actingAs($admin)->post('/admin/students', [
             'name' => 'New Student',
