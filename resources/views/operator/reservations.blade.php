@@ -37,6 +37,7 @@
     <x-table>
         <!-- 1. Bagian Judul Kolom (Header Slot) -->
         <x-slot name="header">
+            <th class="px-5 py-4 text-left">NAMA PEMINJAM</th>
             <th class="px-5 py-4 text-left">NAMA FASILITAS</th>
             <th class="px-5 py-4 text-left">TANGGAL & WAKTU</th>
             <th class="px-5 py-4 text-left">TUJUAN PENGGUNAAN</th>
@@ -47,7 +48,13 @@
         <!-- 2. Bagian Isi Data (Default Slot) -->
         @forelse($reservations as $reservation)
             <tr class="border-t">
-                
+
+                <!-- Nama Peminjam -->
+                <td class="px-5 py-4">
+                    <p class="font-semibold text-teal-900">{{ $reservation->user->name ?? '-' }}</p>
+                    <p class="text-xs text-gray-400">{{ $reservation->user->email ?? '-' }}</p>
+                </td>
+
                 <!-- Nama Fasilitas -->
                 <td class="px-5 py-4">
                     <p class="font-semibold text-teal-900">{{ $reservation->room->name ?? '-' }}</p>
@@ -98,6 +105,7 @@
                                 Tolak
                             </button>
                         </form>
+
                     @else
                         <span class="text-gray-400 text-xs">Selesai / Aksi tidak tersedia</span>
                     @endif

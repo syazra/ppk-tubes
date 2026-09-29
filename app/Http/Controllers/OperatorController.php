@@ -2,13 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Reservation;
-use App\Models\Room;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use App\Models\Reservation;
 
-
-class ReservationController extends Controller
+class OperatorController extends Controller
 {
     /**
      * Menampilkan reservasi user
@@ -35,5 +32,17 @@ class ReservationController extends Controller
         $reservation->save();
 
         return back()->with('success', 'Reservasi disetujui.');
+    }
+
+    /**
+     * Menolak reservasi user
+     */
+    public function reject($id)
+    {
+        $reservation = Reservation::findOrFail($id);
+        $reservation->status = 'ditolak';
+        $reservation->save();
+
+        return back()->with('success', 'Reservasi ditolak.');
     }
 }
