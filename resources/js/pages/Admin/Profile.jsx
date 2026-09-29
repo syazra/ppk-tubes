@@ -1,6 +1,6 @@
 import { Head, useForm } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
-import AdminLayout from '../../components/AdminLayout';
+import AppLayout from '../../components/AppLayout';
 
 const inputClass = 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-dark-01 focus:ring-teal-dark-01';
 const primaryClass = 'rounded-md bg-teal-dark-01 px-4 py-2 text-sm font-semibold text-white-01 hover:bg-teal-dark-02 disabled:opacity-60';
@@ -19,13 +19,16 @@ function Card({ children }) {
     return <section className="mb-5 max-w-7xl px-6 lg:px-8"><div className="rounded-lg border border-green-light-03 bg-white-01 p-6 shadow-sm"><div className="max-w-xl">{children}</div></div></section>;
 }
 
-function ProfileInformation({ admin, status, urls, mustVerifyEmail, emailVerified }) {
-    const form = useForm({ name: admin.name, email: admin.email });
+function ProfileInformation({ user, admin, status, urls, mustVerifyEmail, emailVerified }) {
+    const currentUser = user || admin;
+    const form = useForm({ name: currentUser?.name || '', email: currentUser?.email || '' });
     const verification = useForm({});
 
     useEffect(() => {
-        form.setDefaults({ name: admin.name, email: admin.email });
-    }, [admin.name, admin.email]);
+        if (currentUser) {
+            form.setDefaults({ name: currentUser.name || '', email: currentUser.email || '' });
+        }
+    }, [currentUser?.name, currentUser?.email]);
 
     function submit(event) {
         event.preventDefault();
@@ -138,15 +141,16 @@ function DeleteAccount({ urls }) {
     );
 }
 
-export default function Profile({ admin, status, csrfToken, urls, mustVerifyEmail, emailVerified }) {
+export default function Profile({ user, admin, status, csrfToken, urls, mustVerifyEmail, emailVerified }) {
+    const currentUser = user || admin;
     return (
         <>
             <Head title="Ubah Profil" />
-            <AdminLayout admin={admin} csrfToken={csrfToken} urls={urls} active="profile" title="Ubah Profil" subtitle="Halaman untuk mengubah informasi profil">
-                <Card><ProfileInformation admin={admin} status={status} urls={urls} mustVerifyEmail={mustVerifyEmail} emailVerified={emailVerified} /></Card>
+            <AppLayout user={currentUser} csrfToken={csrfToken} urls={urls} active="profile" title="Ubah Profil" subtitle="Halaman untuk mengubah informasi profil">
+                <Card><ProfileInformation user={user} admin={admin} status={status} urls={urls} mustVerifyEmail={mustVerifyEmail} emailVerified={emailVerified} /></Card>
                 <Card><UpdatePassword status={status} urls={urls} /></Card>
                 <Card><DeleteAccount urls={urls} /></Card>
-            </AdminLayout>
+            </AppLayout>
         </>
     );
 }

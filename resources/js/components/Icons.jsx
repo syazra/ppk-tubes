@@ -1,4 +1,4 @@
-export default function AdminIcon({ name, className = 'h-5 w-5' }) {
+export default function Icon({ name, className = 'h-5 w-5' }) {
     const paths = {
         campus: <><path d="m3 9 9-5 9 5-9 5-9-5Z" /><path d="M7 11v6c3 3 7 3 10 0v-6M21 9v7" /></>,
         home: <><rect x="3" y="3" width="7" height="7" rx="2" /><rect x="14" y="3" width="7" height="7" rx="2" /><rect x="3" y="14" width="7" height="7" rx="2" /><rect x="14" y="14" width="7" height="7" rx="2" /></>,
@@ -22,6 +22,7 @@ export default function AdminIcon({ name, className = 'h-5 w-5' }) {
     return <svg aria-hidden="true" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">{paths[name]}</svg>;
 }
 
-export function adminInitials(name = '') {
-    return name.trim().split(/\s+/).slice(0, 2).map(part => part[0]).join('').toUpperCase() || 'A';
+export function initials(name = '') {
+    const parts = name.trim().split(/\s+/).filter(Boolean);
+    return parts.slice(0, 2).map(part => part[0]).join('').toUpperCase() || 'A';
 }
