@@ -1,30 +1,43 @@
 <x-app-layout>
     <!-- Left Sidebar -->
     <x-slot name="sidebar">
-        @include('user.navbar')
+        @include('operator.navbar')
     </x-slot>
 
+    <!-- Main content -->
     <x-title-bar 
-        title="Reservasi Saya" 
-        subtitle="Lihat daftar fasilitas yang pernah kamu pinjam." 
+        title="Semua Reservasi" 
+        subtitle="Lihat semua daftar reservasi fasilitas." 
     />
 
-    <div>
+    <!-- Ringkasan reservasi -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 m-8 mt-0">
+        <x-white-small-card>
+            <div class="text-sm text-gray-500">Total Reservasi</div>
+            <div class="text-2xl font-bold text-teal-900">dummy</div>
+        </x-white-small-card>
 
-    <!-- Tombol Tambah Reservasi -->
-    <x-white-card>
-        <div class="flex justify-end">
-            <a href="{{ route('reservations.form') }}"
-            class="bg-teal-normal-01 text-white-01 px-5 py-2 rounded-lg hover:bg-teal-normal-02">
-                + Tambah Reservasi
-            </a>
-        </div>
-    </x-white-card>
+        <x-white-small-card>
+            <div class="text-sm text-gray-500">Sudah diproses</div>
+            <div class="text-2xl font-bold text-teal-900">dummy</div>
+        </x-white-small-card>
+
+        <x-white-small-card>
+            <div class="text-sm text-gray-500">Sedang diproses</div>
+            <div class="text-2xl font-bold text-teal-900">dummy</div>
+        </x-white-small-card>
+
+        <x-white-small-card>
+            <div class="text-sm text-gray-500">Belum diproses</div>
+            <div class="text-2xl font-bold text-teal-900">dummy</div>
+        </x-white-small-card>
+    </div>
 
     <!-- Table Reservasi -->
     <x-table>
         <!-- 1. Bagian Judul Kolom (Header Slot) -->
         <x-slot name="header">
+            <th class="px-5 py-4 text-left">NAMA PEMINJAM</th>
             <th class="px-5 py-4 text-left">NAMA FASILITAS</th>
             <th class="px-5 py-4 text-left">TANGGAL & WAKTU</th>
             <th class="px-5 py-4 text-left">TUJUAN PENGGUNAAN</th>
@@ -35,7 +48,13 @@
         <!-- 2. Bagian Isi Data (Default Slot) -->
         @forelse($reservations as $reservation)
             <tr class="border-t">
-                
+
+                <!-- Nama Peminjam -->
+                <td class="px-5 py-4">
+                    <p class="font-semibold text-teal-900">{{ $reservation->user->name ?? '-' }}</p>
+                    <p class="text-xs text-gray-400">{{ $reservation->user->email ?? '-' }}</p>
+                </td>
+
                 <!-- Nama Fasilitas -->
                 <td class="px-5 py-4">
                     <p class="font-semibold text-teal-900">{{ $reservation->room->name ?? '-' }}</p>
@@ -66,20 +85,29 @@
                     @endif
                 </td>
 
-                <!-- Aksi -->
-                <td class="px-5 py-4">
-                    @if($reservation->status == 'disetujui')
-                        <a href="{{ route('reservations.ticket', $reservation->id) }}" class="border border-blue-400 text-blue-500 rounded-lg px-3 py-1 text-xs">Lihat tiket</a>
-                    @elseif($reservation->status == 'menunggu')
-                        <form action="{{ route('reservations.cancel', $reservation->id) }}" method="POST">
+                <!-- Aksi untuk Operator -->
+                <td class="px-5 py-4 flex gap-2">
+                    @if($reservation->status == 'menunggu')
+                        <!-- Tombol Setujui -->
+                        <form action="{{ route('operator.reservations.approve', $reservation->id) }}" method="POST">
                             @csrf
                             @method('PATCH')
-                            <button type="submit" onclick="return confirm('Yakin ingin membatalkan reservasi ini?')" class="border border-red-500 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg px-3 py-1 text-xs">
-                                Batalkan
+                            <button type="submit" class="bg-green-500 text-white px-3 py-1 rounded-lg text-xs hover:bg-green-600">
+                                Setujui
                             </button>
                         </form>
+
+                        <!-- Tombol Tolak -->
+                        <form action="{{ route('operator.reservations.reject', $reservation->id) }}" method="POST">
+                            @csrf
+                            @method('PATCH')
+                            <button type="submit" class="bg-red-500 text-white px-3 py-1 rounded-lg text-xs hover:bg-red-600">
+                                Tolak
+                            </button>
+                        </form>
+
                     @else
-                        <span class="text-gray-400 text-xs">Tidak tersedia</span>
+                        <span class="text-gray-400 text-xs">Selesai / Aksi tidak tersedia</span>
                     @endif
                 </td>
                 
@@ -87,7 +115,7 @@
         @empty
             <tr>
                 <td colspan="5" class="text-center py-10 text-gray-400">
-                    Belum ada reservasi
+                    Belum ada reservasi yang masuk.
                 </td>
             </tr>
         @endforelse
