@@ -42,17 +42,8 @@ export default function Dashboard({ admin, status, csrfToken, urls }) {
     return (
         <>
             <Head title="Dasbor Admin" />
-            <AdminLayout admin={admin} csrfToken={csrfToken} urls={urls} active="dashboard" title="Dasbor Admin" subtitle="Ringkasan aktivitas dan layanan CampuSpace.">
+            <AdminLayout admin={admin} csrfToken={csrfToken} urls={urls} active="dashboard" title="Dasbor Admin" subtitle="Ringkasan aktivitas dan layanan CampuSpace." actions={<Link href={urls.registrations} className="admin-primary-link"><AdminIcon name="student" className="h-4 w-4" />Kelola akun</Link>}>
                 {status && <div role="status" className="mb-5 rounded-xl border border-teal-light-03 bg-teal-light-01 px-4 py-3 text-sm text-teal-darker">{status}</div>}
-
-                <section className="admin-welcome" aria-labelledby="welcome-title">
-                    <div className="relative z-10 min-w-0">
-                        <span className="mb-3 inline-flex items-center gap-1.5 text-xs font-medium text-teal-dark-01"><AdminIcon name="campus" className="h-4 w-4" />CampuSpace</span>
-                        <h2 id="welcome-title" className="break-words text-xl font-bold tracking-tight text-teal-darker sm:text-2xl">Selamat datang, {admin.name}.</h2>
-                        <p className="mt-2 max-w-lg text-sm leading-relaxed text-teal-dark-02/75">Mulai kelola akun dan pantau aktivitas reservasi kampus Anda.</p>
-                    </div>
-                    <Link href={urls.registrations} className="admin-primary-link"><AdminIcon name="student" className="h-4 w-4" />Kelola akun<AdminIcon name="arrow" className="h-4 w-4" /></Link>
-                </section>
 
                 <section aria-labelledby="summary-title">
                     <div className="admin-section-heading">
