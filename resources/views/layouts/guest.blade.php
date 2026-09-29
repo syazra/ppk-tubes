@@ -7,7 +7,7 @@
         <title>{{ config('app.name', 'Pinjamin') }}</title>
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700&display=swap" rel="stylesheet" />
-        @vite(['resources/css/app.css', 'resources/js/app.js'])
+        @vite(['resources/css/app.css', 'resources/css/responsive.css', 'resources/js/app.js'])
     </head>
     <body class="font-sans text-teal-darker antialiased">
         <main class="auth-page {{ request()->routeIs('login') ? 'auth-page-artboard' : '' }} flex min-h-screen items-center px-4 py-6 sm:px-8 sm:py-10 lg:px-[5vw]">

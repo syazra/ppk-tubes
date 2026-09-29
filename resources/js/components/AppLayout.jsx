@@ -3,8 +3,10 @@ import { motion, MotionConfig, useReducedMotion } from 'motion/react';
 import Navbar from './Navbar';
 import Sidebar from './Sidebar';
 
-export default function AppLayout({ user, admin, auth, csrfToken, urls, active, title, subtitle, actions, children, navigation }) {
-    const currentUser = user || admin || auth?.user;
+// Di seluruh komponen, pakai kelas 'app' (bukan user, bukan admin, dll)
+
+export default function AppLayout({ user, auth, csrfToken, urls, active, title, subtitle, actions, children, navigation }) {
+    const currentUser = user || auth?.user;
     const [collapsed, setCollapsed] = useState(() => {
         try { return window.localStorage.getItem('app-sidebar-collapsed') === 'true'; } catch { return false; }
     });
@@ -28,29 +30,29 @@ export default function AppLayout({ user, admin, auth, csrfToken, urls, active, 
 
     return (
         <MotionConfig reducedMotion="user" transition={{ duration: 0.22, ease: 'easeOut' }}>
-            <div className="app-shell admin-shell">
-                <a href="#app-main" className="app-skip-link admin-skip-link">Langsung ke konten</a>
-                <motion.aside initial={false} animate={{ width: collapsed ? 88 : 272 }} className="app-desktop-sidebar admin-desktop-sidebar">
+            <div className="app-shell">
+                <a href="#app-main" className="app-skip-link">Langsung ke konten</a>
+                <motion.aside initial={false} animate={{ width: collapsed ? 88 : 272 }} className="app-desktop-sidebar">
                     <Sidebar user={currentUser} csrfToken={csrfToken} urls={urls} active={active} collapsed={collapsed} navigation={navigation} />
                 </motion.aside>
 
-                <motion.dialog ref={dialogRef} className="app-mobile-dialog admin-mobile-dialog" onClose={() => setMobileOpen(false)}>
-                    <div className="app-mobile-panel admin-mobile-panel">
+                <motion.dialog ref={dialogRef} className="app-mobile-dialog" onClose={() => setMobileOpen(false)}>
+                    <div className="app-mobile-panel">
                         <Sidebar user={currentUser} csrfToken={csrfToken} urls={urls} active={active} mobile onClose={() => setMobileOpen(false)} navigation={navigation} />
                     </div>
                 </motion.dialog>
 
-                <div className="app-workspace admin-workspace">
+                <div className="app-workspace">
                     <Navbar user={currentUser} urls={urls} title={title} collapsed={collapsed} mobileOpen={mobileOpen} onToggleSidebar={() => setCollapsed(v => !v)} onOpenMenu={() => setMobileOpen(true)} />
-                    <main id="app-main" tabIndex={-1} className="app-main admin-main">
-                        <div className="app-page-heading admin-page-heading">
+                    <main id="app-main" tabIndex={-1} className="app-main">
+                        <div className="app-page-heading">
                             <div>
                                 <h1 className="text-2xl font-bold">{title}</h1>
                                 {subtitle && <p className="text-sm text-gray-500">{subtitle}</p>}
                             </div>
-                            {actions && <div className="app-page-actions admin-page-actions">{actions}</div>}
+                            {actions && <div className="app-page-actions">{actions}</div>}
                         </div>
-                        <div className="app-page-content admin-page-content">{children}</div>
+                        <div className="app-page-content">{children}</div>
                     </main>
                 </div>
             </div>

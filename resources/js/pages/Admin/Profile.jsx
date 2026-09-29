@@ -19,8 +19,8 @@ function Card({ children }) {
     return <section className="mb-5 max-w-7xl px-6 lg:px-8"><div className="rounded-lg border border-green-light-03 bg-white-01 p-6 shadow-sm"><div className="max-w-xl">{children}</div></div></section>;
 }
 
-function ProfileInformation({ user, admin, status, urls, mustVerifyEmail, emailVerified }) {
-    const currentUser = user || admin;
+function ProfileInformation({ user, status, urls, mustVerifyEmail, emailVerified }) {
+    const currentUser = user;
     const form = useForm({ name: currentUser?.name || '', email: currentUser?.email || '' });
     const verification = useForm({});
 
@@ -141,13 +141,13 @@ function DeleteAccount({ urls }) {
     );
 }
 
-export default function Profile({ user, admin, status, csrfToken, urls, mustVerifyEmail, emailVerified }) {
-    const currentUser = user || admin;
+export default function Profile({ user, status, csrfToken, urls, mustVerifyEmail, emailVerified }) {
+    const currentUser = user;
     return (
         <>
             <Head title="Ubah Profil" />
             <AppLayout user={currentUser} csrfToken={csrfToken} urls={urls} active="profile" title="Ubah Profil" subtitle="Halaman untuk mengubah informasi profil">
-                <Card><ProfileInformation user={user} admin={admin} status={status} urls={urls} mustVerifyEmail={mustVerifyEmail} emailVerified={emailVerified} /></Card>
+                <Card><ProfileInformation user={user} status={status} urls={urls} mustVerifyEmail={mustVerifyEmail} emailVerified={emailVerified} /></Card>
                 <Card><UpdatePassword status={status} urls={urls} /></Card>
                 <Card><DeleteAccount urls={urls} /></Card>
             </AppLayout>
