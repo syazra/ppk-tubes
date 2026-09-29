@@ -1,6 +1,6 @@
 import { Head, Link, useForm } from '@inertiajs/react';
 import { useState } from 'react';
-import AdminLayout from '../../components/AdminLayout';
+import AppLayout from '../../components/AppLayout';
 
 const inputClass = 'mt-1 block w-full rounded-xl border-gray-300 bg-white-01 px-4 py-3 text-sm text-teal-darker focus:border-teal-dark-01 focus:ring-teal-dark-01';
 const accountTypes = [
@@ -29,7 +29,8 @@ function paginationLabel(label) {
     return { Previous: 'Sebelumnya', Next: 'Berikutnya' }[text] ?? text;
 }
 
-export default function Registrations({ admin, csrfToken, urls, createdAccount, status, accounts, filters }) {
+export default function Registrations({ user, admin, csrfToken, urls, createdAccount, status, accounts, filters }) {
+    const currentUser = user || admin;
     const [copied, setCopied] = useState(false);
     const [editing, setEditing] = useState(null);
     const createForm = useForm({ account_type: 'mahasiswa', name: '', identity_number: '', email: '' });
@@ -82,7 +83,7 @@ export default function Registrations({ admin, csrfToken, urls, createdAccount, 
     return (
         <>
             <Head title="Registrasi Akun" />
-            <AdminLayout admin={admin} csrfToken={csrfToken} urls={urls} active="registrations" title="Registrasi Akun" subtitle="Buat dan kelola akun pengguna serta petugas.">
+            <AppLayout user={currentUser} csrfToken={csrfToken} urls={urls} active="registrations" title="Registrasi Akun" subtitle="Buat dan kelola akun pengguna serta petugas.">
                 <section className="mb-6 max-w-4xl px-6 lg:px-8">
                     {createdAccount && (
                         <div role="status" className="mb-5 rounded-lg border border-teal-light-03 bg-teal-light-01 p-5 text-teal-darker">
@@ -199,7 +200,7 @@ export default function Registrations({ admin, csrfToken, urls, createdAccount, 
                         </div>
                     </div>
                 </section>
-            </AdminLayout>
+            </AppLayout>
 
             {editing && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onKeyDown={event => { if (event.key === 'Escape') setEditing(null); }}>
