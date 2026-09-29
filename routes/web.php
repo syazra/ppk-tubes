@@ -10,7 +10,11 @@ use Inertia\Inertia;
 
 // 1. Route Publik & Guest
 Route::get('/', function () {
-    return view('auth.login');
+    return Inertia::render('Landing', [
+        'loginUrl' => route('login'),
+        'reservationUrl' => route('reservations.index'),
+        'createReservationUrl' => route('reservations.form'),
+    ]);
 });
 
 Route::get('/guest/dashboard', function () {
@@ -64,12 +68,23 @@ Route::middleware(['auth'])->group(function () {
 
 // 3. Route Khusus Admin
 Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.')->group(function () {
-    
-    Route::get('/dashboard', function () { 
-        return view('admin.dashboard'); 
+    Route::get('/dashboard', function () {
+        return Inertia::render('Admin/Dashboard', [
+            'admin' => request()->user()->only('name', 'email'),
+            'status' => session('status'),
+            'csrfToken' => csrf_token(),
+            'urls' => [
+                'dashboard' => route('admin.dashboard'),
+                'registrations' => route('admin.registrations.index'),
+                'profile' => route('profile.edit'),
+                'guest' => route('guest.dashboard'),
+                'logout' => route('logout'),
+            ],
+        ]);
     })->name('dashboard');
 
-
-    Route::post('/students', [StudentController::class, 'store'])->name('students.store');
-    
+    Route::get('/registrations', [RegistrationController::class, 'index'])->name('registrations.index');
+    Route::post('/registrations', [RegistrationController::class, 'store'])->name('registrations.store');
+    Route::put('/registrations/{user}', [RegistrationController::class, 'update'])->name('registrations.update');
+    Route::delete('/registrations/{user}', [RegistrationController::class, 'destroy'])->name('registrations.destroy');
 });

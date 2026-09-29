@@ -15,7 +15,7 @@ export default function Dashboard({ admin, status, csrfToken, urls }) {
     return (
         <>
             <Head title="Dashboard Admin" />
-            <AdminLayout admin={admin} csrfToken={csrfToken} urls={urls} active="dashboard" title="Dashboard Admin" subtitle="Ringkasan aktivitas dan layanan Pinjamin.">
+            <AdminLayout admin={admin} csrfToken={csrfToken} urls={urls} active="dashboard" title="Dashboard Admin" subtitle="Ringkasan aktivitas dan layanan CampuSpace.">
                 <section className="mb-6 max-w-7xl px-6 lg:px-8">
                     {status && (
                         <div role="status" className="mb-5 rounded-lg border border-teal-light-03 bg-teal-light-01 px-4 py-3 text-sm text-teal-darker">
