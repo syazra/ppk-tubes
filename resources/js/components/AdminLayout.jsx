@@ -3,7 +3,7 @@ import { motion, MotionConfig, useReducedMotion } from 'motion/react';
 import AdminNavbar from './AdminNavbar';
 import AdminSidebar from './AdminSidebar';
 
-export default function AdminLayout({ admin, csrfToken, urls, active, title, subtitle, children }) {
+export default function AdminLayout({ admin, csrfToken, urls, active, title, subtitle, actions, children }) {
     const [collapsed, setCollapsed] = useState(() => {
         try { return window.localStorage.getItem('admin-sidebar-collapsed') === 'true'; } catch { return false; }
     });
@@ -73,10 +73,13 @@ export default function AdminLayout({ admin, csrfToken, urls, active, title, sub
                     <AdminNavbar admin={admin} urls={urls} title={title} collapsed={collapsed} mobileOpen={mobileOpen} onToggleSidebar={() => setCollapsed(value => !value)} onOpenMenu={() => setMobileOpen(true)} />
                     <main id="admin-main" tabIndex={-1} className="admin-main">
                         <motion.div key={active} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: reducedMotion ? 0 : 0.35 }}>
-                            <div className="admin-page-heading">
-                                <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-teal-dark-01">Panel Admin</p>
-                                <h1 className="text-2xl font-bold tracking-tight text-teal-darker sm:text-3xl">{title}</h1>
-                                <p className="mt-2 max-w-2xl text-sm leading-relaxed text-gray-500">{subtitle}</p>
+                            <div className={`admin-page-heading${active === 'dashboard' ? ' admin-dashboard-heading' : ''}`}>
+                                <div className="min-w-0">
+                                    <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-teal-dark-01">Panel Admin</p>
+                                    <h1 className="text-2xl font-bold tracking-tight text-teal-darker sm:text-3xl">{title}</h1>
+                                    <p className="mt-2 max-w-2xl text-sm leading-relaxed text-gray-500">{subtitle}</p>
+                                </div>
+                                {actions && <div className="admin-page-actions">{actions}</div>}
                             </div>
                             <div className="admin-page-content">{children}</div>
                         </motion.div>
