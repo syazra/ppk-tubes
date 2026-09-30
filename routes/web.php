@@ -16,11 +16,7 @@ Route::get('/', function () {
         'reservationUrl' => route('reservations.index'),
         'createReservationUrl' => route('reservations.form'),
     ]);
-});
-
-Route::get('/guest/dashboard', function () {
-    return view('guest.dashboard');
-})->name('guest.dashboard');
+})->name('landing');
 
 require __DIR__.'/auth.php';
 
@@ -28,8 +24,8 @@ require __DIR__.'/auth.php';
 Route::middleware(['auth'])->group(function () {
     // -- Dashboards --
     Route::middleware('verified')->group(function () {
-        // guest dashboard
-        Route::get('/dashboard', function () { return view('guest.dashboard'); })->name('dashboard');
+        // Fallback destination for authenticated flows without a role dashboard.
+        Route::get('/dashboard', function () { return redirect()->route('landing'); })->name('dashboard');
 
         // user dashboard
         Route::get('/user/dashboard', function () { 
@@ -79,7 +75,7 @@ Route::middleware(['auth', 'verified'])->prefix('operator')->name('operator.')->
                 'reservations' => route('operator.reservations'),
                 'reports' => route('operator.reports'),
                 'profile' => route('profile.edit'),
-                'guest' => route('guest.dashboard'),
+                'guest' => route('landing'),
                 'logout' => route('logout'),
             ],
         ]);
@@ -144,7 +140,7 @@ Route::middleware(['auth', 'verified'])->prefix('operator')->name('operator.')->
                 'approve' => url('/operator/reservations'),
                 'reject' => url('/operator/reservations'),
                 'profile' => route('profile.edit'),
-                'guest' => route('guest.dashboard'),
+                'guest' => route('landing'),
                 'logout' => route('logout'),
             ],
         ]);
@@ -208,7 +204,7 @@ Route::middleware(['auth', 'verified'])->prefix('operator')->name('operator.')->
                 'reservations' => route('operator.reservations'),
                 'reports' => route('operator.reports'),
                 'profile' => route('profile.edit'),
-                'guest' => route('guest.dashboard'),
+                'guest' => route('landing'),
                 'logout' => route('logout'),
             ],
         ]);
@@ -240,7 +236,7 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
                 'dashboard' => route('admin.dashboard'),
                 'registrations' => route('admin.registrations.index'),
                 'profile' => route('profile.edit'),
-                'guest' => route('guest.dashboard'),
+                'guest' => route('landing'),
                 'logout' => route('logout'),
             ],
         ]);

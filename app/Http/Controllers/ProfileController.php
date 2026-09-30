@@ -37,7 +37,7 @@ class ProfileController extends Controller
                     'profileDestroy' => route('profile.destroy'),
                     'passwordUpdate' => route('password.update'),
                     'verificationSend' => route('verification.send'),
-                    'guest' => route('guest.dashboard'),
+                    'guest' => route('landing'),
                     'logout' => route('logout'),
                 ],
             ]);

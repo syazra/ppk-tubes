@@ -62,7 +62,7 @@ class RegistrationController extends Controller
                 'registrationStore' => route('admin.registrations.store'),
                 'accounts' => route('admin.registrations.index'),
                 'profile' => route('profile.edit'),
-                'guest' => route('guest.dashboard'),
+                'guest' => route('landing'),
                 'logout' => route('logout'),
             ],
         ]);
