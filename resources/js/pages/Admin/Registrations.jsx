@@ -1,6 +1,6 @@
 import { Head, Link, useForm } from '@inertiajs/react';
 import { useState } from 'react';
-import AdminLayout from '../../components/AdminLayout';
+import AppLayout from '../../components/AppLayout';
 
 const inputClass = 'mt-1 block w-full rounded-xl border-gray-300 bg-white-01 px-4 py-3 text-sm text-teal-darker focus:border-teal-dark-01 focus:ring-teal-dark-01';
 const accountTypes = [
@@ -29,7 +29,8 @@ function paginationLabel(label) {
     return { Previous: 'Sebelumnya', Next: 'Berikutnya' }[text] ?? text;
 }
 
-export default function Registrations({ admin, csrfToken, urls, createdAccount, status, accounts, filters }) {
+export default function Registrations({ user, csrfToken, urls, createdAccount, status, accounts, filters }) {
+    const currentUser = user;
     const [copied, setCopied] = useState(false);
     const [editing, setEditing] = useState(null);
     const createForm = useForm({ account_type: 'mahasiswa', name: '', identity_number: '', email: '' });
@@ -82,8 +83,10 @@ export default function Registrations({ admin, csrfToken, urls, createdAccount, 
     return (
         <>
             <Head title="Registrasi Akun" />
-            <AdminLayout admin={admin} csrfToken={csrfToken} urls={urls} active="registrations" title="Registrasi Akun" subtitle="Buat dan kelola akun pengguna serta petugas.">
-                <section className="mb-6 max-w-4xl px-6 lg:px-8">
+            <AppLayout user={currentUser} csrfToken={csrfToken} urls={urls} active="registrations" title="Registrasi Akun" subtitle="Buat dan kelola akun pengguna serta petugas.">
+
+                {/* DAFTARKAN AKUN BARU */}
+                <section className="mb-6 w-full">
                     {createdAccount && (
                         <div role="status" className="mb-5 rounded-lg border border-teal-light-03 bg-teal-light-01 p-5 text-teal-darker">
                             <h2 className="font-semibold">Akun berhasil dibuat</h2>
@@ -103,28 +106,35 @@ export default function Registrations({ admin, csrfToken, urls, createdAccount, 
                         <p className="mt-1 text-sm text-gray-600">Kata sandi dibuat otomatis oleh sistem setelah formulir disimpan.</p>
 
                         <form onSubmit={submit} className="mt-6 space-y-5">
-                            <div>
-                                <label htmlFor="account_type" className="mb-2 block text-sm font-semibold text-teal-darker">Jenis akun</label>
-                                <select id="account_type" name="account_type" value={createForm.data.account_type} onChange={event => createForm.setData('account_type', event.target.value)} required className={inputClass} aria-invalid={Boolean(createForm.errors.account_type)} aria-describedby={createForm.errors.account_type ? 'account_type-error' : undefined}>
-                                    {accountTypes.map(type => <option key={type.value} value={type.value}>{type.label}</option>)}
-                                </select>
-                                <FieldError id="account_type" message={createForm.errors.account_type} />
+                            <div className="grid gap-5 sm:grid-cols-2">
+                                {/* Tipe akun */}
+                                <div>
+                                    <label htmlFor="account_type" className="mb-2 block text-sm font-semibold text-teal-darker">Jenis akun</label>
+                                    <select id="account_type" name="account_type" value={createForm.data.account_type} onChange={event => createForm.setData('account_type', event.target.value)} required className={inputClass} aria-invalid={Boolean(createForm.errors.account_type)} aria-describedby={createForm.errors.account_type ? 'account_type-error' : undefined}>
+                                        {accountTypes.map(type => <option key={type.value} value={type.value}>{type.label}</option>)}
+                                    </select>
+                                    <FieldError id="account_type" message={createForm.errors.account_type} />
+                                </div>
+                                {/* Nama */}
+                                <div>
+                                    <label htmlFor="name" className="mb-2 block text-sm font-semibold text-teal-darker">Nama lengkap</label>
+                                    <input id="name" name="name" type="text" value={createForm.data.name} onChange={event => createForm.setData('name', event.target.value)} required autoComplete="name" className={inputClass} aria-invalid={Boolean(createForm.errors.name)} aria-describedby={createForm.errors.name ? 'name-error' : undefined} />
+                                    <FieldError id="name" message={createForm.errors.name} />
+                                </div>
+                                {/* NIP/NIK */}
+                                <div>
+                                    <label htmlFor="identity_number" className="mb-2 block text-sm font-semibold text-teal-darker">{identityLabel}</label>
+                                    <input id="identity_number" name="identity_number" type="text" value={createForm.data.identity_number} onChange={event => createForm.setData('identity_number', event.target.value)} required autoComplete="off" className={inputClass} aria-invalid={Boolean(createForm.errors.identity_number)} aria-describedby={createForm.errors.identity_number ? 'identity_number-error' : undefined} />
+                                    <FieldError id="identity_number" message={createForm.errors.identity_number} />
+                                </div>
+                                {/* Email */}
+                                <div>
+                                    <label htmlFor="email" className="mb-2 block text-sm font-semibold text-teal-darker">Email</label>
+                                    <input id="email" name="email" type="email" value={createForm.data.email} onChange={event => createForm.setData('email', event.target.value)} required autoComplete="email" className={inputClass} aria-invalid={Boolean(createForm.errors.email)} aria-describedby={createForm.errors.email ? 'email-error' : undefined} />
+                                    <FieldError id="email" message={createForm.errors.email} />
+                                </div>
                             </div>
-                            <div>
-                                <label htmlFor="name" className="mb-2 block text-sm font-semibold text-teal-darker">Nama lengkap</label>
-                                <input id="name" name="name" type="text" value={createForm.data.name} onChange={event => createForm.setData('name', event.target.value)} required autoComplete="name" className={inputClass} aria-invalid={Boolean(createForm.errors.name)} aria-describedby={createForm.errors.name ? 'name-error' : undefined} />
-                                <FieldError id="name" message={createForm.errors.name} />
-                            </div>
-                            <div>
-                                <label htmlFor="identity_number" className="mb-2 block text-sm font-semibold text-teal-darker">{identityLabel}</label>
-                                <input id="identity_number" name="identity_number" type="text" value={createForm.data.identity_number} onChange={event => createForm.setData('identity_number', event.target.value)} required autoComplete="off" className={inputClass} aria-invalid={Boolean(createForm.errors.identity_number)} aria-describedby={createForm.errors.identity_number ? 'identity_number-error' : undefined} />
-                                <FieldError id="identity_number" message={createForm.errors.identity_number} />
-                            </div>
-                            <div>
-                                <label htmlFor="email" className="mb-2 block text-sm font-semibold text-teal-darker">Email</label>
-                                <input id="email" name="email" type="email" value={createForm.data.email} onChange={event => createForm.setData('email', event.target.value)} required autoComplete="email" className={inputClass} aria-invalid={Boolean(createForm.errors.email)} aria-describedby={createForm.errors.email ? 'email-error' : undefined} />
-                                <FieldError id="email" message={createForm.errors.email} />
-                            </div>
+                            
                             <button type="submit" disabled={createForm.processing} className="rounded-xl bg-teal-dark-01 px-5 py-3 text-sm font-semibold text-white-01 transition hover:bg-teal-dark-02 focus:outline-none focus:ring-2 focus:ring-teal-dark-01 focus:ring-offset-2 disabled:opacity-60">
                                 {createForm.processing ? 'Menyimpan...' : 'Daftarkan akun'}
                             </button>
@@ -132,6 +142,7 @@ export default function Registrations({ admin, csrfToken, urls, createdAccount, 
                     </div>
                 </section>
 
+                {/* FILTERING DAN LIHAT SEMUA AKUN */}
                 <section className="mb-8 max-w-7xl px-6 lg:px-8">
                     <div className="rounded-lg border border-green-light-03 bg-white-01 p-6 shadow-sm">
                         <div className="mb-5">
@@ -199,7 +210,7 @@ export default function Registrations({ admin, csrfToken, urls, createdAccount, 
                         </div>
                     </div>
                 </section>
-            </AdminLayout>
+            </AppLayout>
 
             {editing && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onKeyDown={event => { if (event.key === 'Escape') setEditing(null); }}>

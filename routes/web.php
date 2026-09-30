@@ -84,7 +84,8 @@ Route::middleware(['auth'])->group(function () {
 Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', function () {
         return Inertia::render('Admin/Dashboard', [
-            'admin' => request()->user()->only('name', 'email'),
+            'user' => request()->user()->only('name', 'email', 'role', 'account_type'),
+            'admin' => request()->user()->only('name', 'email', 'role', 'account_type'),
             'status' => session('status'),
             'csrfToken' => csrf_token(),
             'urls' => [

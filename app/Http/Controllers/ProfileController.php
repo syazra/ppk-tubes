@@ -23,7 +23,8 @@ class ProfileController extends Controller
             $user = $request->user();
 
             return Inertia::render('Admin/Profile', [
-                'admin' => $user->only('name', 'email'),
+                'user' => $user->only('name', 'email', 'role', 'account_type'),
+                'admin' => $user->only('name', 'email', 'role', 'account_type'),
                 'status' => session('status'),
                 'csrfToken' => csrf_token(),
                 'mustVerifyEmail' => $user instanceof MustVerifyEmail,

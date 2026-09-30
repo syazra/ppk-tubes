@@ -25,7 +25,7 @@
                     <option value="">Pilih Ruangan / Fasilitas</option>
                     @foreach($rooms as $room)
                         <option value="{{ $room->id }}" {{ old('room_id') == $room->id ? 'selected' : '' }}>
-                            {{ $room->name }} — Lokasi: {{ $room->location }} ({{ ucfirst($room->type) }})
+                            {{ $room->name }} - Lokasi: {{ $room->location }} ({{ ucfirst($room->type) }})
                         </option>
                     @endforeach
                 </select>
