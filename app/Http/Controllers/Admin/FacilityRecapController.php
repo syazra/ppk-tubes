@@ -38,7 +38,7 @@ class FacilityRecapController extends Controller
                 'recap' => route('admin.facilities.recap'),
                 'export' => route('admin.facilities.recap.export', ['format' => 'FORMAT']),
                 'profile' => route('profile.edit'),
-                'guest' => route('guest.dashboard'),
+                'guest' => route('landing'),
                 'logout' => route('logout'),
             ],
         ]);

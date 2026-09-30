@@ -48,7 +48,7 @@ class FacilityController extends Controller
                 'facilities' => route('admin.facilities.index'),
                 'recap' => route('admin.facilities.recap'),
                 'profile' => route('profile.edit'),
-                'guest' => route('guest.dashboard'),
+                'guest' => route('landing'),
                 'logout' => route('logout'),
             ],
         ]);
