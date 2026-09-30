@@ -8,11 +8,19 @@ const defaultNavigation = [
     { key: 'profile', icon: 'user', label: 'Profil' },
 ];
 
+const operatorNavigation = [
+    { key: 'dashboard', icon: 'home', label: 'Dasbor' },
+    { key: 'reservations', icon: 'calendar', label: 'Reservasi' },
+    { key: 'reports', icon: 'report', label: 'Laporan' },
+];
+
 export default function Sidebar({ user, auth, csrfToken, urls, active, collapsed = false, onNavigate, onClose, mobile = false, navigation = defaultNavigation }) {
     const currentUser = user || auth?.user;
     const userName = currentUser?.name || 'Pengguna';
     const userEmail = currentUser?.email || '';
-    const navItems = navigation || defaultNavigation;
+    const navItems = navigation === defaultNavigation && currentUser?.role === 'operator'
+        ? operatorNavigation
+        : navigation;
 
     return (
         <aside className={`app-sidebar ${collapsed ? 'is-collapsed' : ''}`}>
