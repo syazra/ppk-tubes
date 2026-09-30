@@ -7,13 +7,13 @@ import EmptyState from '../../components/EmptyState';
 
 // Ringkasan metrik untuk dasbor admin
 const metrics = [
-    { label: 'Total Mahasiswa', detail: 'Jumlah akun mahasiswa terdaftar', icon: 'users' },
-    { label: 'Reservasi Menunggu', detail: 'Permintaan yang menunggu tindak lanjut', icon: 'clock' },
-    { label: 'Reservasi Bulan Ini', detail: 'Total aktivitas reservasi bulanan', icon: 'calendar' },
-    { label: 'Ruangan Aktif', detail: 'Ruangan yang tersedia untuk reservasi', icon: 'room' },
+    { summaryKey: 'students', label: 'Total Mahasiswa', icon: 'users' },
+    { summaryKey: 'pending_reservations', label: 'Reservasi Menunggu', icon: 'clock' },
+    { summaryKey: 'monthly_reservations', label: 'Reservasi Bulan Ini', icon: 'calendar' },
+    { summaryKey: 'active_rooms', label: 'Ruangan Aktif', icon: 'room' },
 ];
 
-export default function Dashboard({ user, status, csrfToken, urls }) {
+export default function Dashboard({ user, status, csrfToken, urls, summary }) {
     const reducedMotion = useReducedMotion();
     const currentUser = user;
 
@@ -29,12 +29,12 @@ export default function Dashboard({ user, status, csrfToken, urls }) {
                     <div className="app-section-heading">
                         <div>
                             <h2 id="summary-title" className="text-lg font-bold tracking-tight text-teal-darker">Ringkasan kampus</h2>
-                            <p className="mt-1 text-xs leading-relaxed text-gray-500">Indikator akan terisi saat data tersedia.</p>
+                            <p className="mt-1 text-xs leading-relaxed text-gray-500">Ringkasan data kampus saat ini.</p>
                         </div>
-                        <span className="app-status-badge"><span className="h-1.5 w-1.5 rounded-full bg-gray-400" />Menunggu data</span>
+                        <span className="app-status-badge"><span className="h-1.5 w-1.5 rounded-full bg-green-500" />Data terkini</span>
                     </div>
                     <div className="app-metric-grid">
-                        {metrics.map((metric, index) => <MetricCard key={metric.label} {...metric} index={index} />)}
+                        {metrics.map(({ summaryKey, ...metric }, index) => <MetricCard key={metric.label} {...metric} value={summary[summaryKey]} index={index} />)}
                     </div>
                 </section>
 
