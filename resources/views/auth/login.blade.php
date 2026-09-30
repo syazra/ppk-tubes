@@ -42,8 +42,8 @@
         </form>
 
         <div class="mt-7 border-t border-gray-200 pt-5 text-center text-sm">
-            @if (Route::has('guest.dashboard'))
-                <a href="{{ route('guest.dashboard') }}" class="font-medium text-gray-600 hover:text-teal-dark-01 hover:underline">Jelajahi sebagai pengunjung</a>
+            @if (Route::has('landing'))
+                <a href="{{ route('landing') }}" class="font-medium text-gray-600 hover:text-teal-dark-01 hover:underline">Jelajahi sebagai pengunjung</a>
             @endif
             @env('local')
             <details class="mt-5 text-left text-gray-600">

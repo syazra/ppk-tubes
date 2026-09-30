@@ -18,11 +18,7 @@ Route::get('/', function () {
         'reservationUrl' => route('reservations.index'),
         'createReservationUrl' => route('reservations.form'),
     ]);
-});
-
-Route::get('/guest/dashboard', function () {
-    return view('guest.dashboard');
-})->name('guest.dashboard');
+})->name('landing');
 
 require __DIR__.'/auth.php';
 
@@ -30,8 +26,8 @@ require __DIR__.'/auth.php';
 Route::middleware(['auth'])->group(function () {
     // -- Dashboards --
     Route::middleware('verified')->group(function () {
-        // guest dashboard
-        Route::get('/dashboard', function () { return view('guest.dashboard'); })->name('dashboard');
+        // Fallback destination for authenticated flows without a role dashboard.
+        Route::get('/dashboard', function () { return redirect()->route('landing'); })->name('dashboard');
 
         // user dashboard
         Route::get('/user/dashboard', function () { 
@@ -81,16 +77,24 @@ Route::middleware(['auth', 'verified'])->prefix('operator')->name('operator.')->
                 'reservations' => route('operator.reservations'),
                 'reports' => route('operator.reports'),
                 'profile' => route('profile.edit'),
-                'guest' => route('guest.dashboard'),
+                'guest' => route('landing'),
                 'logout' => route('logout'),
             ],
         ]);
     })->name('dashboard');
+
     Route::get('/reservations', function (Request $request) {
         $filters = $request->validate([
             'search' => ['nullable', 'string', 'max:255'],
             'status' => ['nullable', 'in:menunggu,disetujui,ditolak,dibatalkan'],
         ]);
+
+        $summary = [
+            'total' => \App\Models\Reservation::count(),
+            'approved' => \App\Models\Reservation::where('status', 'disetujui')->count(),
+            'pending' => \App\Models\Reservation::where('status', 'menunggu')->count(),
+            'rejected' => \App\Models\Reservation::where('status', 'ditolak')->count(),
+        ];
 
         $reservations = \App\Models\Reservation::with(['room', 'user'])
             ->when($filters['status'] ?? null, fn ($query, string $status) => $query->where('status', $status))
@@ -112,7 +116,7 @@ Route::middleware(['auth', 'verified'])->prefix('operator')->name('operator.')->
                 ],
                 'room' => [
                     'name' => $reservation->room?->name,
-                    'type' => $reservation->room?->type,
+                    'location' => $reservation->room?->location,
                 ],
                 'date_to_reserv' => $reservation->date_to_reserv,
                 'start_time' => $reservation->start_time,
@@ -126,6 +130,7 @@ Route::middleware(['auth', 'verified'])->prefix('operator')->name('operator.')->
             'status' => $request->session()->get('success'),
             'csrfToken' => csrf_token(),
             'reservations' => $reservations,
+            'summary' => $summary,
             'filters' => [
                 'search' => $filters['search'] ?? '',
                 'status' => $filters['status'] ?? '',
@@ -137,26 +142,76 @@ Route::middleware(['auth', 'verified'])->prefix('operator')->name('operator.')->
                 'approve' => url('/operator/reservations'),
                 'reject' => url('/operator/reservations'),
                 'profile' => route('profile.edit'),
-                'guest' => route('guest.dashboard'),
+                'guest' => route('landing'),
                 'logout' => route('logout'),
             ],
         ]);
     })->name('reservations');
+
     Route::get('/reports', function (Request $request) {
+        $filters = $request->validate([
+            'search' => ['nullable', 'string', 'max:255'],
+            'status' => ['nullable', 'in:baru,diproses,selesai,ditolak,dibatalkan'],
+        ]);
+
+        $summary = [
+            'total' => \App\Models\Report::count(),
+            'new' => \App\Models\Report::where('status', 'baru')->count(),
+            'processing' => \App\Models\Report::where('status', 'diproses')->count(),
+            'completed' => \App\Models\Report::where('status', 'selesai')->count(),
+        ];
+
+        $reports = \App\Models\Report::with(['room', 'user'])
+            ->when($filters['status'] ?? null, fn ($query, string $status) => $query->where('status', $status))
+            ->when($filters['search'] ?? null, function ($query, string $search): void {
+                $query->where(function ($query) use ($search): void {
+                    $query->whereHas('user', fn ($userQuery) => $userQuery->where('name', 'like', "%{$search}%"))
+                        ->orWhereHas('room', fn ($roomQuery) => $roomQuery->where('name', 'like', "%{$search}%"))
+                        ->orWhere('desc', 'like', "%{$search}%");
+                });
+            })
+            ->latest()
+            ->paginate(10)
+            ->withQueryString()
+            ->through(fn (\App\Models\Report $report): array => [
+                'id' => $report->id,
+                'user' => [
+                    'name' => $report->user?->name,
+                    'email' => $report->user?->email,
+                ],
+                'room' => [
+                    'name' => $report->room?->name,
+                    'location' => $report->room?->location,
+                ],
+                'desc' => $report->desc,
+                'image_url' => $report->image
+                    ? \Illuminate\Support\Facades\Storage::disk('public')->url($report->image)
+                    : null,
+                'status' => $report->status,
+                'created_at' => $report->created_at?->toIso8601String(),
+            ]);
+
         return Inertia::render('Operator/Reports', [
             'user' => $request->user()->only('name', 'email', 'role', 'account_type'),
             'status' => $request->session()->get('status'),
             'csrfToken' => csrf_token(),
+            'reports' => $reports,
+            'summary' => $summary,
+            'filters' => [
+                'search' => $filters['search'] ?? '',
+                'status' => $filters['status'] ?? '',
+            ],
             'urls' => [
                 'dashboard' => route('operator.dashboard'),
                 'reservations' => route('operator.reservations'),
                 'reports' => route('operator.reports'),
                 'profile' => route('profile.edit'),
-                'guest' => route('guest.dashboard'),
+                'guest' => route('landing'),
                 'logout' => route('logout'),
             ],
         ]);
     })->name('reports');
+
     Route::patch('/reservations/{id}/approve', [OperatorController::class, 'approve'])->name('reservations.approve');
     Route::patch('/reservations/{id}/reject', [OperatorController::class, 'reject'])->name('reservations.reject');
 });
@@ -164,18 +219,28 @@ Route::middleware(['auth', 'verified'])->prefix('operator')->name('operator.')->
 // 4. Route Khusus Admin
 Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', function () {
+        $summary = [
+            'students' => \App\Models\User::where('account_type', 'mahasiswa')->count(),
+            'pending_reservations' => \App\Models\Reservation::where('status', 'menunggu')->count(),
+            'monthly_reservations' => \App\Models\Reservation::whereMonth('created_at', now()->month)
+                ->whereYear('created_at', now()->year)
+                ->count(),
+            'active_rooms' => \App\Models\Room::where('is_avail', true)->count(),
+        ];
+
         return Inertia::render('Admin/Dashboard', [
             'user' => request()->user()->only('name', 'email', 'role', 'account_type'),
             'admin' => request()->user()->only('name', 'email', 'role', 'account_type'),
             'status' => session('status'),
             'csrfToken' => csrf_token(),
+            'summary' => $summary,
             'urls' => [
                 'dashboard' => route('admin.dashboard'),
                 'registrations' => route('admin.registrations.index'),
                 'facilities' => route('admin.facilities.index'),
                 'recap' => route('admin.facilities.recap'),
                 'profile' => route('profile.edit'),
-                'guest' => route('guest.dashboard'),
+                'guest' => route('landing'),
                 'logout' => route('logout'),
             ],
         ]);

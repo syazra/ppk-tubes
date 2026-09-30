@@ -25,7 +25,7 @@ export default function Sidebar({ user, auth, csrfToken, urls, active, collapsed
 const operatorNavigation = [
     { key: 'dashboard', icon: 'home', label: 'Dasbor' },
     { key: 'reservations', icon: 'calendar', label: 'Reservasi' },
-    { key: 'reports', icon: 'report', label: 'Laporan' },
+    { key: 'reports', icon: 'tool', label: 'Laporan' },
 ];
 
 export default function Sidebar({ user, auth, csrfToken, urls, active, collapsed = false, onNavigate, onClose, mobile = false, navigation = defaultNavigation }) {
