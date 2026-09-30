@@ -8,11 +8,19 @@ const defaultNavigation = [
     { key: 'profile', icon: 'user', label: 'Profil' },
 ];
 
-export default function Sidebar({ user, auth, csrfToken, urls, active, collapsed = false, onNavigate, onClose, mobile = false, navigation = defaultNavigation }) {
+const adminNavigation = [
+    { key: 'dashboard', icon: 'home', label: 'Dasbor' },
+    { key: 'registrations', icon: 'student', label: 'Registrasi' },
+    { key: 'facilities', icon: 'room', label: 'Fasilitas' },
+    { key: 'recap', icon: 'chart', label: 'Rekap Fasilitas' },
+    { key: 'profile', icon: 'user', label: 'Profil' },
+];
+
+export default function Sidebar({ user, auth, csrfToken, urls, active, collapsed = false, onNavigate, onClose, mobile = false, navigation }) {
     const currentUser = user || auth?.user;
     const userName = currentUser?.name || 'Pengguna';
     const userEmail = currentUser?.email || '';
-    const navItems = navigation || defaultNavigation;
+    const navItems = navigation || (currentUser?.role === 'admin' ? adminNavigation : defaultNavigation);
 
     return (
         <aside className={`app-sidebar ${collapsed ? 'is-collapsed' : ''}`}>
