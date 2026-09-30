@@ -12,9 +12,13 @@ class Room extends Model
         'desc',
         'type',
         'capacity',
-        'is_avail'
+        'is_avail',
     ];
 
+    protected function casts(): array
+    {
+        return ['is_avail' => 'boolean', 'capacity' => 'integer'];
+    }
 
     public function reservations()
     {

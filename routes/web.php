@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Admin\RegistrationController;
+use App\Http\Controllers\Admin\FacilityController;
+use App\Http\Controllers\Admin\FacilityRecapController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ReservationController;
@@ -170,6 +172,8 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
             'urls' => [
                 'dashboard' => route('admin.dashboard'),
                 'registrations' => route('admin.registrations.index'),
+                'facilities' => route('admin.facilities.index'),
+                'recap' => route('admin.facilities.recap'),
                 'profile' => route('profile.edit'),
                 'guest' => route('guest.dashboard'),
                 'logout' => route('logout'),
@@ -181,4 +185,11 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     Route::post('/registrations', [RegistrationController::class, 'store'])->name('registrations.store');
     Route::put('/registrations/{user}', [RegistrationController::class, 'update'])->name('registrations.update');
     Route::delete('/registrations/{user}', [RegistrationController::class, 'destroy'])->name('registrations.destroy');
+
+    Route::get('/facilities', [FacilityController::class, 'index'])->name('facilities.index');
+    Route::post('/facilities', [FacilityController::class, 'store'])->name('facilities.store');
+    Route::put('/facilities/{room}', [FacilityController::class, 'update'])->name('facilities.update');
+    Route::patch('/facilities/{room}/availability', [FacilityController::class, 'availability'])->name('facilities.availability');
+    Route::get('/facilities/recap', [FacilityRecapController::class, 'index'])->name('facilities.recap');
+    Route::get('/facilities/recap/export/{format}', [FacilityRecapController::class, 'export'])->name('facilities.recap.export');
 });

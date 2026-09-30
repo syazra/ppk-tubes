@@ -21,7 +21,7 @@ export default function Dashboard({ user, status, csrfToken, urls }) {
         <>
             {/* JUDUL */}
             <Head title="Dasbor Admin" />
-            <AppLayout user={currentUser} csrfToken={csrfToken} urls={urls} active="dashboard" title="Dasbor Admin" subtitle="Ringkasan aktivitas dan layanan CampuSpace." actions={<Link href={urls?.registrations || '#'} className="app-primary-link"><Icon name="student" className="h-4 w-4" />Kelola akun</Link>}>
+            <AppLayout user={currentUser} csrfToken={csrfToken} urls={urls} active="dashboard" title="Dasbor Admin" subtitle="Ringkasan aktivitas dan layanan CampuSpace." actions={<div className="flex flex-wrap gap-2"><Link href={urls?.registrations || '#'} className="app-primary-link"><Icon name="student" className="h-4 w-4" />Kelola akun</Link><Link href={urls.facilities} className="app-primary-link"><Icon name="room" className="h-4 w-4" />Kelola fasilitas</Link></div>}>
                 {status && <div role="status" className="mb-5 rounded-xl border border-teal-light-03 bg-teal-light-01 px-4 py-3 text-sm text-teal-darker">{status}</div>}
 
                 {/* RINGKASAN */}

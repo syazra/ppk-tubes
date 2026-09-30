@@ -8,6 +8,20 @@ const defaultNavigation = [
     { key: 'profile', icon: 'user', label: 'Profil' },
 ];
 
+const adminNavigation = [
+    { key: 'dashboard', icon: 'home', label: 'Dasbor' },
+    { key: 'registrations', icon: 'student', label: 'Registrasi' },
+    { key: 'facilities', icon: 'room', label: 'Fasilitas' },
+    { key: 'recap', icon: 'chart', label: 'Rekap Fasilitas' },
+    { key: 'profile', icon: 'user', label: 'Profil' },
+];
+
+export default function Sidebar({ user, auth, csrfToken, urls, active, collapsed = false, onNavigate, onClose, mobile = false, navigation }) {
+    const currentUser = user || auth?.user;
+    const userName = currentUser?.name || 'Pengguna';
+    const userEmail = currentUser?.email || '';
+    const navItems = navigation || (currentUser?.role === 'admin' ? adminNavigation : defaultNavigation);
+
 const operatorNavigation = [
     { key: 'dashboard', icon: 'home', label: 'Dasbor' },
     { key: 'reservations', icon: 'calendar', label: 'Reservasi' },
