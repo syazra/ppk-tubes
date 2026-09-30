@@ -1,6 +1,7 @@
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, useForm } from '@inertiajs/react';
 import { useState } from 'react';
 import AppLayout from '../../components/AppLayout';
+import FilterTable from '../../components/FilterTable';
 
 const inputClass = 'mt-1 block w-full rounded-xl border-gray-300 bg-white-01 px-4 py-3 text-sm text-teal-darker focus:border-teal-dark-01 focus:ring-teal-dark-01';
 const accountTypes = [
@@ -22,11 +23,6 @@ function formatCreatedAt(value) {
     return value
         ? new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value))
         : '—';
-}
-
-function paginationLabel(label) {
-    const text = label.replace('&laquo; ', '').replace(' &raquo;', '').trim();
-    return { Previous: 'Sebelumnya', Next: 'Berikutnya' }[text] ?? text;
 }
 
 export default function Registrations({ user, csrfToken, urls, createdAccount, status, accounts, filters }) {
@@ -143,73 +139,50 @@ export default function Registrations({ user, csrfToken, urls, createdAccount, s
                 </section>
 
                 {/* FILTERING DAN LIHAT SEMUA AKUN */}
-                <section className="mb-8 max-w-7xl px-6 lg:px-8">
-                    <div className="rounded-lg border border-green-light-03 bg-white-01 p-6 shadow-sm">
-                        <div className="mb-5">
-                            <h2 className="text-xl font-bold text-teal-darker">Data akun</h2>
-                            <p className="mt-1 text-sm text-gray-600">Daftar mahasiswa, dosen, staf, dan petugas.</p>
-                        </div>
-
-                        <form onSubmit={applyFilters} className="mb-5 grid gap-3 md:grid-cols-[1fr_15rem_auto]">
-                            <div>
-                                <label htmlFor="account-search" className="sr-only">Cari nama, nomor induk, atau email</label>
-                                <input id="account-search" type="search" value={filterForm.data.search} onChange={event => filterForm.setData('search', event.target.value)} placeholder="Cari nama, nomor induk, atau email" className={inputClass} />
-                            </div>
-                            <div>
-                                <label htmlFor="account-filter" className="sr-only">Filter jenis akun</label>
-                                <select id="account-filter" value={filterForm.data.type} onChange={event => filterForm.setData('type', event.target.value)} className={inputClass}>
-                                    <option value="">Semua jenis akun</option>
-                                    {accountTypes.map(type => <option key={type.value} value={type.value}>{type.label}</option>)}
-                                </select>
-                            </div>
-                            <button type="submit" disabled={filterForm.processing} className="rounded-xl border border-teal-dark-01 px-5 py-3 text-sm font-semibold text-teal-dark-01 hover:bg-teal-light-01 disabled:opacity-60">Terapkan filter</button>
-                        </form>
-
-                        {deleteForm.errors.delete && <p role="alert" className="mb-4 rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">{deleteForm.errors.delete}</p>}
-
-                        <div className="overflow-x-auto">
-                            <table className="min-w-full divide-y divide-gray-200 text-left text-sm">
-                                <thead className="bg-teal-light-01 text-xs uppercase tracking-wide text-teal-darker">
-                                    <tr>
-                                        <th scope="col" className="px-4 py-3">Jenis akun</th>
-                                        <th scope="col" className="px-4 py-3">Nama</th>
-                                        <th scope="col" className="px-4 py-3">NIM/NIP</th>
-                                        <th scope="col" className="px-4 py-3">Email</th>
-                                        <th scope="col" className="px-4 py-3">Tanggal dibuat</th>
-                                        <th scope="col" className="px-4 py-3">Aksi</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-100">
-                                    {accounts.data.map(account => (
-                                        <tr key={account.id}>
-                                            <td className="whitespace-nowrap px-4 py-3">{accountTypeLabel(account.account_type)}</td>
-                                            <td className="whitespace-nowrap px-4 py-3 font-medium text-teal-darker">{account.name}</td>
-                                            <td className="whitespace-nowrap px-4 py-3">{account.identity_number || '—'}</td>
-                                            <td className="whitespace-nowrap px-4 py-3">{account.email}</td>
-                                            <td className="whitespace-nowrap px-4 py-3">{formatCreatedAt(account.created_at)}</td>
-                                            <td className="whitespace-nowrap px-4 py-3">
-                                                <div className="flex gap-3">
-                                                    <button type="button" onClick={() => openEdit(account)} className="font-medium text-teal-dark-01 underline">Ubah</button>
-                                                    <button type="button" onClick={() => deleteAccount(account)} disabled={deleteForm.processing} className="font-medium text-red-600 underline disabled:opacity-60">Hapus</button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                    {accounts.data.length === 0 && <tr><td colSpan="6" className="px-4 py-8 text-center text-gray-500">Tidak ada akun yang cocok dengan filter.</td></tr>}
-                                </tbody>
-                            </table>
-                        </div>
-
-                        <div className="mt-5 flex flex-wrap items-center justify-between gap-3 text-sm">
-                            <p className="text-gray-600">Menampilkan {accounts.from ?? 0}–{accounts.to ?? 0} dari {accounts.total} akun</p>
-                            <nav aria-label="Navigasi halaman akun" className="flex flex-wrap gap-1">
-                                {accounts.links.map((link, index) => link.url
-                                    ? <Link key={index} href={link.url} preserveState preserveScroll className={`rounded border px-3 py-1.5 ${link.active ? 'border-teal-dark-01 bg-teal-dark-01 text-white-01' : 'border-gray-300 text-teal-darker hover:bg-teal-light-01'}`}>{paginationLabel(link.label)}</Link>
-                                    : <span key={index} className="rounded border border-gray-200 px-3 py-1.5 text-gray-400">{paginationLabel(link.label)}</span>)}
-                            </nav>
-                        </div>
-                    </div>
-                </section>
+                <FilterTable
+                    title="Data akun"
+                    description="Daftar mahasiswa, dosen, staf, dan petugas."
+                    filterForm={filterForm}
+                    onSubmit={applyFilters}
+                    filterFields={[
+                        { name: 'search', id: 'account-search', label: 'Cari nama, nomor induk, atau email', placeholder: 'Cari nama, nomor induk, atau email' },
+                        {
+                            name: 'type',
+                            id: 'account-filter',
+                            label: 'Filter jenis akun',
+                            type: 'select',
+                            options: [{ value: '', label: 'Semua jenis akun' }, ...accountTypes],
+                        },
+                    ]}
+                    rows={accounts}
+                    columns={[
+                        { label: 'Jenis akun' },
+                        { label: 'Nama' },
+                        { label: 'NIM/NIP' },
+                        { label: 'Email' },
+                        { label: 'Tanggal dibuat' },
+                        { label: 'Aksi' },
+                    ]}
+                    renderRow={account => (
+                        <>
+                            <td className="whitespace-nowrap px-4 py-3">{accountTypeLabel(account.account_type)}</td>
+                            <td className="whitespace-nowrap px-4 py-3 font-medium text-teal-darker">{account.name}</td>
+                            <td className="whitespace-nowrap px-4 py-3">{account.identity_number || '—'}</td>
+                            <td className="whitespace-nowrap px-4 py-3">{account.email}</td>
+                            <td className="whitespace-nowrap px-4 py-3">{formatCreatedAt(account.created_at)}</td>
+                            <td className="whitespace-nowrap px-4 py-3">
+                                <div className="flex gap-3">
+                                    <button type="button" onClick={() => openEdit(account)} className="font-medium text-teal-dark-01 underline">Ubah</button>
+                                    <button type="button" onClick={() => deleteAccount(account)} disabled={deleteForm.processing} className="font-medium text-red-600 underline disabled:opacity-60">Hapus</button>
+                                </div>
+                            </td>
+                        </>
+                    )}
+                    emptyMessage="Tidak ada akun yang cocok dengan filter."
+                    errorMessage={deleteForm.errors.delete}
+                    recordLabel="akun"
+                    paginationLabel="Navigasi halaman akun"
+                />
             </AppLayout>
 
             {editing && (

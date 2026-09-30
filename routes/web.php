@@ -26,7 +26,7 @@ Route::get('/guest/dashboard', function () {
 
 require __DIR__.'/auth.php';
 
-// 2. Route Utama (Wajib Login: Mahasiswa, Dosen, Operator)
+// 2. Route Utama (Wajib Login: Mahasiswa dan Dosen)
 Route::middleware(['auth'])->group(function () {
     // -- Dashboards --
     Route::middleware('verified')->group(function () {
@@ -40,19 +40,6 @@ Route::middleware(['auth'])->group(function () {
             $recentReports = \App\Models\Report::with('room')->where('user_id', $user->id)->latest()->take(3)->get();
             return view('user.dashboard', compact('recentReservations', 'recentReports')); 
         })->name('user.dashboard');
-
-        // operator dashboard
-        Route::get('/operator/dashboard', function () { return view('operator.dashboard'); })->name('operator.dashboard');
-        Route::get('/operator/reservations', function () { 
-            $reservations = \App\Models\Reservation::with('room')->latest()->get();
-            return view('operator.reservations', compact('reservations')); 
-        })->name('operator.reservations');
-        Route::get('/operator/reports', function () { 
-            $rooms = \App\Models\Room::all();
-            return view('operator.reports', compact('rooms')); 
-        })->name('operator.reports');
-        Route::patch('/operator/reservations/{id}/approve', [OperatorController::class, 'approve'])->name('operator.reservations.approve');
-        Route::patch('/operator/reservations/{id}/reject', [OperatorController::class, 'reject'])->name('operator.reservations.reject');
     });
 
     // -- Profile --
@@ -82,7 +69,99 @@ Route::middleware(['auth'])->group(function () {
     });
 });
 
-// 3. Route Khusus Admin
+// 3. Route Khusus Operator
+Route::middleware(['auth', 'verified'])->prefix('operator')->name('operator.')->group(function () {
+    Route::get('/dashboard', function (Request $request) {
+        return Inertia::render('Operator/Dashboard', [
+            'user' => $request->user()->only('name', 'email', 'role', 'account_type'),
+            'status' => $request->session()->get('status'),
+            'csrfToken' => csrf_token(),
+            'urls' => [
+                'dashboard' => route('operator.dashboard'),
+                'reservations' => route('operator.reservations'),
+                'reports' => route('operator.reports'),
+                'profile' => route('profile.edit'),
+                'guest' => route('guest.dashboard'),
+                'logout' => route('logout'),
+            ],
+        ]);
+    })->name('dashboard');
+    Route::get('/reservations', function (Request $request) {
+        $filters = $request->validate([
+            'search' => ['nullable', 'string', 'max:255'],
+            'status' => ['nullable', 'in:menunggu,disetujui,ditolak,dibatalkan'],
+        ]);
+
+        $reservations = \App\Models\Reservation::with(['room', 'user'])
+            ->when($filters['status'] ?? null, fn ($query, string $status) => $query->where('status', $status))
+            ->when($filters['search'] ?? null, function ($query, string $search): void {
+                $query->where(function ($query) use ($search): void {
+                    $query->whereHas('user', fn ($userQuery) => $userQuery->where('name', 'like', "%{$search}%"))
+                        ->orWhereHas('room', fn ($roomQuery) => $roomQuery->where('name', 'like', "%{$search}%"))
+                        ->orWhere('desc', 'like', "%{$search}%");
+                });
+            })
+            ->latest()
+            ->paginate(10)
+            ->withQueryString()
+            ->through(fn (\App\Models\Reservation $reservation): array => [
+                'id' => $reservation->id,
+                'user' => [
+                    'name' => $reservation->user?->name,
+                    'email' => $reservation->user?->email,
+                ],
+                'room' => [
+                    'name' => $reservation->room?->name,
+                    'type' => $reservation->room?->type,
+                ],
+                'date_to_reserv' => $reservation->date_to_reserv,
+                'start_time' => $reservation->start_time,
+                'end_time' => $reservation->end_time,
+                'desc' => $reservation->desc,
+                'status' => $reservation->status,
+            ]);
+
+        return Inertia::render('Operator/Reservations', [
+            'user' => $request->user()->only('name', 'email', 'role', 'account_type'),
+            'status' => $request->session()->get('success'),
+            'csrfToken' => csrf_token(),
+            'reservations' => $reservations,
+            'filters' => [
+                'search' => $filters['search'] ?? '',
+                'status' => $filters['status'] ?? '',
+            ],
+            'urls' => [
+                'dashboard' => route('operator.dashboard'),
+                'reservations' => route('operator.reservations'),
+                'reports' => route('operator.reports'),
+                'approve' => url('/operator/reservations'),
+                'reject' => url('/operator/reservations'),
+                'profile' => route('profile.edit'),
+                'guest' => route('guest.dashboard'),
+                'logout' => route('logout'),
+            ],
+        ]);
+    })->name('reservations');
+    Route::get('/reports', function (Request $request) {
+        return Inertia::render('Operator/Reports', [
+            'user' => $request->user()->only('name', 'email', 'role', 'account_type'),
+            'status' => $request->session()->get('status'),
+            'csrfToken' => csrf_token(),
+            'urls' => [
+                'dashboard' => route('operator.dashboard'),
+                'reservations' => route('operator.reservations'),
+                'reports' => route('operator.reports'),
+                'profile' => route('profile.edit'),
+                'guest' => route('guest.dashboard'),
+                'logout' => route('logout'),
+            ],
+        ]);
+    })->name('reports');
+    Route::patch('/reservations/{id}/approve', [OperatorController::class, 'approve'])->name('reservations.approve');
+    Route::patch('/reservations/{id}/reject', [OperatorController::class, 'reject'])->name('reservations.reject');
+});
+
+// 4. Route Khusus Admin
 Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', function () {
         return Inertia::render('Admin/Dashboard', [
