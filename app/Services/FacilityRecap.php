@@ -45,7 +45,7 @@ class FacilityRecap
             });
 
         $damages = Report::query()->whereIn('room_id', $ids)
-            ->whereIn('status', ['menunggu', 'disetujui'])
+            ->whereIn('status', ['baru', 'diproses', 'selesai'])
             ->whereBetween('created_at', [$from->startOfDay(), $to->endOfDay()])
             ->selectRaw('room_id, COUNT(*) as total')
             ->groupBy('room_id')->pluck('total', 'room_id');

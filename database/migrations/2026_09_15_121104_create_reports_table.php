@@ -17,8 +17,8 @@ return new class extends Migration
             $table->foreignId('room_id')->constrained('rooms')->cascadeOnDelete();
             $table->text('desc');
             $table->string('image');
+            $table->enum('status', ['baru', 'diproses', 'selesai', 'ditolak', 'dibatalkan'])->default('baru');
             $table->timestamps();
-            $table->enum('status', ['menunggu', 'disetujui', 'ditolak', 'dibatalkan'])->default('menunggu');
         });
     }
 

@@ -46,7 +46,8 @@ class RegistrationController extends Controller
             ]);
 
         return Inertia::render('Admin/Registrations', [
-            'admin' => $request->user()->only('name', 'email'),
+            'user' => $request->user()->only('name', 'email', 'role', 'account_type'),
+            'admin' => $request->user()->only('name', 'email', 'role', 'account_type'),
             'csrfToken' => csrf_token(),
             'createdAccount' => $request->session()->pull('createdAccount'),
             'status' => $request->session()->get('status'),

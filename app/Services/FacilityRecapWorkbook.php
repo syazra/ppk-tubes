@@ -29,7 +29,7 @@ class FacilityRecapWorkbook
 
         $facilityRows = [
             ['Rekap fasilitas', $filters['from'].' s.d. '.$filters['to']],
-            ['Reservasi disetujui; laporan kerusakan menunggu/disetujui'],
+            ['Reservasi disetujui; laporan kerusakan baru/diproses/selesai'],
             [],
             ['Fasilitas', 'Lokasi', 'Jenis', 'Status', 'Reservasi Disetujui', 'Jam Terpakai', 'Laporan Kerusakan'],
         ];

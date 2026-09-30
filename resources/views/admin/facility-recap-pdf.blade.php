@@ -17,7 +17,7 @@
 <body>
     <h1>Rekap okupansi dan kerusakan fasilitas</h1>
     <p>Periode: {{ $filters['from'] }} s.d. {{ $filters['to'] }}</p>
-    <p>Okupansi dihitung dari reservasi disetujui. Kerusakan dihitung dari laporan menunggu dan disetujui.</p>
+    <p>Okupansi dihitung dari reservasi disetujui. Kerusakan dihitung dari laporan baru, diproses, dan selesai.</p>
     <h2>Per fasilitas</h2>
     <table>
         <thead><tr><th>Fasilitas</th><th>Lokasi</th><th>Jenis</th><th>Status</th><th class="number">Reservasi</th><th class="number">Jam terpakai</th><th class="number">Kerusakan</th></tr></thead>

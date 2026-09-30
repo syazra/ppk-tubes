@@ -33,7 +33,7 @@ class FacilityController extends Controller
             ->withQueryString();
 
         return Inertia::render('Admin/Facilities', [
-            'admin' => $request->user()->only('name', 'email'),
+            'user' => $request->user()->only('name', 'email', 'role', 'account_type'),
             'csrfToken' => csrf_token(),
             'status' => $request->session()->get('status'),
             'rooms' => $rooms,

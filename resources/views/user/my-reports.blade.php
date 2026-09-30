@@ -4,6 +4,29 @@
         @include('user.navbar')
     </x-slot>
 
+    @if (session('success'))
+        <div x-data="{ show: true }" 
+             x-init="setTimeout(() => show = false, 4000)" 
+             x-show="show" 
+             x-transition
+             class="fixed top-5 right-5 z-50 flex items-center p-4 mb-4 text-sm text-teal-800 rounded-lg bg-teal-50 border border-teal-200 shadow-lg" 
+             role="alert">
+            <svg class="flex-shrink-0 inline w-4 h-4 me-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM9.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM12 15H8a1 1 0 0 1 0-2h1v-3H8a1 1 0 0 1 0-2h2a1 1 0 0 1 1 1v4h1a1 1 0 0 1 0 2Z"/>
+            </svg>
+            <span class="sr-only">Info</span>
+            <div>
+                <span class="font-medium">Berhasil!</span> {{ session('success') }}
+            </div>
+            <button @click="show = false" type="button" class="ms-auto -mx-1.5 -my-1.5 bg-teal-50 text-teal-500 rounded-lg focus:ring-2 focus:ring-teal-400 p-1.5 hover:bg-teal-200 inline-flex items-center justify-center h-8 w-8">
+                <span class="sr-only">Close</span>
+                <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+                </svg>
+            </button>
+        </div>
+    @endif
+
     <!-- Right main content: Title Bar Kustom -->
     <x-title-bar 
         title="Riwayat Laporan Saya" 
@@ -19,12 +42,12 @@
             </a>
         </div>
 
-        {{-- Pesan Notifikasi Sukses / Error --}}
-        @if(session('success'))
+        {{-- Pesan Notifikasi Error --}}
+        <!-- @if(session('success'))
             <div class="mb-4 p-4 bg-green-100 text-green-700 rounded-lg text-sm flex items-center justify-between">
                 <span>{{ session('success') }}</span>
             </div>
-        @endif
+        @endif -->
 
         @if(session('error'))
             <div class="mb-4 p-4 bg-red-100 text-red-700 rounded-lg text-sm flex items-center justify-between">
@@ -61,8 +84,27 @@
                 </td>
                 
                 <!-- Deskripsi -->
-                <td class="px-5 py-4 text-gray-600 max-w-xs break-words whitespace-normal">
-                    {{ $report->desc }}
+                <td class="px-5 py-4 text-gray-600 max-w-xs break-words whitespace-normal" 
+                    x-data="{ expanded: false, isLongText: false }" 
+                    x-init="$nextTick(() => { 
+                        isLongText = $refs.descText.scrollHeight > $refs.descText.clientHeight; 
+                    })">
+                    
+                    <!-- Teks Deskripsi -->
+                    <div class="relative">
+                        <p x-ref="descText" 
+                        :class="expanded ? '' : 'line-clamp-3 overflow-hidden'" 
+                        class="transition-all duration-200">
+                            {{ $report->desc }}
+                        </p>
+                    </div>
+
+                    <!-- Tombol hanya muncul (v-show / x-show) jika isLongText bernilai true -->
+                    <button x-show="isLongText" 
+                            @click="expanded = !expanded" 
+                            class="text-xs text-teal-normal-01 hover:text-teal-normal-02 font-medium mt-1 focus:outline-none inline-block">
+                        <span x-text="expanded ? 'Tampilkan Lebih Sedikit' : 'Lihat Selengkapnya'"></span>
+                    </button>
                 </td>
                 
                 <!-- Bukti Foto -->
@@ -78,13 +120,17 @@
                 
                 <!-- Status -->
                 <td class="px-5 py-4">
-                    @if($report->status === 'menunggu')
+                    @if($report->status === 'baru')
                         <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-700">
-                            Menunggu
+                            Menunggu Diproses
                         </span>
-                    @elseif($report->status === 'disetujui')
+                    @elseif($report->status === 'selesai')
                         <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-700">
-                            Disetujui
+                            Selesai
+                        </span>
+                    @elseif($report->status === 'diproses')
+                        <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-700">
+                            Sedang Diproses
                         </span>
                     @elseif($report->status === 'dibatalkan')
                         <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-700">
@@ -104,7 +150,7 @@
                 
                 <!-- Aksi -->
                 <td class="px-5 py-4 text-center">
-                    @if($report->status === 'menunggu')
+                    @if($report->status === 'baru')
                         <form action="{{ route('reports.cancel', $report->id) }}" method="POST" onsubmit="return confirm('Apakah kamu yakin ingin membatalkan laporan ini?')">
                             @csrf
                             @method('PATCH')
@@ -113,7 +159,7 @@
                             </button>
                         </form>
                     @else
-                        <span class="text-gray-400 italic text-xs">Tidak dapat dibatalkan</span>
+                        <span class="text-gray-400 italic text-xs">Tidak tersedia</span>
                     @endif
                 </td>
             </tr>

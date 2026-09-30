@@ -7,7 +7,7 @@ use App\Models\Room;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
-
+use Carbon\Carbon;
 
 class ReservationController extends Controller
 {
@@ -21,10 +21,7 @@ class ReservationController extends Controller
             ->latest()
             ->get();
 
-        return view(
-            'user.my-reservations',
-            compact('reservations')
-        );
+        return view('user.my-reservations', compact('reservations'));
     }
 
     /**
@@ -33,11 +30,7 @@ class ReservationController extends Controller
     public function create()
     {
         $rooms = Room::where('is_avail', true)->get();
-
-        return view(
-            'user.reservation-form',
-            compact('rooms')
-        );
+        return view('user.reservation-form', compact('rooms'));
     }
 
     /**
@@ -86,7 +79,9 @@ class ReservationController extends Controller
     }
 
     /**
-     * Mengambil jadwal booking ruangan
+     * Mengambil jadwal booking ruangan (Time Blocking)
+     * Hanya status 'disetujui' dan 'menunggu' yang memblok slot waktu.
+     * Status 'dibatalkan' dan 'ditolak' membebaskan slot waktu agar tersedia kembali.
      */
     public function availableSlots(Request $request)
     {

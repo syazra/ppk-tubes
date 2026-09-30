@@ -112,7 +112,7 @@ class AdminFacilityTest extends TestCase
                 'end_time' => $end, 'status' => $status,
             ]);
         }
-        foreach ([[$first, 'menunggu', '2026-09-12'], [$first, 'ditolak', '2026-09-13'], [$second, 'disetujui', '2026-09-14'], [$third, 'menunggu', '2026-08-14']] as [$room, $status, $date]) {
+        foreach ([[$first, 'baru', '2026-09-12'], [$first, 'ditolak', '2026-09-13'], [$second, 'selesai', '2026-09-14'], [$third, 'diproses', '2026-08-14']] as [$room, $status, $date]) {
             $report = Report::create(['user_id' => $user->id, 'room_id' => $room->id, 'desc' => 'Rusak', 'image' => 'test.jpg', 'status' => $status]);
             $report->forceFill(['created_at' => $date.' 10:00:00'])->save();
         }

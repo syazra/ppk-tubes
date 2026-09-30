@@ -25,7 +25,7 @@ class FacilityRecapController extends Controller
         $filters = $this->filters($request);
 
         return Inertia::render('Admin/FacilityRecap', [
-            'admin' => $request->user()->only('name', 'email'),
+            'user' => $request->user()->only('name', 'email', 'role', 'account_type'),
             'csrfToken' => csrf_token(),
             'filters' => $filters,
             'locations' => Room::query()->distinct()->orderBy('location')->pluck('location'),
@@ -60,7 +60,7 @@ class FacilityRecapController extends Controller
                 }
                 fwrite($output, "\xEF\xBB\xBF");
                 fputcsv($output, ['Periode', $filters['from'].' s.d. '.$filters['to']]);
-                fputcsv($output, ['Kriteria', 'Reservasi disetujui; laporan kerusakan menunggu/disetujui']);
+                fputcsv($output, ['Kriteria', 'Reservasi disetujui; laporan kerusakan baru/diproses/selesai']);
                 fputcsv($output, []);
                 fputcsv($output, ['Jenis', 'Fasilitas/Lokasi', 'Lokasi', 'Status', 'Jumlah Fasilitas', 'Reservasi Disetujui', 'Jam Terpakai', 'Laporan Kerusakan']);
                 foreach ($data['facilities'] as $row) {

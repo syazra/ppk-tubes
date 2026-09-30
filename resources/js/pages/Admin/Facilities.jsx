@@ -1,6 +1,6 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import { useState } from 'react';
-import AdminLayout from '../../components/AdminLayout';
+import AppLayout from '../../components/AppLayout';
 
 const inputClass = 'mt-1 block w-full rounded-xl border-gray-300 bg-white-01 px-4 py-3 text-sm text-teal-darker focus:border-teal-dark-01 focus:ring-teal-dark-01';
 const buttonClass = 'rounded-xl bg-teal-dark-01 px-5 py-3 text-sm font-semibold text-white-01 hover:bg-teal-dark-02 disabled:opacity-60';
@@ -39,7 +39,7 @@ function FacilityFields({ form, types, prefix }) {
     </>;
 }
 
-export default function Facilities({ admin, csrfToken, urls, status, rooms, filters, types }) {
+export default function Facilities({ user, csrfToken, urls, status, rooms, filters, types }) {
     const createForm = useForm({ ...emptyRoom });
     const editForm = useForm({ ...emptyRoom });
     const filterForm = useForm({ search: filters.search, availability: filters.availability });
@@ -79,7 +79,7 @@ export default function Facilities({ admin, csrfToken, urls, status, rooms, filt
 
     return <>
         <Head title="Kelola Fasilitas" />
-        <AdminLayout admin={admin} csrfToken={csrfToken} urls={urls} active="facilities" title="Kelola Fasilitas" subtitle="Tambah, perbarui, dan atur ketersediaan fasilitas kampus.">
+        <AppLayout user={user} csrfToken={csrfToken} urls={urls} active="facilities" title="Kelola Fasilitas" subtitle="Tambah, perbarui, dan atur ketersediaan fasilitas kampus.">
             <div className="max-w-7xl space-y-6 px-6 pb-8 lg:px-8">
                 {status && <p role="status" className="rounded-xl border border-teal-light-03 bg-teal-light-01 px-4 py-3 text-sm text-teal-darker">{status}</p>}
                 <section className="rounded-xl border border-green-light-03 bg-white-01 p-6 shadow-sm">
@@ -109,7 +109,7 @@ export default function Facilities({ admin, csrfToken, urls, status, rooms, filt
                     <div className="mt-5 flex flex-wrap items-center justify-between gap-3 text-sm"><p className="text-gray-600">Menampilkan {rooms.from ?? 0}–{rooms.to ?? 0} dari {rooms.total} fasilitas</p><nav aria-label="Halaman fasilitas" className="flex gap-2">{rooms.links.map((link, index) => link.url ? <Link key={index} href={link.url} preserveScroll className={`rounded border px-3 py-1.5 ${link.active ? 'border-teal-dark-01 bg-teal-dark-01 text-white-01' : 'border-gray-300 text-teal-darker'}`}>{pageLabel(link.label)}</Link> : <span key={index} className="rounded border border-gray-200 px-3 py-1.5 text-gray-400">{pageLabel(link.label)}</span>)}</nav></div>
                 </section>
             </div>
-        </AdminLayout>
+        </AppLayout>
         {editing && <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onKeyDown={event => { if (event.key === 'Escape') setEditing(null); }}><div role="dialog" aria-modal="true" aria-labelledby="edit-facility-title" className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl bg-white-01 p-6 shadow-xl"><h2 id="edit-facility-title" className="text-xl font-bold text-teal-darker">Ubah fasilitas</h2><form onSubmit={save} className="mt-5 grid gap-4 sm:grid-cols-2"><FacilityFields form={editForm} types={types} prefix="edit" /><div className="flex justify-end gap-3 sm:col-span-2"><button type="button" onClick={() => setEditing(null)} className="rounded-xl border border-gray-300 px-5 py-3 text-sm font-semibold">Batal</button><button type="submit" disabled={editForm.processing} className={buttonClass}>{editForm.processing ? 'Menyimpan...' : 'Simpan perubahan'}</button></div></form></div></div>}
     </>;
 }
