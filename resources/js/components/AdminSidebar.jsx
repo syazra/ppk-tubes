@@ -5,6 +5,8 @@ import AdminIcon, { adminInitials } from './AdminIcon';
 const navigation = [
     { key: 'dashboard', icon: 'home', label: 'Dasbor' },
     { key: 'registrations', icon: 'student', label: 'Registrasi Akun' },
+    { key: 'facilities', icon: 'room', label: 'Fasilitas' },
+    { key: 'recap', icon: 'chart', label: 'Rekap Fasilitas' },
     { key: 'profile', icon: 'user', label: 'Profil' },
 ];
 

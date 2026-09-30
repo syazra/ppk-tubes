@@ -31,6 +31,8 @@ class ProfileController extends Controller
                 'urls' => [
                     'dashboard' => route('admin.dashboard'),
                     'registrations' => route('admin.registrations.index'),
+                    'facilities' => route('admin.facilities.index'),
+                    'recap' => route('admin.facilities.recap'),
                     'profile' => route('profile.edit'),
                     'profileUpdate' => route('profile.update'),
                     'profileDestroy' => route('profile.destroy'),

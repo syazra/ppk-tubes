@@ -52,6 +52,7 @@ export default function Dashboard({ admin, status, csrfToken, urls }) {
                         <p className="mt-2 max-w-lg text-sm leading-relaxed text-teal-dark-02/75">Mulai kelola akun dan pantau aktivitas reservasi kampus Anda.</p>
                     </div>
                     <Link href={urls.registrations} className="admin-primary-link"><AdminIcon name="student" className="h-4 w-4" />Kelola akun<AdminIcon name="arrow" className="h-4 w-4" /></Link>
+                    <Link href={urls.facilities} className="admin-primary-link"><AdminIcon name="room" className="h-4 w-4" />Kelola fasilitas<AdminIcon name="arrow" className="h-4 w-4" /></Link>
                 </section>
 
                 <section aria-labelledby="summary-title">

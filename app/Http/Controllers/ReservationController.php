@@ -6,6 +6,7 @@ use App\Models\Reservation;
 use App\Models\Room;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 
 class ReservationController extends Controller
@@ -92,7 +93,7 @@ class ReservationController extends Controller
         $request->validate([
             'room_id' => [
                 'required',
-                'exists:rooms,id'
+                Rule::exists('rooms', 'id')->where('is_avail', true)
             ],
 
             'date' => [
@@ -140,7 +141,7 @@ class ReservationController extends Controller
         $validated = $request->validate([
             'room_id' => [
                 'required',
-                'exists:rooms,id'
+                Rule::exists('rooms', 'id')->where('is_avail', true)
             ],
             'desc' => [
                 'required',
