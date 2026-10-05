@@ -8,6 +8,8 @@ use App\Http\Controllers\OperatorController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+use Endroid\QrCode\Builder\Builder;
+use Endroid\QrCode\Writer\SvgWriter;
 
 // 1. Route Publik & Guest
 Route::get('/', function () {
@@ -55,8 +57,14 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/', 'store')->name('store');
         
         Route::get('/{reservation}/ticket', 'ticket')->name('ticket');
+        Route::get('/{reservation}/qrcode', 'qrcode')->name('qrcode');
         Route::patch('/{reservation}/cancel', 'cancel')->name('cancel');
     });
+
+    Route::get('/qrcode/{id}', function ($id) {
+            return QrCode::size(150)
+                ->generate($id);
+        });
 
     // -- User Reports --
     Route::controller(ReportController::class)->group(function () {
@@ -157,6 +165,7 @@ Route::middleware(['auth', 'verified'])->prefix('operator')->name('operator.')->
     })->name('reports');
     Route::patch('/reservations/{id}/approve', [OperatorController::class, 'approve'])->name('reservations.approve');
     Route::patch('/reservations/{id}/reject', [OperatorController::class, 'reject'])->name('reservations.reject');
+    
 });
 
 // 4. Route Khusus Admin

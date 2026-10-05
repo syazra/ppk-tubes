@@ -7,6 +7,8 @@ use App\Models\Room;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use Endroid\QrCode\Builder\Builder;
+use Endroid\QrCode\Writer\SvgWriter;
 
 class ReservationController extends Controller
 {
@@ -332,6 +334,53 @@ class ReservationController extends Controller
                 'success',
                 'Reservasi berhasil dibuat'
             );
+    }
+
+    public function qrcode(Reservation $reservation)
+    {
+        abort_if(
+            $reservation->user_id != Auth::id(),
+            403
+        );
+
+
+        $url = route(
+            'reservations.ticket',
+            $reservation->id
+        );
+
+
+        $result = new Builder(
+            writer: new SvgWriter(),
+            data: $url,
+            size: 150
+        );
+
+        $result = $result->build();
+
+
+        return response($result->getString())
+            ->header(
+                'Content-Type',
+                'image/svg+xml'
+            );
+
+        
+    }
+
+    public function ticket(Reservation $reservation)
+    {
+        abort_if(
+            $reservation->user_id != Auth::id(),
+            403
+        );
+
+        $reservation->load('room');
+
+        return view(
+            'user.ticket',
+            compact('reservation')
+        );
     }
 
 

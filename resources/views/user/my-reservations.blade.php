@@ -263,10 +263,10 @@
             </div>
 
             <!-- Info singkat + QR -->
-            <div class="flex justify-between items-start mb-5">
+            <div class="relative mb-6">
 
                 <!-- Kiri -->
-                <div class="space-y-3">
+                <div class="space-y-3 right-5">
 
                     <div>
                         <p class="text-gray-500 text-xs">
@@ -283,20 +283,18 @@
                             ID Reservasi
                         </p>
 
-                        <p class="font-semibold text-teal-900">
-                            RSV-{{ $reservation->id ?? '' }}
-                        </p>
+                        <p id="ticketId" class="font-semibold text-teal-900"></p>
                     </div>
 
                 </div>
 
 
                 <!-- QR kanan -->
-                <div class="border rounded-lg p-3">
+                <div class="absolute top-0 right-6">
                     <img id="ticketQr"
                         src=""
                         alt="QR Code"
-                        class="w-24 h-24">
+                        class="w-38 h-38">
                 </div>
 
             </div>
@@ -316,10 +314,12 @@
 
             document.getElementById('ticketModal')
                 .classList.remove('hidden');
+            document.getElementById('ticketId').innerHTML =
+                `RSV-${reservation.id}`;
 
             // tampilkan QR Code
             document.getElementById('ticketQr').src =
-                `/qrcode/${reservation.id}`;
+                `/reservations/${reservation.id}/qrcode`;
 
             document.getElementById('ticketContent').innerHTML = `
 
