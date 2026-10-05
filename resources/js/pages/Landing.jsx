@@ -71,7 +71,7 @@ const styles = `
 .cs-hero { position: relative; background: linear-gradient(90deg, #073c3594, #073c3538 70%), url('${heroBackground}') center / cover no-repeat; color: var(--paper); overflow: hidden; }
 .cs-hero:before { content: ''; position: absolute; inset: 0; background: linear-gradient(120deg, #ffffff0d, #d8ece306 55%, #073c3514); pointer-events: none; }
 .cs-hero:after { content: ''; position: absolute; inset: auto 0 0; height: 120px; background: linear-gradient(transparent, #073c3538); pointer-events: none; }
-.cs-hero-grid { position: relative; z-index: 1; display: grid; grid-template-columns: 1fr 1.04fr; align-items: center; gap: 64px; padding-block: 164px 90px; min-height: 770px; }
+.cs-hero-grid { position: relative; z-index: 1; display: grid; grid-template-columns: 1fr 1.04fr; align-items: center; gap: 64px; padding-block: 130px 72px; min-height: 100vh; min-height: 100svh; }
 .cs-hero .cs-eyebrow { color: #e3efcf; margin-bottom: 27px !important; }
 .cs-hero-content > * { animation: cs-arrive .75s cubic-bezier(.22, 1, .36, 1) both; animation-delay: var(--intro, 0s); }
 .cs-hero-content > :nth-child(2) { animation-delay: calc(var(--intro, 0s) + .06s); }
@@ -179,7 +179,7 @@ const styles = `
 @media (max-width: 1050px) {
     .cs-wrap { width: calc(100% - 64px); }
     .cs-nav-links { gap: 20px; }
-    .cs-hero-grid { gap: 32px; min-height: 720px; }
+    .cs-hero-grid { gap: 32px; }
     .cs-hero h1 { font-size: 62px; }
     .cs-preview-heading { flex-wrap: wrap; }
     .cs-preview-body { padding: 20px; }
