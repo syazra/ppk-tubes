@@ -4,6 +4,7 @@ import heroBackground from '../../images/landing-botanical.webp';
 import oggRegular from '../../fonts/ogg-regular.otf';
 import oggItalic from '../../fonts/ogg-regular-italic.otf';
 import Icon from '../components/Icons';
+import IntroOverlay, { INTRO_DELAY, useIntro } from '../components/IntroOverlay';
 
 const styles = `
 @font-face { font-family: 'CampuSpace Ogg'; src: url('${oggRegular}') format('opentype'); font-weight: 400; font-style: normal; font-display: swap; }
@@ -47,7 +48,7 @@ const styles = `
 .cs-skip { position: fixed; top: 8px; left: 12px; z-index: 100; padding: 12px 20px; background: var(--lime); transform: translateY(-160%); }
 .cs-skip:focus { transform: none; }
 .cs main { scroll-margin-top: 82px; }
-.cs-nav { position: fixed; top: 0; left: 0; right: 0; z-index: 30; background: linear-gradient(90deg, #00A991, #11695D); color: var(--paper); border-bottom: 1px solid #ffffff1a; box-shadow: 0 4px 24px #001e2310; transition: box-shadow .25s ease; }
+.cs-nav { animation: cs-nav-in .7s calc(var(--intro, 0s) + .05s) cubic-bezier(.22, 1, .36, 1) both; position: fixed; top: 0; left: 0; right: 0; z-index: 30; background: linear-gradient(90deg, #00A991, #11695D); color: var(--paper); border-bottom: 1px solid #ffffff1a; box-shadow: 0 4px 24px #001e2310; transition: box-shadow .25s ease; }
 .cs-nav[data-scrolled="true"] { box-shadow: 0 8px 30px #003b3326; }
 .cs-reading-progress { position: absolute; bottom: -1px; left: 0; width: 100%; height: 2px; background: var(--lime); transform: scaleX(0); transform-origin: left; pointer-events: none; }
 .cs-nav-inner { height: 82px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
@@ -72,18 +73,18 @@ const styles = `
 .cs-hero:after { content: ''; position: absolute; inset: auto 0 0; height: 120px; background: linear-gradient(transparent, #073c3538); pointer-events: none; }
 .cs-hero-grid { position: relative; z-index: 1; display: grid; grid-template-columns: 1fr 1.04fr; align-items: center; gap: 64px; padding-block: 164px 90px; min-height: 770px; }
 .cs-hero .cs-eyebrow { color: #e3efcf; margin-bottom: 27px !important; }
-.cs-hero-content > * { animation: cs-arrive .75s cubic-bezier(.22, 1, .36, 1) both; }
-.cs-hero-content > :nth-child(2) { animation-delay: .06s; }
-.cs-hero-content > :nth-child(3) { animation-delay: .12s; }
-.cs-hero-content > :nth-child(4) { animation-delay: .18s; }
-.cs-hero-content > :nth-child(5) { animation-delay: .24s; }
+.cs-hero-content > * { animation: cs-arrive .75s cubic-bezier(.22, 1, .36, 1) both; animation-delay: var(--intro, 0s); }
+.cs-hero-content > :nth-child(2) { animation-delay: calc(var(--intro, 0s) + .06s); }
+.cs-hero-content > :nth-child(3) { animation-delay: calc(var(--intro, 0s) + .12s); }
+.cs-hero-content > :nth-child(4) { animation-delay: calc(var(--intro, 0s) + .18s); }
+.cs-hero-content > :nth-child(5) { animation-delay: calc(var(--intro, 0s) + .24s); }
 .cs-hero h1 { font-size: clamp(60px, 6.3vw, 86px); line-height: 1.08; margin-bottom: 28px; text-shadow: 0 2px 24px #00362d20; }
 .cs-hero h1 em { color: #d6ebb4; font-weight: 400; }
 .cs-hero-copy { max-width: 405px; color: #edf2e8; font-size: 16px; line-height: 1.85; }
 .cs-hero-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 32px; }
 .cs-hero-note { display: flex; align-items: center; gap: 7px; margin-top: 22px !important; color: #e0e9dc; font-size: 12px; }
 .cs-hero-note svg { width: 14px; height: 14px; }
-.cs-art { position: relative; min-width: 0; animation: cs-arrive .9s .18s cubic-bezier(.22, 1, .36, 1) both; }
+.cs-art { position: relative; min-width: 0; animation: cs-arrive .9s calc(var(--intro, 0s) + .18s) cubic-bezier(.22, 1, .36, 1) both; }
 .cs-reservation-preview { position: relative; width: 100%; background: #f7fbef; color: var(--ink); border: 1px solid #d5e1cc; border-radius: 16px; overflow: hidden; box-shadow: 0 24px 64px #002c3045; }
 .cs-preview-bar { display: flex; align-items: center; gap: 14px; padding: 16px 24px; background: #edf3e6; border-bottom: 1px solid #dce5d5; font-size: 10px; letter-spacing: .04em; color: #52664e; }
 .cs-preview-dots { display: flex; gap: 5px; }
@@ -164,6 +165,7 @@ const styles = `
 .cs[data-past-hero="true"] .cs-back-top { opacity: 1; visibility: visible; pointer-events: auto; transform: translateY(0); }
 .cs-back-top:hover { background: var(--teal); }
 .cs-back-top .cs-arrow { transform: rotate(180deg); }
+@keyframes cs-nav-in { from { opacity: 0; transform: translateY(-100%); } to { opacity: 1; transform: translateY(0); } }
 @keyframes cs-arrive { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes cs-answer-in { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes cs-menu-in { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
@@ -311,6 +313,7 @@ const faqs = [
 
 export default function Landing({ loginUrl, reservationUrl, createReservationUrl }) {
     const [menuOpen, setMenuOpen] = useState(false);
+    const intro = useIntro();
     const [activeSection, setActiveSection] = useState('');
     const rootRef = useRef(null);
     const navRef = useRef(null);
@@ -454,7 +457,8 @@ export default function Landing({ loginUrl, reservationUrl, createReservationUrl
                 <link rel="preload" href={heroBackground} as="image" />
             </Head>
             <style>{styles}</style>
-            <div className="cs" lang="id" id="atas" ref={rootRef}>
+            <div className="cs" lang="id" id="atas" ref={rootRef} style={intro ? { '--intro': `${INTRO_DELAY}s` } : undefined}>
+                {intro && <IntroOverlay />}
                 <a className="cs-skip" href="#konten">Langsung ke konten</a>
                 <header className="cs-nav" ref={navRef} onKeyDown={closeOnEscape}>
                     <div className="cs-wrap cs-nav-inner">

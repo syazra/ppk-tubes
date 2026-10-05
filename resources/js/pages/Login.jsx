@@ -5,6 +5,7 @@ import heroBackground from '../../images/landing-botanical.webp';
 import oggRegular from '../../fonts/ogg-regular.otf';
 import oggItalic from '../../fonts/ogg-regular-italic.otf';
 import Icon from '../components/Icons';
+import IntroOverlay, { INTRO_DELAY, useIntro } from '../components/IntroOverlay';
 
 const styles = `
 @font-face { font-family: 'CampuSpace Ogg'; src: url('${oggRegular}') format('opentype'); font-weight: 400; font-style: normal; font-display: swap; }
@@ -28,6 +29,7 @@ const styles = `
 .lg-fog-1 { top: 10%; height: 60%; opacity: .1; animation: lg-drift 90s linear infinite; }
 .lg-fog-2 { bottom: 0; height: 55%; opacity: .08; background-size: 1400px 100%; animation: lg-drift-b 140s linear infinite; }
 .lg-mist { position: absolute; inset: auto 0 0; height: 45%; pointer-events: none; background: linear-gradient(transparent, #cfeee51a); }
+.lg-spark { position: absolute; width: 3px; height: 3px; border-radius: 50%; background: var(--lime); box-shadow: 0 0 6px #d3e9a6aa; pointer-events: none; opacity: 0; animation: lg-rise linear infinite; }
 .lg-drop { position: absolute; z-index: 0; pointer-events: none; border-radius: 50% 50% 50% 50% / 58% 58% 42% 42%; background: radial-gradient(circle at 32% 26%, #ffffffd0 0 9%, #ffffff10 32%, #04302a22 72%, #ffffff40 100%); box-shadow: 0 1px 2px #00201c26, inset 0 -1px 2px #ffffff30; }
 .lg-drop.slide { animation: lg-drip linear infinite; }
 .lg-drop.slide:before { content: ''; position: absolute; left: 50%; bottom: 80%; width: 38%; height: var(--drip); transform: translateX(-50%); border-radius: 99px; background: linear-gradient(transparent, #ffffff33); }
@@ -92,12 +94,13 @@ const styles = `
 @keyframes lg-float { 0%, 100% { transform: translate(0, 0) scale(1); } 50% { transform: translate(40px, 30px) scale(1.12); } }
 @keyframes lg-drift { to { background-position-x: 1000px; } }
 @keyframes lg-drift-b { to { background-position-x: -1400px; } }
+@keyframes lg-rise { 0% { transform: translateY(0) scale(.6); opacity: 0; } 15% { opacity: .7; } 100% { transform: translateY(-110vh) scale(1.1); opacity: 0; } }
 @keyframes lg-drip { 0%, 55% { transform: translateY(0); } 100% { transform: translateY(var(--drip)); } }
 @keyframes lg-shimmer { to { background-position: -200% 0; } }
 @keyframes lg-bob { 0%, 100% { transform: rotate(-4deg); } 50% { transform: rotate(4deg) translateY(-2px); } }
 @keyframes lg-spin { to { transform: rotate(360deg); } }
 @media (max-width: 520px) { .lg-card { padding: 36px 24px 28px; } .lg-title { font-size: 32px; } .lg-back { left: 16px; top: 14px; } }
-@media (prefers-reduced-motion: reduce) { .lg *, .lg *:before, .lg *:after { animation: none !important; transition: none !important; } .lg-drop.slide { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .lg *, .lg *:before, .lg *:after { animation: none !important; transition: none !important; } .lg-drop.slide { animation: none; } .lg-spark { display: none; } }
 @media (forced-colors: active) { .lg-card { border: 1px solid CanvasText; background: Canvas; } }
 `;
 
@@ -119,7 +122,7 @@ const droplets = Array.from({ length: 14 }, (_, i) => {
     return { slide, style: { left: `${random(i + 50) * 100}%`, top: `${random(i + 90) * 100}%`, width: size, height: size * (slide ? 1.25 : 1.1), opacity: 0.2 + random(i + 7) * 0.25, ...(slide ? { animationDuration: `${14 + random(i) * 12}s`, animationDelay: `${-random(i + 3) * 14}s`, '--drip': `${70 + random(i + 5) * 140}px` } : {}) } };
 });
 
-const container = { hidden: {}, show: { transition: { staggerChildren: 0.07, delayChildren: 0.15 } } };
+const sparks = Array.from({ length: 16 }, (_, i) => ({ left: `${(i * 7 + 5) % 100}%`, bottom: `-${(i % 4) * 20 + 10}px`, duration: `${10 + (i % 5) * 3}s`, delay: `${-(i * 1.9)}s` }));
 const item = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 220, damping: 24 } } };
 
 function FieldError({ id, message }) {
@@ -136,6 +139,9 @@ function FieldError({ id, message }) {
 
 export default function Login({ status, landingUrl = '/', demoAccounts = [] }) {
     const reduced = useReducedMotion();
+    const intro = useIntro();
+    const introDelay = intro ? INTRO_DELAY : 0;
+    const container = { hidden: {}, show: { transition: { staggerChildren: 0.07, delayChildren: 0.15 + introDelay } } };
     const { data, setData, post, processing, errors, clearErrors, reset } = useForm({ email: '', password: '', remember: false });
     const [showPassword, setShowPassword] = useState(false);
     const [capsLock, setCapsLock] = useState(false);
@@ -192,6 +198,7 @@ export default function Login({ status, landingUrl = '/', demoAccounts = [] }) {
                 <link rel="preload" href={oggRegular} as="font" type="font/otf" crossOrigin="anonymous" />
             </Head>
             <style>{styles}</style>
+            {intro && <IntroOverlay />}
             <div className="lg" lang="id">
                 <div className="lg-orb lg-orb-1" aria-hidden="true" />
                 <div className="lg-orb lg-orb-2" aria-hidden="true" />
@@ -200,14 +207,15 @@ export default function Login({ status, landingUrl = '/', demoAccounts = [] }) {
                 <div className="lg-fog lg-fog-1" aria-hidden="true" style={{ backgroundImage: fogImage(7) }} />
                 <div className="lg-fog lg-fog-2" aria-hidden="true" style={{ backgroundImage: fogImage(23) }} />
                 <div className="lg-mist" aria-hidden="true" />
+                {sparks.map((spark, index) => <i className="lg-spark" aria-hidden="true" key={index} style={{ left: spark.left, bottom: spark.bottom, animationDuration: spark.duration, animationDelay: spark.delay }} />)}
                 {droplets.map((drop, index) => <i className={`lg-drop${drop.slide ? ' slide' : ''}`} aria-hidden="true" key={index} style={drop.style} />)}
 
-                <motion.div initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4 }}>
+                <motion.div initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4 + introDelay }}>
                     <Link href={landingUrl} className="lg-back"><Icon name="landing-arrow" variant="landing" className="" />Kembali ke beranda</Link>
                 </motion.div>
 
                 <div className="lg-stage" onPointerMove={onPointerMove} onPointerLeave={onPointerLeave}>
-                    <motion.div initial={reduced ? false : { opacity: 0, y: 40, scale: 0.94 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ type: 'spring', stiffness: 120, damping: 18 }}>
+                    <motion.div initial={reduced ? false : { opacity: 0, y: 40, scale: 0.94 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ type: 'spring', stiffness: 120, damping: 18, delay: introDelay }}>
                         <motion.div key={shakeKey} animate={cardAnimation} transition={{ duration: 0.45 }}>
                             <motion.main className="lg-card" style={reduced ? undefined : { rotateX, rotateY }}>
                                 <motion.div className="lg-shine" style={{ background: glare }} aria-hidden="true" />
