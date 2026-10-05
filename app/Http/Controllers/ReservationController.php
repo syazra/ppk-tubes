@@ -17,10 +17,94 @@ class ReservationController extends Controller
     {
         $reservations = Reservation::with('room')
             ->where('user_id', Auth::id())
-            ->latest()
+
+            // Pencarian
+            ->when(request('search'), function ($query) {
+
+                $search = request('search');
+
+                $query->where(function ($q) use ($search) {
+
+                    $q->whereHas('room', function ($room) use ($search) {
+                        $room->where('name', 'like', "%$search%")
+                            ->orWhere('type', 'like', "%$search%");
+                    })
+                    ->orWhere('date_to_reserv', 'like', "%$search%");
+
+                });
+
+            })
+
+
+            // Filter status
+            ->when(request('status'), function ($query) {
+
+                $query->where(
+                    'status',
+                    request('status')
+                );
+
+            })
+
+
+            // Sorting
+            ->when(request('sort'), function ($query) {
+
+                switch (request('sort')) {
+
+                    // waktu reservasi terdekat
+                    case 'reservation_near':
+                        $query->orderBy('date_to_reserv', 'asc')
+                            ->orderBy('start_time', 'asc');
+                        break;
+
+
+                    // waktu reservasi terjauh
+                    case 'reservation_far':
+                        $query->orderBy('date_to_reserv', 'desc')
+                            ->orderBy('start_time', 'desc');
+                        break;
+
+
+                    // pengajuan terbaru
+                    case 'created_near':
+                        $query->orderBy('created_at', 'desc');
+                        break;
+
+
+                    // pengajuan terlama
+                    case 'created_far':
+                        $query->orderBy('created_at', 'asc');
+                        break;
+
+
+                    default:
+                        $query->latest();
+                }
+
+            }, function ($query) {
+                // default kalau tidak pilih filter
+                $query->latest();
+            })
+
+
             ->get();
 
-        return view('user.my-reservations', compact('reservations'));
+
+        if(request()->ajax()) {
+
+            return view(
+                'user.partials.reservation-table',
+                compact('reservations')
+            )->render();
+
+        }
+
+
+        return view(
+            'user.my-reservations',
+            compact('reservations')
+        );
     }
 
     /**
@@ -32,21 +116,7 @@ class ReservationController extends Controller
         return view('user.reservation-form', compact('rooms'));
     }
 
-    /**
-     * Detail tiket reservasi
-     */
-    public function ticket(Reservation $reservation)
-    {
-        abort_if(
-            $reservation->user_id != Auth::id(),
-            403
-        );
-
-        return view(
-            'user.reservation-ticket',
-            compact('reservation')
-        );
-    }
+    
 
     /**
      * Membatalkan reservasi
@@ -77,6 +147,8 @@ class ReservationController extends Controller
             );
     }
 
+    
+
     /**
      * Mengambil jadwal booking ruangan (Time Blocking)
      * Hanya status 'disetujui' dan 'menunggu' yang memblok slot waktu.
@@ -106,12 +178,10 @@ class ReservationController extends Controller
             )
 
             // yang masih dianggap memakai ruangan
-            ->whereNotIn(
+            ->where(
                 'status',
-                [
-                    'ditolak',
-                    'dibatalkan'
-                ]
+                'disetujui'
+                
             )
 
             ->get();
@@ -154,6 +224,18 @@ class ReservationController extends Controller
                 'date_format:H:i'
             ]
         ]);
+
+        $reservationStart = Carbon::parse(
+            $validated['date_to_reserv'].' '.$validated['start_time']
+        );
+
+        if($reservationStart->isBefore(now()->addHours(12))){
+            return back()
+                ->withErrors([
+                    'time' => 'Reservasi minimal dilakukan 12 jam sebelumnya.'
+                ])
+                ->withInput();
+        }
 
         /*
          * Cek jam operasional
@@ -203,12 +285,9 @@ class ReservationController extends Controller
                 'date_to_reserv',
                 $validated['date_to_reserv']
             )
-            ->whereNotIn(
+            ->where(
                 'status',
-                [
-                    'ditolak',
-                    'dibatalkan'
-                ]
+                'disetujui'
             )
 
             ->where(function($query) use ($validated){
@@ -254,4 +333,7 @@ class ReservationController extends Controller
                 'Reservasi berhasil dibuat'
             );
     }
+
+
+
 }
