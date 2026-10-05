@@ -3,20 +3,30 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Room; // Panggil model Room
-use App\Models\Report; // Panggil model Report untuk menyimpan data
-use Illuminate\Support\Facades\Auth; // Untuk mendeteksi user yang sedang login
-use Illuminate\Support\Facades\Storage;
+use App\Models\Report;
+use App\Models\Room;
+use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
 
 class ReportController extends Controller
 {
     public function create()
     {
-        // Ambil semua data ruangan dari database[cite: 1]
-        $rooms = Room::where('is_avail', true)->get();
-        
-        // Kirim data ruangan ke view
-        return view('user.report-form', compact('rooms'));
+        $rooms = Room::where('is_avail', true)
+            ->get(['id', 'name', 'location', 'type']);
+
+        return Inertia::render('User/ReportForm', [
+            'rooms' => $rooms,
+            'csrfToken' => csrf_token(),
+            'urls' => [
+                'dashboard' => route('user.dashboard'),
+                'reports' => route('reports.index'),
+                'reservations' => route('reservations.index'),
+                'profile' => route('profile.edit'),
+                'guest' => route('landing'),
+                'logout' => route('logout'),
+            ],
+        ]);
     }
 
     public function store(Request $request)
@@ -65,7 +75,19 @@ class ReportController extends Controller
                     ->oldest()
                     ->get();
 
-        return view('user.my-reports', compact('reports'));
+        return Inertia::render('User/MyReports', [
+            'reports' => $reports,
+            'csrfToken' => csrf_token(),
+            'error' => session('error'),
+            'urls' => [
+                'dashboard' => route('user.dashboard'),
+                'reports' => route('reports.index'),
+                'reservations' => route('reservations.index'),
+                'profile' => route('profile.edit'),
+                'guest' => route('landing'),
+                'logout' => route('logout'),
+            ],
+        ]);
     }
 
     public function cancel(Report $report)

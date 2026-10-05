@@ -2,6 +2,7 @@ import { Head, router, useForm } from '@inertiajs/react';
 import AppLayout from '../../components/AppLayout';
 import FilterTable from '../../components/FilterTable';
 import MetricCard from '../../components/MetricCard';
+import StatusBadge, { getStatusColor } from '../../components/StatusBadge';
 
 const metrics = [
     { summaryKey: 'total', label: 'Total Reservasi', icon: 'calendar' },
@@ -16,15 +17,6 @@ const statusOptions = [
     { value: 'ditolak', label: 'Ditolak' },
     { value: 'dibatalkan', label: 'Dibatalkan' },
 ];
-
-function statusClass(value) {
-    return {
-        disetujui: 'bg-green-100 text-green-700',
-        ditolak: 'bg-red-100 text-red-700',
-        dibatalkan: 'bg-gray-100 text-gray-600',
-        menunggu: 'bg-yellow-100 text-yellow-700',
-    }[value] ?? 'bg-gray-100 text-gray-600';
-}
 
 function formatReservationDate(value) {
     return value
@@ -87,7 +79,7 @@ export default function Reservations({ user, status, csrfToken, urls, reservatio
                         { label: 'Peminjam' },
                         { label: 'Fasilitas' },
                         { label: 'Tanggal & Waktu' },
-                        { label: 'Tujuan Penggunaan' },
+                        { label: 'Deskripsi', type: 'desc' },
                         { label: 'Status' },
                         { label: 'Aksi' },
                     ]}
@@ -105,9 +97,9 @@ export default function Reservations({ user, status, csrfToken, urls, reservatio
                                 <p>{formatReservationDate(reservation.date_to_reserv)}</p>
                                 <p className="text-xs text-gray-500">{formatTime(reservation.start_time)}–{formatTime(reservation.end_time)}</p>
                             </td>
-                            <td className="max-w-xs px-4 py-3 text-gray-600">{reservation.desc}</td>
+                            <td className="whitespace-normal text-xs max-w-xs px-4 py-3 text-gray-600">{reservation.desc}</td>
                             <td className="whitespace-nowrap px-4 py-3">
-                                <span className={`rounded-full px-3 py-1 text-xs ${statusClass(reservation.status)}`}>{statusLabel(reservation.status)}</span>
+                                <StatusBadge color={getStatusColor(reservation.status)}>{statusLabel(reservation.status)}</StatusBadge>
                             </td>
                             <td className="whitespace-nowrap px-4 py-3">
                                 <div className="flex gap-3">

@@ -37,10 +37,8 @@ Route::middleware(['auth'])->group(function () {
         Route::patch('/{reservation}/cancel', 'cancel')->name('cancel');
     });
 
-    Route::controller(ReportController::class)->group(function () {
-        Route::get('/my-reports', 'index')->name('reports.index');
-        Route::get('/report/create', 'create')->name('reports.create');
-        Route::post('/report/store', 'store')->name('reports.store');
-        Route::patch('/reports/{report}/cancel', 'cancel')->name('reports.cancel');
-    });
+    Route::get('/my-reports', [ReportController::class, 'index'])->name('reports.index');
+    Route::get('/report/create', [ReportController::class, 'create'])->name('reports.create');
+    Route::post('/report/store', [ReportController::class, 'store'])->name('reports.store');
+    Route::patch('/reports/{report}/cancel', [ReportController::class, 'cancel'])->name('reports.cancel');
 });

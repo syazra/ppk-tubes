@@ -2,10 +2,10 @@ import { Link } from '@inertiajs/react';
 import { motion } from 'motion/react';
 import Icon, { initials } from './Icons';
 
-const defaultNavigation = [
+const userNavigation = [
     { key: 'dashboard', icon: 'home', label: 'Dasbor' },
-    { key: 'registrations', icon: 'student', label: 'Registrasi' },
-    { key: 'profile', icon: 'user', label: 'Profil' },
+    { key: 'reservations', icon: 'calendar', label: 'Reservasi' },
+    { key: 'reports', icon: 'tool', label: 'Laporan' },
 ];
 
 const adminNavigation = [
@@ -38,17 +38,9 @@ export default function Sidebar({
     const userName = currentUser?.name || 'Pengguna';
     const userEmail = currentUser?.email || '';
 
-    // Determine navigation based on role if not explicitly passed as a prop
-    let navItems = navigation;
-    if (!navItems) {
-        if (currentUser?.role === 'admin') {
-            navItems = adminNavigation;
-        } else if (currentUser?.role === 'operator') {
-            navItems = operatorNavigation;
-        } else {
-            navItems = defaultNavigation;
-        }
-    }
+    const isAdmin = currentUser?.role === 'admin';
+    const isOperator = currentUser?.role === 'operator';
+    const navItems = navigation ?? (isAdmin ? adminNavigation : isOperator ? operatorNavigation : userNavigation);
 
     return (
         <aside className={`app-sidebar ${collapsed ? 'is-collapsed' : ''}`}>
