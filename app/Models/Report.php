@@ -19,6 +19,7 @@ class Report extends Model
         'desc',
         'image',
         'status',
+        'estimated_completion_at',
     ];
 
     /**

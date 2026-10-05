@@ -189,6 +189,7 @@ Route::middleware(['auth', 'verified'])->prefix('operator')->name('operator.')->
                     : null,
                 'status' => $report->status,
                 'created_at' => $report->created_at?->toIso8601String(),
+                'estimated_completion_at' => $report->estimated_completion_at,
             ]);
 
         return Inertia::render('Operator/Reports', [
@@ -205,6 +206,9 @@ Route::middleware(['auth', 'verified'])->prefix('operator')->name('operator.')->
                 'dashboard' => route('operator.dashboard'),
                 'reservations' => route('operator.reservations'),
                 'reports' => route('operator.reports'),
+                'processing' => url('/operator/reports'), // <-- TAMBAHKAN INI
+                'complete' => url('/operator/reports'),   // <-- TAMBAHKAN INI
+                'reject' => url('/operator/reports'),
                 'profile' => route('profile.edit'),
                 'guest' => route('landing'),
                 'logout' => route('logout'),
@@ -214,6 +218,10 @@ Route::middleware(['auth', 'verified'])->prefix('operator')->name('operator.')->
 
     Route::patch('/reservations/{id}/approve', [OperatorController::class, 'approve'])->name('reservations.approve');
     Route::patch('/reservations/{id}/reject', [OperatorController::class, 'reject'])->name('reservations.reject');
+    Route::patch('/reports/{id}/process', [OperatorController::class, 'setProcess'])->name('reports.process');
+    Route::patch('/reports/{id}/complete', [OperatorController::class, 'markAsCompleted'])->name('reports.complete');
+    Route::patch('/reports/{id}/reject', [OperatorController::class, 'rejectReport'])->name('reports.reject');
+    Route::patch('/reports/{id}/extend', [OperatorController::class, 'extendEstimate'])->name('reports.extend');
 });
 
 // 4. Route Khusus Admin
