@@ -2,7 +2,7 @@
     <div>
         <!--LOGO -->
         <div class="h-16 flex items-center px-6 border-b border-teal-light-03/40">
-            <a href="{{ route('guest.dashboard') }}" class="flex items-center gap-3">
+            <a href="{{ route('landing') }}" class="flex items-center gap-3">
                 <x-heroicon-o-academic-cap class="w-8 h-8 stroke-white-01"/>
                 <span class="font-bold text-white-01 text-lg">CampuSpace</span>
             </a>

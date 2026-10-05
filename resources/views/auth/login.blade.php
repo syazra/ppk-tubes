@@ -42,18 +42,19 @@
         </form>
 
         <div class="mt-7 border-t border-gray-200 pt-5 text-center text-sm">
-            @if (Route::has('guest.dashboard'))
-                <a href="{{ route('guest.dashboard') }}" class="font-medium text-gray-600 hover:text-teal-dark-01 hover:underline">Jelajahi sebagai pengunjung</a>
+            @if (Route::has('landing'))
+                <a href="{{ route('landing') }}" class="font-medium text-gray-600 hover:text-teal-dark-01 hover:underline">Jelajahi sebagai pengunjung</a>
             @endif
             @env('local')
             <details class="mt-5 text-left text-gray-600">
                 <summary class="cursor-pointer text-center text-xs font-medium hover:text-teal-dark-01">Gunakan akun demo</summary>
                 <p class="mt-3 text-xs leading-5">Pilih peran untuk mengisi formulir. Kata sandi demo: <strong>password</strong>.</p>
                 <div class="mt-3 grid grid-cols-2 gap-2">
-                    <button type="button" @click="fillDemo('student@students.kampus.ac.id')" class="rounded-lg border border-gray-200 px-3 py-2 text-left text-xs hover:border-teal-dark-01 hover:bg-teal-light-01">Mahasiswa</button>
-                    <button type="button" @click="fillDemo('lecturer@lecturer.kampus.ac.id')" class="rounded-lg border border-gray-200 px-3 py-2 text-left text-xs hover:border-teal-dark-01 hover:bg-teal-light-01">Dosen</button>
-                    <button type="button" @click="fillDemo('operator@operator.kampus.ac.id')" class="rounded-lg border border-gray-200 px-3 py-2 text-left text-xs hover:border-teal-dark-01 hover:bg-teal-light-01">Operator</button>
-                    <button type="button" @click="fillDemo('admin@admin.kampus.ac.id')" class="rounded-lg border border-gray-200 px-3 py-2 text-left text-xs hover:border-teal-dark-01 hover:bg-teal-light-01">Admin</button>
+                    <button type="button" @click="fillDemo('ruthseptriana@students.kampus.ac.id')" class="rounded-lg border border-gray-200 px-3 py-2 text-left text-xs hover:border-teal-dark-01 hover:bg-teal-light-01">Mahasiswa</button>
+                    <button type="button" @click="fillDemo('sandykurniawan@lecturer.kampus.ac.id')" class="rounded-lg border border-gray-200 px-3 py-2 text-left text-xs hover:border-teal-dark-01 hover:bg-teal-light-01">Dosen</button>
+                    <button type="button" @click="fillDemo('benynugroho@staff.kampus.ac.id')" class="rounded-lg border border-gray-200 px-3 py-2 text-left text-xs hover:border-teal-dark-01 hover:bg-teal-light-01">Staf</button>
+                    <button type="button" @click="fillDemo('anangardiyanto@operator.kampus.ac.id')" class="rounded-lg border border-gray-200 px-3 py-2 text-left text-xs hover:border-teal-dark-01 hover:bg-teal-light-01">Operator</button>
+                    <button type="button" @click="fillDemo('arispujiw@admin.kampus.ac.id')" class="rounded-lg border border-gray-200 px-3 py-2 text-left text-xs hover:border-teal-dark-01 hover:bg-teal-light-01">Admin</button>
                 </div>
             </details>
             @endenv

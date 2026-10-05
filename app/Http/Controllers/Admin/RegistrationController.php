@@ -59,10 +59,12 @@ class RegistrationController extends Controller
             'urls' => [
                 'dashboard' => route('admin.dashboard'),
                 'registrations' => route('admin.registrations.index'),
+                'facilities' => route('admin.facilities.index'),
+                'recap' => route('admin.facilities.recap'),
                 'registrationStore' => route('admin.registrations.store'),
                 'accounts' => route('admin.registrations.index'),
                 'profile' => route('profile.edit'),
-                'guest' => route('guest.dashboard'),
+                'guest' => route('landing'),
                 'logout' => route('logout'),
             ],
         ]);

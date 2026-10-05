@@ -1,10 +1,34 @@
 import { Link } from '@inertiajs/react';
+import { Children, cloneElement, Fragment, isValidElement } from 'react';
+import ExpandableDescription from './ExpandableDescription';
 
 const inputClass = 'mt-1 block w-full rounded-xl border-gray-300 bg-white-01 px-4 py-3 text-sm text-teal-darker focus:border-teal-dark-01 focus:ring-teal-dark-01';
 
 function paginationLabel(label) {
     const text = label.replace('&laquo; ', '').replace(' &raquo;', '').trim();
     return { Previous: 'Sebelumnya', Next: 'Berikutnya' }[text] ?? text;
+}
+
+function renderCells(row, columns, renderRow) {
+    const renderedRow = renderRow(row);
+    const cells = renderedRow?.type === Fragment ? renderedRow.props.children : renderedRow;
+
+    return Children.map(cells, (cell, index) => {
+        if (!isValidElement(cell) || cell.type !== 'td') return cell;
+
+        const isDescription = columns[index]?.type === 'desc';
+
+        return cloneElement(cell, {
+            className: `${cell.props.className || ''} align-top px-4 py-3`.trim(),
+            children: isDescription ? (
+                <div className="w-full min-w-0 break-all whitespace-normal">
+                    <ExpandableDescription>
+                        {cell.props.children}
+                    </ExpandableDescription>
+                </div>
+            ) : cell.props.children,
+        });
+    });
 }
 
 export default function FilterTable({
@@ -23,12 +47,14 @@ export default function FilterTable({
 }) {
     return (
         <section className="mb-8 max-w-7xl px-6 lg:px-8">
-            <div className="rounded-lg border border-green-light-03 bg-white-01 p-6 shadow-sm">
+            <div className="rounded- border border-green-light-03 bg-white-01 p-6 shadow-sm">
+                {/* subjudul */}
                 <div className="mb-5">
                     <h2 className="text-xl font-bold text-teal-darker">{title}</h2>
                     <p className="mt-1 text-sm text-gray-600">{description}</p>
                 </div>
 
+                {/* filter */}
                 <form onSubmit={onSubmit} className="mb-5 grid gap-3 md:grid-cols-[1fr_15rem_auto]">
                     {filterFields.map(field => (
                         <div key={field.name}>
@@ -63,20 +89,33 @@ export default function FilterTable({
 
                 {errorMessage && <p role="alert" className="mb-4 rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">{errorMessage}</p>}
 
-                <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200 text-left text-sm">
+                {/* tabel */}
+                <div className="overflow-x-auto w-full">
+                    <table className="w-full table-auto divide-y divide-gray-200 text-left text-sm">
+                        {/* judul kolom */}
                         <thead className="bg-teal-light-01 text-xs uppercase tracking-wide text-teal-darker">
                             <tr>
-                                {columns.map(column => <th key={column.label} scope="col" className="px-4 py-3">{column.label}</th>)}
+                                {columns.map(column => (
+                                    <th
+                                        key={column.label}
+                                        scope="col"
+                                        className="whitespace-normal break-words px-4 py-3"
+                                    >
+                                        {column.label}
+                                    </th>
+                                ))}
                             </tr>
                         </thead>
+
+                        {/* isi kolom */}
                         <tbody className="divide-y divide-gray-100">
-                            {rows.data.map(row => <tr key={row.id}>{renderRow(row)}</tr>)}
+                            {rows.data.map(row => <tr key={row.id}>{renderCells(row, columns, renderRow)}</tr>)}
                             {rows.data.length === 0 && <tr><td colSpan={columns.length} className="px-4 py-8 text-center text-gray-500">{emptyMessage}</td></tr>}
                         </tbody>
                     </table>
                 </div>
 
+                {/* aksi bawah */}
                 <div className="mt-5 flex flex-wrap items-center justify-between gap-3 text-sm">
                     <p className="text-gray-600">Menampilkan {rows.from ?? 0}–{rows.to ?? 0} dari {rows.total} {recordLabel}</p>
                     <nav aria-label={navigationLabel} className="flex flex-wrap gap-1">

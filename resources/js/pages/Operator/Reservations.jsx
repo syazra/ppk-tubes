@@ -2,12 +2,13 @@ import { Head, router, useForm } from '@inertiajs/react';
 import AppLayout from '../../components/AppLayout';
 import FilterTable from '../../components/FilterTable';
 import MetricCard from '../../components/MetricCard';
+import StatusBadge, { getStatusColor } from '../../components/StatusBadge';
 
 const metrics = [
-    { label: 'Total Reservasi', detail: 'Jumlah total reservasi yang masuk', icon: 'calendar' },
-    { label: 'Reservasi Disetujui', detail: 'Reservasi yang telah disetujui', icon: 'calendar' },
-    { label: 'Reservasi Menunggu', detail: 'Reservasi yang menunggu persetujuan', icon: 'clock' },
-    { label: 'Reservasi Ditolak', detail: 'Reservasi yang ditolak', icon: 'calendar' },
+    { summaryKey: 'total', label: 'Total Reservasi', icon: 'calendar' },
+    { summaryKey: 'approved', label: 'Reservasi Disetujui', icon: 'check' },
+    { summaryKey: 'pending', label: 'Reservasi Menunggu', icon: 'clock' },
+    { summaryKey: 'rejected', label: 'Reservasi Ditolak', icon: 'close' },
 ];
 
 const statusOptions = [
@@ -31,16 +32,7 @@ function statusLabel(value) {
     return statusOptions.find(option => option.value === value)?.label ?? value;
 }
 
-function statusClass(value) {
-    return {
-        disetujui: 'bg-green-100 text-green-700',
-        ditolak: 'bg-red-100 text-red-700',
-        dibatalkan: 'bg-red-100 text-red-600',
-        menunggu: 'bg-yellow-100 text-yellow-700',
-    }[value] ?? 'bg-gray-100 text-gray-600';
-}
-
-export default function Reservations({ user, status, csrfToken, urls, reservations, filters }) {
+export default function Reservations({ user, status, csrfToken, urls, reservations, filters, summary }) {
     const filterForm = useForm({ search: filters.search, status: filters.status });
 
     function applyFilters(event) {
@@ -61,22 +53,15 @@ export default function Reservations({ user, status, csrfToken, urls, reservatio
 
                 {/* RINGKASAN */}
                 <section aria-labelledby="summary-title">
-                    <div className="app-section-heading">
-                        <div>
-                            <h2 id="summary-title" className="text-lg font-bold tracking-tight text-teal-darker">Ringkasan Reservasi</h2>
-                            <p className="mt-1 text-xs leading-relaxed text-gray-500">Indikator akan terisi saat data tersedia.</p>
-                        </div>
-                        <span className="app-status-badge"><span className="h-1.5 w-1.5 rounded-full bg-gray-400" />Menunggu data</span>
-                    </div>
                     <div className="app-metric-grid">
-                        {metrics.map((metric, index) => <MetricCard key={metric.label} {...metric} index={index} />)}
+                        {metrics.map(({ summaryKey, ...metric }, index) => <MetricCard key={metric.label} {...metric} value={summary[summaryKey]} index={index} />)}
                     </div>
                 </section>
 
                 {/* AKTIVITAS */}
                 <FilterTable
                     title="Semua Reservasi"
-                    description="Lihat dan kelola reservasi fasilitas kampus."
+                    description=""
                     filterForm={filterForm}
                     onSubmit={applyFilters}
                     filterFields={[
@@ -91,10 +76,10 @@ export default function Reservations({ user, status, csrfToken, urls, reservatio
                     ]}
                     rows={reservations}
                     columns={[
-                        { label: 'Nama Peminjam' },
-                        { label: 'Nama Fasilitas' },
+                        { label: 'Peminjam' },
+                        { label: 'Fasilitas' },
                         { label: 'Tanggal & Waktu' },
-                        { label: 'Tujuan Penggunaan' },
+                        { label: 'Deskripsi', type: 'desc' },
                         { label: 'Status' },
                         { label: 'Aksi' },
                     ]}
@@ -106,21 +91,21 @@ export default function Reservations({ user, status, csrfToken, urls, reservatio
                             </td>
                             <td className="whitespace-nowrap px-4 py-3 font-medium text-teal-darker">
                                 <p>{reservation.room?.name ?? '—'}</p>
-                                {reservation.room?.type && <p className="text-xs font-normal text-gray-500">{reservation.room.type}</p>}
+                                {reservation.room?.location && <p className="text-xs font-normal text-gray-500">{reservation.room.location}</p>}
                             </td>
                             <td className="whitespace-nowrap px-4 py-3 text-teal-dark-01">
                                 <p>{formatReservationDate(reservation.date_to_reserv)}</p>
                                 <p className="text-xs text-gray-500">{formatTime(reservation.start_time)}–{formatTime(reservation.end_time)}</p>
                             </td>
-                            <td className="max-w-xs px-4 py-3 text-gray-600">{reservation.desc}</td>
+                            <td className="whitespace-normal text-xs max-w-xs px-4 py-3 text-gray-600">{reservation.desc}</td>
                             <td className="whitespace-nowrap px-4 py-3">
-                                <span className={`rounded-full px-3 py-1 text-xs ${statusClass(reservation.status)}`}>{statusLabel(reservation.status)}</span>
+                                <StatusBadge color={getStatusColor(reservation.status)}>{statusLabel(reservation.status)}</StatusBadge>
                             </td>
                             <td className="whitespace-nowrap px-4 py-3">
                                 <div className="flex gap-3">
                                     {reservation.status === 'menunggu' ? (
                                         <>
-                                            <button type="button" onClick={() => updateReservation(reservation, 'approve')} className="font-medium text-green-700 underline">Setujui</button>
+                                            <button type="button" onClick={() => updateReservation(reservation, 'approve')} className="font-medium text-teal-normal-01 underline">Setujui</button>
                                             <button type="button" onClick={() => updateReservation(reservation, 'reject')} className="font-medium text-red-600 underline">Tolak</button>
                                         </>
                                     ) : <span className="text-xs text-gray-400">Aksi tidak tersedia</span>}

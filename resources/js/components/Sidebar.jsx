@@ -2,25 +2,45 @@ import { Link } from '@inertiajs/react';
 import { motion } from 'motion/react';
 import Icon, { initials } from './Icons';
 
-const defaultNavigation = [
+const userNavigation = [
+    { key: 'dashboard', icon: 'home', label: 'Dasbor' },
+    { key: 'reservations', icon: 'calendar', label: 'Reservasi' },
+    { key: 'reports', icon: 'tool', label: 'Laporan' },
+];
+
+const adminNavigation = [
     { key: 'dashboard', icon: 'home', label: 'Dasbor' },
     { key: 'registrations', icon: 'student', label: 'Registrasi' },
+    { key: 'facilities', icon: 'room', label: 'Fasilitas' },
+    { key: 'recap', icon: 'chart', label: 'Rekap Fasilitas' },
     { key: 'profile', icon: 'user', label: 'Profil' },
 ];
 
 const operatorNavigation = [
     { key: 'dashboard', icon: 'home', label: 'Dasbor' },
     { key: 'reservations', icon: 'calendar', label: 'Reservasi' },
-    { key: 'reports', icon: 'report', label: 'Laporan' },
+    { key: 'reports', icon: 'tool', label: 'Laporan' },
 ];
 
-export default function Sidebar({ user, auth, csrfToken, urls, active, collapsed = false, onNavigate, onClose, mobile = false, navigation = defaultNavigation }) {
+export default function Sidebar({ 
+    user, 
+    auth, 
+    csrfToken, 
+    urls, 
+    active, 
+    collapsed = false, 
+    onNavigate, 
+    onClose, 
+    mobile = false, 
+    navigation 
+}) {
     const currentUser = user || auth?.user;
     const userName = currentUser?.name || 'Pengguna';
     const userEmail = currentUser?.email || '';
-    const navItems = navigation === defaultNavigation && currentUser?.role === 'operator'
-        ? operatorNavigation
-        : navigation;
+
+    const isAdmin = currentUser?.role === 'admin';
+    const isOperator = currentUser?.role === 'operator';
+    const navItems = navigation ?? (isAdmin ? adminNavigation : isOperator ? operatorNavigation : userNavigation);
 
     return (
         <aside className={`app-sidebar ${collapsed ? 'is-collapsed' : ''}`}>
@@ -42,8 +62,19 @@ export default function Sidebar({ user, auth, csrfToken, urls, active, collapsed
                 {navItems.map(item => {
                     const isActive = active === item.key;
                     return (
-                        <Link key={item.key} href={urls?.[item.key] || '#'} onClick={onNavigate} className={`app-nav-link ${isActive ? 'is-active' : ''}`}>
-                            {isActive && <motion.span layoutId={mobile ? 'mobile-app-active' : 'desktop-app-active'} className="app-nav-active" transition={{ type: 'spring', stiffness: 380, damping: 32 }} />}
+                        <Link 
+                            key={item.key} 
+                            href={urls?.[item.key] || '#'} 
+                            onClick={onNavigate} 
+                            className={`app-nav-link ${isActive ? 'is-active' : ''}`}
+                        >
+                            {isActive && (
+                                <motion.span 
+                                    layoutId={mobile ? 'mobile-app-active' : 'desktop-app-active'} 
+                                    className="app-nav-active" 
+                                    transition={{ type: 'spring', stiffness: 380, damping: 32 }} 
+                                />
+                            )}
                             <Icon name={item.icon} className="relative z-10 h-5 w-5 shrink-0" />
                             {!collapsed && <span className="app-sidebar-label relative z-10">{item.label}</span>}
                         </Link>
@@ -63,7 +94,10 @@ export default function Sidebar({ user, auth, csrfToken, urls, active, collapsed
                 </Link>
                 <form method="post" action={urls?.logout || '#'}>
                     {csrfToken && <input type="hidden" name="_token" value={csrfToken} />}
-                    <button type="submit" className="app-logout"><Icon name="logout" className="h-5 w-5 shrink-0" />{!collapsed && <span>Keluar</span>}</button>
+                    <button type="submit" className="app-logout">
+                        <Icon name="logout" className="h-5 w-5 shrink-0" />
+                        {!collapsed && <span>Keluar</span>}
+                    </button>
                 </form>
             </div>
         </aside>

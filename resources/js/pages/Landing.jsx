@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import heroBackground from '../../images/landing-botanical.webp';
 import oggRegular from '../../fonts/ogg-regular.otf';
 import oggItalic from '../../fonts/ogg-regular-italic.otf';
-import { LandingIcon as Icon } from '../components/Icons';
+import Icon from '../components/Icons';
 
 const styles = `
 @font-face { font-family: 'CampuSpace Ogg'; src: url('${oggRegular}') format('opentype'); font-weight: 400; font-style: normal; font-display: swap; }
@@ -280,15 +280,15 @@ function ReservationPreview({ reservationUrl, createReservationUrl }) {
                     <tbody><tr><td colSpan={5}>Belum ada reservasi</td></tr></tbody>
                 </table>
                 </div>
-                <a className="cs-preview-link" href={reservationUrl}>Buka Reservasi Saya <Icon name="arrow" className="cs-arrow" /></a>
+                <a className="cs-preview-link" href={reservationUrl}>Buka Reservasi Saya <Icon name="landing-arrow" className="cs-arrow" variant="landing" /></a>
             </div>
         </figure>
     );
 }
 
-const facilities = [['room', 'Ruang kelas'], ['hall', 'Aula'], ['lab', 'Laboratorium'], ['tool', 'Peralatan'], ['field', 'Lapangan']];
+const facilities = [['landing-room', 'Ruang kelas'], ['hall', 'Aula'], ['lab', 'Laboratorium'], ['tool', 'Peralatan'], ['field', 'Lapangan']];
 const features = [
-    { icon: 'calendar', title: 'Reservasi fasilitas', text: 'Pilih fasilitas dan tanggal, periksa jadwal yang tersedia, lalu ajukan peminjaman. Lihat status pengajuan dan tiket peminjaman di halaman Reservasi Saya.', action: 'reservation', actionLabel: 'Ajukan reservasi' },
+    { icon: 'landing-calendar', title: 'Reservasi fasilitas', text: 'Pilih fasilitas dan tanggal, periksa jadwal yang tersedia, lalu ajukan peminjaman. Lihat status pengajuan dan tiket peminjaman di halaman Reservasi Saya.', action: 'reservation', actionLabel: 'Ajukan reservasi' },
     { icon: 'tool', title: 'Laporan kerusakan', text: 'Pilih fasilitas yang bermasalah dan jelaskan kondisinya. Laporan masuk ke petugas agar dapat diperiksa dan ditindaklanjuti.', action: 'login', actionLabel: 'Masuk untuk melapor' },
 ];
 const steps = [
@@ -298,7 +298,7 @@ const steps = [
 ];
 const roles = [
     ['Mahasiswa & dosen', 'Mengajukan peminjaman untuk kegiatan kampus dan melaporkan masalah pada fasilitas.', 'people'],
-    ['Petugas', 'Meninjau pengajuan reservasi dan menindaklanjuti laporan fasilitas.', 'shield'],
+    ['Petugas', 'Meninjau pengajuan reservasi dan menindaklanjuti laporan fasilitas.', 'landing-shield'],
     ['Admin', 'Mengelola akses pengguna dan memantau layanan fasilitas kampus.', 'grid'],
 ];
 const faqs = [
@@ -463,9 +463,9 @@ export default function Landing({ loginUrl, reservationUrl, createReservationUrl
                             {navigation.map(([href, label]) => <a href={href} key={href} aria-current={activeSection === href.slice(1) ? 'location' : undefined}>{label}</a>)}
                         </nav>
                         <div className="cs-nav-action">
-                            <a className="cs-button cs-button-primary" href={loginUrl}>Masuk <Icon name="arrow" className="cs-arrow" /></a>
+                            <a className="cs-button cs-button-primary" href={loginUrl}>Masuk <Icon name="landing-arrow" className="cs-arrow" variant="landing" /></a>
                             <button id="cs-menu-toggle" className="cs-menu-toggle" type="button" aria-label={menuOpen ? 'Tutup menu' : 'Buka menu'} aria-expanded={menuOpen} aria-controls="cs-mobile-navigation" onClick={() => setMenuOpen(!menuOpen)}>
-                                <Icon name={menuOpen ? 'close' : 'menu'} />
+                                <Icon name={menuOpen ? 'landing-close' : 'landing-menu'} variant="landing" />
                             </button>
                         </div>
                     </div>
@@ -483,10 +483,10 @@ export default function Landing({ loginUrl, reservationUrl, createReservationUrl
                                 <h1 id="hero-title" className="cs-serif" lang="en">Your Campus.<br /><em>Your Space.</em></h1>
                                 <p className="cs-hero-copy">Cek ketersediaan fasilitas kampus, ajukan reservasi, dan laporkan kerusakan melalui CampuSpace.</p>
                                 <div className="cs-hero-actions">
-                                    <a href={createReservationUrl} className="cs-button cs-button-primary">Ajukan reservasi <Icon name="arrow" className="cs-arrow" /></a>
-                                    <a href="#cara-kerja" className="cs-button cs-button-secondary">Cara reservasi <Icon name="down" className="cs-arrow" /></a>
+                                    <a href={createReservationUrl} className="cs-button cs-button-primary">Ajukan reservasi <Icon name="landing-arrow" className="cs-arrow" variant="landing" /></a>
+                                    <a href="#cara-kerja" className="cs-button cs-button-secondary">Cara reservasi <Icon name="down" className="cs-arrow" variant="landing" /></a>
                                 </div>
-                                <p className="cs-hero-note"><Icon name="shield" />Gunakan akun yang diberikan pengelola kampus.</p>
+                                <p className="cs-hero-note"><Icon name="landing-shield" variant="landing" />Gunakan akun yang diberikan pengelola kampus.</p>
                             </div>
                             <div className="cs-art">
                                 <ReservationPreview reservationUrl={reservationUrl} createReservationUrl={createReservationUrl} />
@@ -501,10 +501,10 @@ export default function Landing({ loginUrl, reservationUrl, createReservationUrl
                                 <p className="cs-copy">Urus peminjaman dan sampaikan masalah fasilitas tanpa harus berpindah layanan.</p>
                             </div>
                             <div className="cs-facilities cs-reveal" aria-label="Jenis fasilitas">
-                                {facilities.map(([icon, label]) => <span className="cs-facility" key={label}><Icon name={icon} />{label}</span>)}
+                                {facilities.map(([icon, label]) => <span className="cs-facility" key={label}><Icon name={icon} variant="landing" />{label}</span>)}
                             </div>
                             <div className="cs-feature-grid">
-                                {features.map((feature, index) => <article className="cs-feature cs-reveal" key={feature.title} style={{ '--reveal-delay': `${index * 90}ms` }}><Icon name={feature.icon} /><h3>{feature.title}</h3><p>{feature.text}</p><a className="cs-feature-link" href={feature.action === 'reservation' ? createReservationUrl : loginUrl}>{feature.actionLabel}<Icon name="arrow" className="cs-arrow" /></a></article>)}
+                                {features.map((feature, index) => <article className="cs-feature cs-reveal" key={feature.title} style={{ '--reveal-delay': `${index * 90}ms` }}><Icon name={feature.icon} variant="landing" /><h3>{feature.title}</h3><p>{feature.text}</p><a className="cs-feature-link" href={feature.action === 'reservation' ? createReservationUrl : loginUrl}>{feature.actionLabel}<Icon name="landing-arrow" className="cs-arrow" variant="landing" /></a></article>)}
                             </div>
                         </div>
                     </section>
@@ -521,7 +521,7 @@ export default function Landing({ loginUrl, reservationUrl, createReservationUrl
                     <section className="cs-section" aria-labelledby="roles-title">
                         <div className="cs-wrap cs-roles">
                             <div className="cs-reveal"><p className="cs-eyebrow">Untuk warga kampus</p><h2 id="roles-title" className="cs-serif cs-section-title">Siapa yang<br />menggunakan CampuSpace?</h2></div>
-                            <div>{roles.map(([title, text, icon], index) => <article className="cs-role cs-reveal" key={title} style={{ '--reveal-delay': `${index * 70}ms` }}><h3 className="cs-role-title"><span className="cs-role-icon"><Icon name={icon} /></span>{title}</h3><p>{text}</p></article>)}</div>
+                            <div>{roles.map(([title, text, icon], index) => <article className="cs-role cs-reveal" key={title} style={{ '--reveal-delay': `${index * 70}ms` }}><h3 className="cs-role-title"><span className="cs-role-icon"><Icon name={icon} variant="landing" /></span>{title}</h3><p>{text}</p></article>)}</div>
                         </div>
                     </section>
 
@@ -529,13 +529,13 @@ export default function Landing({ loginUrl, reservationUrl, createReservationUrl
                         <div className="cs-wrap cs-faq-grid">
                             <div className="cs-faq-intro cs-reveal"><p className="cs-eyebrow">Ada pertanyaan?</p><h2 id="faq-title" className="cs-serif cs-section-title">Pertanyaan umum</h2><p className="cs-copy">Tentang akun, peminjaman, dan laporan fasilitas.</p></div>
                             <div className="cs-faq-list">
-                                {faqs.map(([question, answer], index) => <details className="cs-reveal" key={question} style={{ '--reveal-delay': `${index * 45}ms` }}><summary>{question}<span className="cs-faq-indicator" aria-hidden="true"><Icon name="chevron" /></span></summary><p>{answer}</p></details>)}
+                                {faqs.map(([question, answer], index) => <details className="cs-reveal" key={question} style={{ '--reveal-delay': `${index * 45}ms` }}><summary>{question}<span className="cs-faq-indicator" aria-hidden="true"><Icon name="landing-chevron" variant="landing" /></span></summary><p>{answer}</p></details>)}
                             </div>
                         </div>
                     </section>
 
                     <section className="cs-final cs-dark" aria-labelledby="final-title">
-                        <div className="cs-wrap cs-reveal"><div><h2 id="final-title" className="cs-serif">Butuh fasilitas untuk kegiatanmu?</h2><p>Pilih fasilitas dan jadwal, lalu ajukan peminjaman.</p></div><a href={createReservationUrl} className="cs-button cs-button-primary">Ajukan reservasi <Icon name="arrow" className="cs-arrow" /></a></div>
+                        <div className="cs-wrap cs-reveal"><div><h2 id="final-title" className="cs-serif">Butuh fasilitas untuk kegiatanmu?</h2><p>Pilih fasilitas dan jadwal, lalu ajukan peminjaman.</p></div><a href={createReservationUrl} className="cs-button cs-button-primary">Ajukan reservasi <Icon name="landing-arrow" className="cs-arrow" variant="landing" /></a></div>
                     </section>
                 </main>
 
@@ -546,7 +546,7 @@ export default function Landing({ loginUrl, reservationUrl, createReservationUrl
                         <nav className="cs-footer-links" aria-label="Navigasi footer"><a href="#fasilitas">Fasilitas</a><a href="#cara-kerja">Cara reservasi</a><a href="#faq">FAQ</a></nav>
                     </div>
                 </footer>
-                <a href="#atas" className="cs-back-top" aria-label="Kembali ke atas"><Icon name="down" className="cs-arrow" /></a>
+                <a href="#atas" className="cs-back-top" aria-label="Kembali ke atas"><Icon name="down" className="cs-arrow" variant="landing" /></a>
             </div>
         </>
     );
