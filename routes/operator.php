@@ -32,13 +32,13 @@ Route::middleware(['auth', 'verified'])->prefix('operator')->name('operator.')->
         ]);
 
         $summary = [
-            'total' => Reservation::count(),
-            'approved' => Reservation::where('status', 'disetujui')->count(),
-            'pending' => Reservation::where('status', 'menunggu')->count(),
-            'rejected' => Reservation::where('status', 'ditolak')->count(),
+            'total' => \App\Models\Reservation::count(),
+            'approved' => \App\Models\Reservation::where('status', 'disetujui')->count(),
+            'pending' => \App\Models\Reservation::where('status', 'menunggu')->count(),
+            'rejected' => \App\Models\Reservation::where('status', 'ditolak')->count(),
         ];
 
-        $reservations = Reservation::with(['room', 'user'])
+        $reservations = \App\Models\Reservation::with(['room', 'user'])
             ->when($filters['status'] ?? null, fn ($query, string $status) => $query->where('status', $status))
             ->when($filters['search'] ?? null, function ($query, string $search): void {
                 $query->where(function ($query) use ($search): void {
@@ -50,7 +50,7 @@ Route::middleware(['auth', 'verified'])->prefix('operator')->name('operator.')->
             ->latest()
             ->paginate(10)
             ->withQueryString()
-            ->through(fn (Reservation $reservation): array => [
+            ->through(fn (\App\Models\Reservation $reservation): array => [
                 'id' => $reservation->id,
                 'user' => [
                     'name' => $reservation->user?->name,
@@ -97,13 +97,13 @@ Route::middleware(['auth', 'verified'])->prefix('operator')->name('operator.')->
         ]);
 
         $summary = [
-            'total' => Report::count(),
-            'new' => Report::where('status', 'baru')->count(),
-            'processing' => Report::where('status', 'diproses')->count(),
-            'completed' => Report::where('status', 'selesai')->count(),
+            'total' => \App\Models\Report::count(),
+            'new' => \App\Models\Report::where('status', 'baru')->count(),
+            'processing' => \App\Models\Report::where('status', 'diproses')->count(),
+            'completed' => \App\Models\Report::where('status', 'selesai')->count(),
         ];
 
-        $reports = Report::with(['room', 'user'])
+        $reports = \App\Models\Report::with(['room', 'user'])
             ->when($filters['status'] ?? null, fn ($query, string $status) => $query->where('status', $status))
             ->when($filters['search'] ?? null, function ($query, string $search): void {
                 $query->where(function ($query) use ($search): void {
@@ -115,7 +115,7 @@ Route::middleware(['auth', 'verified'])->prefix('operator')->name('operator.')->
             ->latest()
             ->paginate(10)
             ->withQueryString()
-            ->through(fn (Report $report): array => [
+            ->through(fn (\App\Models\Report $report): array => [
                 'id' => $report->id,
                 'user' => [
                     'name' => $report->user?->name,
@@ -127,10 +127,11 @@ Route::middleware(['auth', 'verified'])->prefix('operator')->name('operator.')->
                 ],
                 'desc' => $report->desc,
                 'image_url' => $report->image
-                    ? Storage::disk('public')->url($report->image)
+                    ? \Illuminate\Support\Facades\Storage::disk('public')->url($report->image)
                     : null,
                 'status' => $report->status,
                 'created_at' => $report->created_at?->toIso8601String(),
+                'estimated_completion_at' => $report->estimated_completion_at,
             ]);
 
         return Inertia::render('Operator/Reports', [
@@ -147,6 +148,9 @@ Route::middleware(['auth', 'verified'])->prefix('operator')->name('operator.')->
                 'dashboard' => route('operator.dashboard'),
                 'reservations' => route('operator.reservations'),
                 'reports' => route('operator.reports'),
+                'processing' => url('/operator/reports'), // <-- TAMBAHKAN INI
+                'complete' => url('/operator/reports'),   // <-- TAMBAHKAN INI
+                'reject' => url('/operator/reports'),
                 'profile' => route('profile.edit'),
                 'guest' => route('landing'),
                 'logout' => route('logout'),
@@ -156,4 +160,8 @@ Route::middleware(['auth', 'verified'])->prefix('operator')->name('operator.')->
 
     Route::patch('/reservations/{id}/approve', [OperatorController::class, 'approve'])->name('reservations.approve');
     Route::patch('/reservations/{id}/reject', [OperatorController::class, 'reject'])->name('reservations.reject');
+    Route::patch('/reports/{id}/process', [OperatorController::class, 'setProcess'])->name('reports.process');
+    Route::patch('/reports/{id}/complete', [OperatorController::class, 'markAsCompleted'])->name('reports.complete');
+    Route::patch('/reports/{id}/reject', [OperatorController::class, 'rejectReport'])->name('reports.reject');
+    Route::patch('/reports/{id}/extend', [OperatorController::class, 'extendEstimate'])->name('reports.extend');
 });

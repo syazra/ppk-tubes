@@ -3,6 +3,7 @@ import { Head, useForm, router } from '@inertiajs/react';
 import AppLayout from '../../components/AppLayout';
 import FilterTable from '../../components/FilterTable';
 import MetricCard from '../../components/MetricCard';
+import StatusBadge, { getStatusColor } from '../../components/StatusBadge';
 
 const metrics = [
     { summaryKey: 'total', label: 'Total Laporan', detail: 'Jumlah semua laporan kerusakan', icon: 'tool' },
@@ -18,16 +19,6 @@ const statusOptions = [
     { value: 'ditolak', label: 'Ditolak' },
     { value: 'dibatalkan', label: 'Dibatalkan' },
 ];
-
-function statusClass(value) {
-    return {
-        baru: 'bg-blue-100 text-blue-700',
-        diproses: 'bg-yellow-100 text-yellow-700',
-        selesai: 'bg-green-100 text-green-700',
-        ditolak: 'bg-red-100 text-red-700',
-        dibatalkan: 'bg-gray-100 text-gray-600',
-    }[value] ?? 'bg-gray-100 text-gray-600';
-}
 
 function statusLabel(value) {
     return statusOptions.find(option => option.value === value)?.label ?? value;
@@ -124,9 +115,9 @@ export default function Reports({ user, status, csrfToken, urls, reports, filter
                     rows={reports}
                     columns={[
                         { label: 'Pelapor' },
-                        { label: 'Fasilitas / Ruangan' },
-                        { label: 'Deskripsi' },
-                        { label: 'Bukti Foto' },
+                        { label: 'Fasilitas' },
+                        { label: 'Deskripsi', type: 'desc' },
+                        { label: 'Bukti' },
                         { label: 'Status' },
                         { label: 'Tanggal' },
                         { label: 'Estimasi Selesai' },
@@ -141,13 +132,16 @@ export default function Reports({ user, status, csrfToken, urls, reports, filter
                                 <p className="font-medium text-teal-darker">{report.room?.name ?? '—'}</p>
                                 {report.room?.location && <p className="text-xs text-gray-500">{report.room.location}</p>}
                             </td>
-                            <td className="max-w-sm whitespace-normal px-4 py-3 text-gray-600">{report.desc}</td>
+                            <td className="whitespace-normal text-xs px-4 py-3 text-gray-600">{report.desc}</td>
                             <td className="whitespace-nowrap px-4 py-3">
                                 {report.image_url
-                                    ? <a href={report.image_url} target="_blank" rel="noreferrer" className="font-medium text-teal-dark-01 underline">Lihat foto</a>
+                                    ? <a href={report.image_url} target="_blank" rel="noreferrer" className="font-medium text-teal-normal-01 underline">Lihat foto</a>
                                     : <span className="text-gray-400">Tidak ada foto</span>}
                             </td>
                             <td className="whitespace-nowrap px-4 py-3">
+                                <StatusBadge color={getStatusColor(report.status)}>{statusLabel(report.status)}</StatusBadge>
+                            </td>
+                            <td className="whitespace-nowrap text-xs px-4 py-3 text-gray-600">{formatReportDate(report.created_at)}</td>
                                 <div className="flex gap-3">
                                     {report.status === 'baru' ? (
                                         <>
