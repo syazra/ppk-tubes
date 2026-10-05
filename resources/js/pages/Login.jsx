@@ -192,7 +192,7 @@ export default function Login({ status, landingUrl = '/', demoAccounts = [] }) {
                 <link rel="preload" href={oggRegular} as="font" type="font/otf" crossOrigin="anonymous" />
             </Head>
             <style>{styles}</style>
-            {intro && <IntroOverlay variant="fog" />}
+            {intro && <IntroOverlay variant="radial" />}
             <div className="lg" lang="id">
                 <div className="lg-orb lg-orb-1" aria-hidden="true" />
                 <div className="lg-orb lg-orb-2" aria-hidden="true" />

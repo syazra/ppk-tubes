@@ -21,37 +21,22 @@ export function fogImage(seed) {
 }
 
 /**
- * Login intro: the page starts hidden behind a soft fog bank that parts to the
- * sides and thins out, with a small wordmark that fades with it.
+ * Login intro: a plain green radial gradient covers the page, then fades
+ * out while slowly expanding to reveal it.
  */
-function FogIntro() {
+function RadialIntro() {
     const [done, setDone] = useState(false);
     if (done) return null;
-
-    const timing = { delay: 0.45, duration: INTRO_DELAY + 0.1, ease: [0.4, 0, 0.2, 1] };
-    const layer = { position: 'absolute', top: 0, bottom: 0, width: '70%', backgroundSize: '1000px 100%', backgroundRepeat: 'repeat', backgroundPosition: 'center' };
 
     return (
         <motion.div
             aria-hidden="true"
-            style={{ position: 'fixed', inset: 0, zIndex: 1000, pointerEvents: 'none', background: 'linear-gradient(180deg, #b9d3ca, #9fc0b5)', overflow: 'hidden' }}
-            initial={{ opacity: 1 }}
-            animate={{ opacity: 0 }}
-            transition={timing}
+            style={{ position: 'fixed', inset: 0, zIndex: 1000, pointerEvents: 'none', background: 'radial-gradient(circle at 50% 50%, #0d5a4c 0%, #0a3f36 45%, #062e29 100%)' }}
+            initial={{ opacity: 1, scale: 1 }}
+            animate={{ opacity: 0, scale: 1.15 }}
+            transition={{ delay: 0.3, duration: INTRO_DELAY, ease: [0.4, 0, 0.2, 1] }}
             onAnimationComplete={() => setDone(true)}
-        >
-            <motion.div style={{ ...layer, left: 0, backgroundImage: fogImage(7) }} initial={{ x: 0, opacity: 1 }} animate={{ x: '-45%', opacity: 0.3 }} transition={timing} />
-            <motion.div style={{ ...layer, right: 0, backgroundImage: fogImage(23) }} initial={{ x: 0, opacity: 1 }} animate={{ x: '45%', opacity: 0.3 }} transition={timing} />
-            <motion.div style={{ ...layer, left: '15%', backgroundImage: fogImage(41), opacity: 0.8 }} initial={{ opacity: 0.8 }} animate={{ opacity: 0 }} transition={{ ...timing, duration: INTRO_DELAY - 0.2 }} />
-            <motion.div
-                style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', fontFamily: 'Figtree, ui-sans-serif, system-ui, sans-serif', fontSize: 22, fontWeight: 600, letterSpacing: '-.6px', color: '#0b3d35' }}
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: [0, 0.85, 0.85, 0], y: 0 }}
-                transition={{ duration: INTRO_DELAY, times: [0, 0.3, 0.65, 1], ease: 'easeOut' }}
-            >
-                <span>Campu<span style={{ fontWeight: 400 }}>Space</span></span>
-            </motion.div>
-        </motion.div>
+        />
     );
 }
 /**
@@ -59,7 +44,7 @@ function FogIntro() {
  * open top/bottom to reveal the page.
  */
 export default function IntroOverlay({ variant = 'curtain' }) {
-    if (variant === 'fog') return <FogIntro />;
+    if (variant === 'radial') return <RadialIntro />;
     return <CurtainIntro />;
 }
 
