@@ -1,5 +1,5 @@
-import { motion } from 'motion/react';
-import { useState } from 'react';
+import { animate, motion, useMotionValue, useTransform } from 'motion/react';
+import { useEffect, useState } from 'react';
 
 // Seconds before page content should start animating in (overlay is covering the page until then).
 export const INTRO_DELAY = 1.3;
@@ -15,10 +15,49 @@ export function useIntro() {
 const panelStyle = { position: 'absolute', left: 0, right: 0, height: '50%', background: '#062e29', overflow: 'hidden' };
 
 /**
+ * Login intro: the logo emits water-like ripples, then a feathered circular iris
+ * opens from the centre to reveal the page.
+ */
+function IrisIntro() {
+    const [done, setDone] = useState(false);
+    const radius = useMotionValue(0);
+    const mask = useTransform(radius, value => `radial-gradient(circle at 50% 50%, transparent ${value}px, #000 ${value + 90}px)`);
+
+    useEffect(() => {
+        const max = Math.hypot(window.innerWidth, window.innerHeight) / 2 + 120;
+        const controls = animate(radius, max, { delay: INTRO_DELAY - 0.2, duration: 1, ease: [0.65, 0, 0.35, 1], onComplete: () => setDone(true) });
+        return () => controls.stop();
+    }, [radius]);
+
+    if (done) return null;
+
+    return (
+        <motion.div
+            aria-hidden="true"
+            style={{ position: 'fixed', inset: 0, zIndex: 1000, pointerEvents: 'none', background: 'radial-gradient(ellipse at 50% 50%, #0d4a40, #062e29 70%)', WebkitMaskImage: mask, maskImage: mask, display: 'grid', placeItems: 'center', color: '#d3e9a6' }}
+        >
+            <motion.div style={{ position: 'relative', display: 'grid', placeItems: 'center' }} initial={{ opacity: 1 }} animate={{ opacity: 0 }} transition={{ delay: INTRO_DELAY - 0.3, duration: 0.35 }}>
+                {[0, 0.35, 0.7].map(delay => (
+                    <motion.span key={delay} style={{ position: 'absolute', width: 84, height: 84, borderRadius: '50%', border: '1.5px solid #d3e9a6' }} initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 4.2, opacity: [0, 0.5, 0] }} transition={{ delay, duration: 1.5, ease: 'easeOut', repeat: 0 }} />
+                ))}
+                <motion.div style={{ width: 84, height: 84, borderRadius: 24, background: '#003b33', display: 'grid', placeItems: 'center', boxShadow: '0 0 40px #d3e9a633' }} initial={{ scale: 0.4, opacity: 0, rotate: -20 }} animate={{ scale: 1, opacity: 1, rotate: 0 }} transition={{ type: 'spring', stiffness: 160, damping: 14 }}>
+                    <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"><path d={BRAND_PATH} /></svg>
+                </motion.div>
+            </motion.div>
+        </motion.div>
+    );
+}
+
+/**
  * Full-screen intro: the logo draws itself on a dark panel, then the panel splits
  * open top/bottom to reveal the page.
  */
-export default function IntroOverlay() {
+export default function IntroOverlay({ variant = 'curtain' }) {
+    if (variant === 'iris') return <IrisIntro />;
+    return <CurtainIntro />;
+}
+
+function CurtainIntro() {
     const [done, setDone] = useState(false);
     if (done) return null;
 
