@@ -34,6 +34,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/slots', 'availableSlots')->name('slots');
         Route::post('/', 'store')->name('store');
         Route::get('/{reservation}/ticket', 'ticket')->name('ticket');
+        Route::get('/{reservation}/qrcode', 'qrcode')->name('qrcode');
         Route::patch('/{reservation}/cancel', 'cancel')->name('cancel');
     });
 

@@ -55,11 +55,9 @@ class OperatorController extends Controller
         ]);
 
 
-    return back()
-        ->with(
-            'success',
-            'Reservasi disetujui.'
-        );
+    return redirect()
+        ->route('operator.reservations')
+        ->with('success', 'Reservasi disetujui.');
 }
 
     public function reject($id)
@@ -68,7 +66,7 @@ class OperatorController extends Controller
         $reservation->status = 'ditolak';
         $reservation->save();
 
-        return back()->with('success', 'Reservasi ditolak.');
+        return redirect()->route('operator.reservations')->with('success', 'Reservasi ditolak.');
     }
 
     /**
