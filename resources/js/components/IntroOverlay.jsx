@@ -1,5 +1,5 @@
-import { animate, motion, useMotionValue, useTransform } from 'motion/react';
-import { useEffect, useState } from 'react';
+import { motion } from 'motion/react';
+import { useState } from 'react';
 
 // Seconds before page content should start animating in (overlay is covering the page until then).
 export const INTRO_DELAY = 1.3;
@@ -14,46 +14,52 @@ export function useIntro() {
 
 const panelStyle = { position: 'absolute', left: 0, right: 0, height: '50%', background: '#062e29', overflow: 'hidden' };
 
+// Tileable fractal-noise SVG tinted white, used as a fog texture.
+export function fogImage(seed) {
+    const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='1000' height='640'><filter id='f' x='0' y='0' width='100%' height='100%'><feTurbulence type='fractalNoise' baseFrequency='.005 .011' numOctaves='4' seed='${seed}' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .92  0 0 0 0 1  0 0 0 0 .96  0 0 0 1.9 -.7'/></filter><rect width='100%' height='100%' filter='url(#f)'/></svg>`;
+    return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
+}
+
 /**
- * Login intro: the logo emits water-like ripples, then a feathered circular iris
- * opens from the centre to reveal the page.
+ * Login intro: the page starts hidden behind a soft fog bank that parts to the
+ * sides and thins out, with a small wordmark that fades with it.
  */
-function IrisIntro() {
+function FogIntro() {
     const [done, setDone] = useState(false);
-    const radius = useMotionValue(0);
-    const mask = useTransform(radius, value => `radial-gradient(circle at 50% 50%, transparent ${value}px, #000 ${value + 90}px)`);
-
-    useEffect(() => {
-        const max = Math.hypot(window.innerWidth, window.innerHeight) / 2 + 120;
-        const controls = animate(radius, max, { delay: INTRO_DELAY - 0.2, duration: 1, ease: [0.65, 0, 0.35, 1], onComplete: () => setDone(true) });
-        return () => controls.stop();
-    }, [radius]);
-
     if (done) return null;
+
+    const timing = { delay: 0.45, duration: INTRO_DELAY + 0.1, ease: [0.4, 0, 0.2, 1] };
+    const layer = { position: 'absolute', top: 0, bottom: 0, width: '70%', backgroundSize: '1000px 100%', backgroundRepeat: 'repeat', backgroundPosition: 'center' };
 
     return (
         <motion.div
             aria-hidden="true"
-            style={{ position: 'fixed', inset: 0, zIndex: 1000, pointerEvents: 'none', background: 'radial-gradient(ellipse at 50% 50%, #0d4a40, #062e29 70%)', WebkitMaskImage: mask, maskImage: mask, display: 'grid', placeItems: 'center', color: '#d3e9a6' }}
+            style={{ position: 'fixed', inset: 0, zIndex: 1000, pointerEvents: 'none', background: 'linear-gradient(180deg, #b9d3ca, #9fc0b5)', overflow: 'hidden' }}
+            initial={{ opacity: 1 }}
+            animate={{ opacity: 0 }}
+            transition={timing}
+            onAnimationComplete={() => setDone(true)}
         >
-            <motion.div style={{ position: 'relative', display: 'grid', placeItems: 'center' }} initial={{ opacity: 1 }} animate={{ opacity: 0 }} transition={{ delay: INTRO_DELAY - 0.3, duration: 0.35 }}>
-                {[0, 0.35, 0.7].map(delay => (
-                    <motion.span key={delay} style={{ position: 'absolute', width: 84, height: 84, borderRadius: '50%', border: '1.5px solid #d3e9a6' }} initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 4.2, opacity: [0, 0.5, 0] }} transition={{ delay, duration: 1.5, ease: 'easeOut', repeat: 0 }} />
-                ))}
-                <motion.div style={{ width: 84, height: 84, borderRadius: 24, background: '#003b33', display: 'grid', placeItems: 'center', boxShadow: '0 0 40px #d3e9a633' }} initial={{ scale: 0.4, opacity: 0, rotate: -20 }} animate={{ scale: 1, opacity: 1, rotate: 0 }} transition={{ type: 'spring', stiffness: 160, damping: 14 }}>
-                    <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"><path d={BRAND_PATH} /></svg>
-                </motion.div>
+            <motion.div style={{ ...layer, left: 0, backgroundImage: fogImage(7) }} initial={{ x: 0, opacity: 1 }} animate={{ x: '-45%', opacity: 0.3 }} transition={timing} />
+            <motion.div style={{ ...layer, right: 0, backgroundImage: fogImage(23) }} initial={{ x: 0, opacity: 1 }} animate={{ x: '45%', opacity: 0.3 }} transition={timing} />
+            <motion.div style={{ ...layer, left: '15%', backgroundImage: fogImage(41), opacity: 0.8 }} initial={{ opacity: 0.8 }} animate={{ opacity: 0 }} transition={{ ...timing, duration: INTRO_DELAY - 0.2 }} />
+            <motion.div
+                style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', fontFamily: 'Figtree, ui-sans-serif, system-ui, sans-serif', fontSize: 22, fontWeight: 600, letterSpacing: '-.6px', color: '#0b3d35' }}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: [0, 0.85, 0.85, 0], y: 0 }}
+                transition={{ duration: INTRO_DELAY, times: [0, 0.3, 0.65, 1], ease: 'easeOut' }}
+            >
+                <span>Campu<span style={{ fontWeight: 400 }}>Space</span></span>
             </motion.div>
         </motion.div>
     );
 }
-
 /**
  * Full-screen intro: the logo draws itself on a dark panel, then the panel splits
  * open top/bottom to reveal the page.
  */
 export default function IntroOverlay({ variant = 'curtain' }) {
-    if (variant === 'iris') return <IrisIntro />;
+    if (variant === 'fog') return <FogIntro />;
     return <CurtainIntro />;
 }
 
