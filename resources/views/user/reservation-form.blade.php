@@ -6,20 +6,16 @@
 
     <x-title-bar title="Form Reservasi" subtitle="Ajukan peminjaman fasilitas sesuai kebutuhan kamu." />
 
+    @include('user.partials.facility-browser')
+
     <x-white-card>
-        <form action="{{ route('reservations.store') }}" method="POST">
+        <form id="reservation-form" action="{{ route('reservations.store') }}" method="POST">
             @csrf
-            {{-- RUANGAN --}}
+            {{-- FASILITAS DIPILIH DARI KATALOG --}}
+            @php($selectedRoom = $rooms->firstWhere('id', old('room_id')))
+            <input type="hidden" name="room_id" id="room_id" value="{{ $selectedRoom?->id ?? '' }}">
             <div class="mb-5">
-                <x-input-label for="room_id" value="Ruangan" />
-                <select name="room_id" id="room_id" class="block mt-1 w-full rounded-lg border-gray-300">
-                    <option value="">Pilih Ruangan</option>
-                    @foreach($rooms as $room)
-                        <option value="{{ $room->id }}" {{ old('room_id') == $room->id ? 'selected' : '' }}>
-                            {{ $room->name }} - Lokasi: {{ $room->location }} ({{ ucfirst($room->type) }})
-                        </option>
-                    @endforeach
-                </select>
+                <p id="selected-facility" class="text-sm font-semibold text-teal-700" tabindex="-1" role="status" aria-live="polite">{{ $selectedRoom ? 'Fasilitas dipilih: ' . $selectedRoom->name . ' · ' . $selectedRoom->location : 'Belum ada fasilitas dipilih. Pilih fasilitas dari daftar di atas.' }}</p>
                 <x-input-error :messages="$errors->get('room_id')" class="mt-2" />
             </div>
 
@@ -27,7 +23,7 @@
             <div class="mb-5">
                 <x-input-label for="date_to_reserv" value="Hari / Tanggal" />
                 <div class="relative mt-1">
-                    <input id="date_to_reserv" class="block w-full rounded-lg border-gray-300 focus:border-teal-500 focus:ring-teal-500 shadow-sm cursor-pointer" type="date" name="date_to_reserv" min="{{ date('Y-m-d', strtotime('+3 hours')) }}" />
+                    <input id="date_to_reserv" class="block w-full rounded-lg border-gray-300 focus:border-teal-500 focus:ring-teal-500 shadow-sm cursor-pointer" type="date" name="date_to_reserv" min="{{ app(\App\Services\RoomAvailability::class)->earliestStart()->format('Y-m-d') }}" value="{{ is_string(old('date_to_reserv')) ? old('date_to_reserv') : '' }}" />
                 </div>
                 <x-input-error :messages="$errors->get('date_to_reserv')" class="mt-2" />
             </div>
@@ -35,7 +31,7 @@
             {{-- TUJUAN --}}
             <div class="mb-5">
                 <x-input-label for="desc" value="Tujuan Penggunaan" />
-                <textarea id="desc" name="desc" rows="4" class="block mt-1 w-full rounded-lg border-gray-300" placeholder="Masukkan tujuan penggunaan ruangan"></textarea>
+                <textarea id="desc" name="desc" rows="4" class="block mt-1 w-full rounded-lg border-gray-300" placeholder="Masukkan tujuan penggunaan ruangan">{{ is_string(old('desc')) ? old('desc') : '' }}</textarea>
                 <x-input-error :messages="$errors->get('desc')" class="mt-2" />
             </div>
 
@@ -44,28 +40,31 @@
                 <div class="flex items-center justify-between mb-3">
                     <label class="block text-sm font-semibold">Ketersediaan Waktu</label>
                     <div class="flex items-center gap-4 text-xs text-gray-500">
-                        <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-white border inline-block"></span> Kosong</span>
+                        <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-white border inline-block"></span> Tersedia</span>
                         <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-teal-600 inline-block"></span> Dipilih</span>
-                        <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-gray-400 inline-block"></span> Sudah dipesan</span>
+                        <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-gray-400 inline-block"></span> Tidak tersedia</span>
                     </div>
                 </div>
 
                 <div class="border rounded-xl bg-gray-50 p-5">
-                    <p id="time-grid-hint" class="text-sm text-gray-400 italic mb-3">Pilih ruangan &amp; tanggal terlebih dahulu untuk melihat jadwal.</p>
+                    <p id="time-grid-hint" class="text-sm text-gray-400 italic mb-3" role="status" aria-live="polite">Pilih fasilitas dari daftar di atas &amp; tanggal untuk melihat jadwal.</p>
 
                     <style>
                         .time-grid-layout { display: grid; grid-template-columns: 70px 1fr; gap: 0.75rem; }
                         .time-grid-layout.hidden { display: none; }
                     </style>
 
-                    <div id="time-grid-wrapper" class="time-grid-layout hidden">
+                    <div id="time-grid-wrapper" class="time-grid-layout hidden" role="group" aria-label="Ketersediaan Waktu">
                         <div id="time-labels" class="text-xs text-gray-500"></div>
                         <div id="time-grid"></div>
                     </div>
 
                     <p class="text-xs text-gray-400 mt-3">Klik slot awal, lalu klik slot akhir untuk memblok rentang waktu. Klik salah satu slot terpilih lagi untuk membatalkan pilihan.</p>
                 </div>
-                <p id="selected-range-text" class="text-sm text-teal-700 font-medium mt-2"></p>
+                <p id="selected-range-text" class="text-sm text-teal-700 font-medium mt-2" role="status" aria-live="polite"></p>
+                <x-input-error :messages="$errors->get('time')" class="mt-2" />
+                <x-input-error :messages="$errors->get('start_time')" class="mt-2" />
+                <x-input-error :messages="$errors->get('end_time')" class="mt-2" />
             </div>
 
             {{-- Hidden Time --}}
@@ -84,7 +83,7 @@
 
     <script>
         (function () {
-            const roomSelect = document.getElementById('room_id');
+            const roomInput = document.getElementById('room_id');
             const dateInput = document.getElementById('date_to_reserv');
             
             dateInput.addEventListener('click', function() {
@@ -101,17 +100,20 @@
             const endInput = document.getElementById('end_time');
             const rangeText = document.getElementById('selected-range-text');
 
-            const OPEN_MINUTES = 7 * 60;
-            const CLOSE_MINUTES = 20 * 60;
-            const STEP = 30;
+            const OPEN_MINUTES = toMinutes(@js(\App\Services\RoomAvailability::OPEN_TIME));
+            const CLOSE_MINUTES = toMinutes(@js(\App\Services\RoomAvailability::CLOSE_TIME));
+            const STEP = @js(\App\Services\RoomAvailability::STEP_MINUTES);
             const AVAILABILITY_URL = "{{ route('reservations.slots') }}";
 
             let bookedRanges = [];
             let anchorMinutes = null;
+            let earliestStartLocal = '';
+            let requestVersion = 0;
+            let availabilityRequest;
 
             function toMinutes(time) {
-                const [hour, minute] = time.split(':').map(Number);
-                return hour * 60 + minute;
+                const [hour, minute, second = 0] = time.split(':').map(Number);
+                return hour * 60 + minute + second / 60;
             }
 
             function toHHMM(minutes) {
@@ -128,20 +130,16 @@
             }
 
             function isBooked(minutes) {
-                return bookedRanges.find(range => minutes >= range.startMin && minutes < range.endMin);
+                return bookedRanges.some(range => range.startMin < minutes + STEP && range.endMin > minutes);
+            }
+
+            function isUnavailable(minutes) {
+                return isBooked(minutes) || `${dateInput.value} ${toHHMM(minutes)}:00.000000` < earliestStartLocal;
             }
 
             function buildGrid() {
                 grid.innerHTML = '';
                 labels.innerHTML = '';
-
-                // Ambil tanggal hari ini dengan format YYYY-MM-DD
-                const todayStr = new Date().toISOString().split('T')[0];
-                const selectedDate = dateInput.value;
-                
-                // Hitung total menit saat ini (misal jam 16:30 -> 16 * 60 + 30 = 990 menit)
-                const now = new Date();
-                const currentMinutes = now.getHours() * 60 + now.getMinutes();
 
                 for (let m = OPEN_MINUTES; m < CLOSE_MINUTES; m += STEP) {
                     const value = toHHMM(m);
@@ -155,18 +153,26 @@
                     slot.dataset.minutes = m;
                     slot.className = `h-10 border-b border-gray-200 bg-white transition`;
 
-                    const booking = isBooked(m);
-                    
-                    // Cek apakah tanggal yang dipilih adalah hari ini DAN jam slot sudah lewat dari waktu sekarang (+ buffer 3 jam jika ingin persis H-3 jam)
-                    // Menggunakan currentMinutes + 180 (3 jam) agar slot dalam rentang 3 jam ke depan ikut terkunci
-                    const isPassedToday = (selectedDate === todayStr) && (m <= (currentMinutes + 180));
+                    const booking = isUnavailable(m);
+                    slot.textContent = `${value} - ${toHHMM(m + STEP)} · ${booking ? 'Tidak tersedia' : 'Tersedia'}`;
+                    slot.classList.add('flex', 'items-center', 'justify-center', 'text-xs');
+                    slot.setAttribute('role', 'button');
+                    slot.setAttribute('aria-disabled', String(booking));
+                    slot.setAttribute('aria-pressed', 'false');
 
-                    if (booking || isPassedToday) {
+                    if (booking) {
                         slot.classList.remove('bg-white');
                         slot.classList.add('bg-gray-400', 'cursor-not-allowed');
                         slot.style.pointerEvents = 'none';
                     } else {
                         slot.classList.add('cursor-pointer');
+                        slot.tabIndex = 0;
+                        slot.addEventListener('keydown', function(event) {
+                            if (event.key === 'Enter' || event.key === ' ') {
+                                event.preventDefault();
+                                onSlotClick(m);
+                            }
+                        });
                         slot.addEventListener('mouseenter', function() {
                             if (!slot.classList.contains('bg-teal-600')) {
                                 slot.classList.add('bg-teal-100');
@@ -184,15 +190,16 @@
                     grid.appendChild(slot);
                 }
 
-                labels.innerHTML += `<div class="h-10 flex items-start pt-1 text-xs text-gray-500">20:00</div>`;
+                labels.innerHTML += `<div class="h-10 flex items-start pt-1 text-xs text-gray-500">${toHHMM(CLOSE_MINUTES)}</div>`;
                 paintSelection();
             }
 
             function paintSelection() {
                 [...grid.children].forEach(slot => {
                     const minutes = Number(slot.dataset.minutes);
-                    const booked = isBooked(minutes);
+                    const booked = isUnavailable(minutes);
                     const selected = startInput.value !== '' && minutes >= toMinutes(startInput.value) && minutes < toMinutes(endInput.value);
+                    slot.setAttribute('aria-pressed', String(selected));
 
                     if (booked) {
                         slot.classList.remove('bg-teal-600', 'bg-teal-100', 'text-white');
@@ -211,6 +218,11 @@
             }
 
             function onSlotClick(minutes) {
+                if (startInput.value !== '' && minutes >= toMinutes(startInput.value) && minutes < toMinutes(endInput.value)) {
+                    resetSelection();
+                    paintSelection();
+                    return;
+                }
                 if (anchorMinutes === null) {
                     anchorMinutes = minutes;
                     startInput.value = toHHMM(minutes);
@@ -224,7 +236,7 @@
                 const end = Math.max(anchorMinutes, minutes) + STEP;
 
                 for (let m = start; m < end; m += STEP) {
-                    if (isBooked(m)) {
+                    if (isUnavailable(m)) {
                         alert('Waktu tersebut sudah dibooking');
                         resetSelection();
                         paintSelection();
@@ -248,21 +260,36 @@
             }
 
             async function loadAvailabilityAndBuildGrid() {
-                const roomId = roomSelect.value;
+                const roomId = roomInput.value;
                 const date = dateInput.value;
+                const version = ++requestVersion;
+                availabilityRequest?.abort();
+                availabilityRequest = new AbortController();
                 bookedRanges = [];
                 resetSelection();
+                wrapper.classList.add('hidden');
+                hint.classList.remove('hidden');
 
                 if (!roomId || !date) {
+                    hint.textContent = 'Pilih fasilitas dari daftar di atas & tanggal untuk melihat jadwal.';
                     hint.classList.remove('hidden');
                     wrapper.classList.add('hidden');
                     return;
                 }
 
+                hint.textContent = 'Memuat jadwal…';
                 try {
                     const url = `${AVAILABILITY_URL}?room_id=${roomId}&date=${date}`;
-                    const response = await fetch(url);
+                    const response = await fetch(url, {headers: {Accept: 'application/json'}, signal: availabilityRequest.signal});
+                    if (!response.ok) throw new Error('Jadwal tidak dapat dimuat');
                     const data = await response.json();
+                    if (version !== requestVersion) return;
+                    const cutoff = response.headers.get('X-Reservation-Earliest-Start');
+                    if (!Array.isArray(data) || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}[+-]\d{2}:\d{2}$/.test(cutoff ?? '')) throw new Error('Jadwal tidak valid');
+                    const validTime = time => typeof time === 'string' && /^(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d)?$/.test(time);
+                    if (!data.every(item => item && validTime(item.start_time) && validTime(item.end_time)
+                        && toMinutes(item.start_time) < toMinutes(item.end_time))) throw new Error('Jadwal tidak valid');
+                    earliestStartLocal = cutoff.slice(0, 26).replace('T', ' ');
 
                     bookedRanges = data.map(item => ({
                         startMin: toMinutes(item.start_time),
@@ -273,15 +300,18 @@
                     wrapper.classList.remove('hidden');
                     buildGrid();
                 } catch (error) {
+                    if (error.name === 'AbortError' || version !== requestVersion) return;
                     console.error(error);
                     hint.textContent = 'Gagal memuat jadwal, silakan coba lagi.';
                 }
             }
 
-            roomSelect.addEventListener('change', loadAvailabilityAndBuildGrid);
+            roomInput.addEventListener('change', loadAvailabilityAndBuildGrid);
             dateInput.addEventListener('change', loadAvailabilityAndBuildGrid);
 
-            document.querySelector('form').addEventListener('submit', function(e) {
+            if (roomInput.value && dateInput.value) loadAvailabilityAndBuildGrid();
+
+            document.getElementById('reservation-form').addEventListener('submit', function(e) {
                 if (startInput.value === '' || endInput.value === '') {
                     e.preventDefault();
                     alert('Silakan pilih waktu reservasi terlebih dahulu');

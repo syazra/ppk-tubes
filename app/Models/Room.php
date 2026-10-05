@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Room extends Model
 {
@@ -23,5 +24,13 @@ class Room extends Model
     public function reservations()
     {
         return $this->hasMany(Reservation::class);
+    }
+
+    /** @return HasMany<RoomImage, $this> */
+    public function images(): HasMany
+    {
+        return $this->hasMany(RoomImage::class)
+            ->orderBy('display_order')
+            ->orderBy('id');
     }
 }
