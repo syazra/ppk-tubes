@@ -23,12 +23,12 @@ const styles = `
 .lg-orb-1 { width: 420px; height: 420px; top: -120px; left: -100px; background: #d3e9a6; animation: lg-float 14s ease-in-out infinite; }
 .lg-orb-2 { width: 480px; height: 480px; bottom: -180px; right: -120px; background: #00a991; animation: lg-float 18s ease-in-out infinite reverse; }
 .lg-orb-3 { width: 220px; height: 220px; top: 55%; left: 12%; background: #7fd6c2; opacity: .3; animation: lg-float 11s ease-in-out infinite; }
-.lg-frost { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(180deg, #ffffff14, #06302a20); -webkit-backdrop-filter: blur(2.5px) saturate(120%); backdrop-filter: blur(2.5px) saturate(120%); }
-.lg-fog { position: absolute; left: 0; right: 0; pointer-events: none; background-repeat: repeat-x; background-size: 1000px 100%; }
-.lg-fog-1 { top: 8%; height: 62%; opacity: .5; animation: lg-drift 90s linear infinite; }
-.lg-fog-2 { bottom: -4%; height: 58%; opacity: .38; background-size: 1400px 100%; animation: lg-drift-b 140s linear infinite; }
-.lg-mist { position: absolute; inset: auto 0 0; height: 45%; pointer-events: none; background: linear-gradient(transparent, #cfeee54d 80%, #e6f6f066); }
-.lg-drop { position: absolute; z-index: 0; pointer-events: none; border-radius: 50% 50% 50% 50% / 58% 58% 42% 42%; background: radial-gradient(circle at 32% 26%, #ffffffd0 0 9%, #ffffff10 32%, #04302a22 72%, #ffffff40 100%); box-shadow: 0 3px 5px #00201c40, inset 0 -2px 3px #ffffff40, inset 0 1px 2px #00000025; }
+.lg-frost { position: absolute; inset: 0; pointer-events: none; -webkit-backdrop-filter: blur(1px); backdrop-filter: blur(1px); }
+.lg-fog { position: absolute; left: 0; right: 0; pointer-events: none; background-repeat: repeat-x; background-size: 1000px 100%; -webkit-mask-image: linear-gradient(transparent, #000 35%, #000 65%, transparent); mask-image: linear-gradient(transparent, #000 35%, #000 65%, transparent); }
+.lg-fog-1 { top: 10%; height: 60%; opacity: .1; animation: lg-drift 90s linear infinite; }
+.lg-fog-2 { bottom: 0; height: 55%; opacity: .08; background-size: 1400px 100%; animation: lg-drift-b 140s linear infinite; }
+.lg-mist { position: absolute; inset: auto 0 0; height: 45%; pointer-events: none; background: linear-gradient(transparent, #cfeee51a); }
+.lg-drop { position: absolute; z-index: 0; pointer-events: none; border-radius: 50% 50% 50% 50% / 58% 58% 42% 42%; background: radial-gradient(circle at 32% 26%, #ffffffd0 0 9%, #ffffff10 32%, #04302a22 72%, #ffffff40 100%); box-shadow: 0 1px 2px #00201c26, inset 0 -1px 2px #ffffff30; }
 .lg-drop.slide { animation: lg-drip linear infinite; }
 .lg-drop.slide:before { content: ''; position: absolute; left: 50%; bottom: 80%; width: 38%; height: var(--drip); transform: translateX(-50%); border-radius: 99px; background: linear-gradient(transparent, #ffffff33); }
 .lg-back { position: absolute; top: 24px; left: 28px; z-index: 2; display: inline-flex; align-items: center; gap: 8px; min-height: 44px; color: #e3eae1; font-size: 13px; text-decoration: none; transition: color .2s; }
@@ -36,8 +36,8 @@ const styles = `
 .lg-back svg { width: 16px; height: 16px; transform: rotate(180deg); transition: transform .2s; }
 .lg-back:hover svg { transform: rotate(180deg) translateX(3px); }
 .lg-stage { position: relative; z-index: 1; width: min(460px, 100%); perspective: 1200px; }
-.lg-card { position: relative; padding: 44px 40px 36px; background: linear-gradient(145deg, #ffffffb8, #f1f9e8a0); border: 1px solid #ffffff90; border-radius: 24px; box-shadow: 0 30px 80px #00221d66, 0 2px 0 #ffffffb0 inset, 0 -1px 0 #ffffff40 inset; transform-style: preserve-3d; overflow: hidden; }
-@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { .lg-card { -webkit-backdrop-filter: blur(26px) saturate(150%); backdrop-filter: blur(26px) saturate(150%); } }
+.lg-card { position: relative; padding: 44px 40px 36px; background: linear-gradient(145deg, #f9fcf4e6, #f1f9e8d9); border: 1px solid #ffffffa0; border-radius: 24px; box-shadow: 0 30px 80px #00221d66, 0 2px 0 #ffffffb0 inset, 0 -1px 0 #ffffff40 inset; transform-style: preserve-3d; overflow: hidden; }
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { .lg-card { -webkit-backdrop-filter: blur(14px) saturate(120%); backdrop-filter: blur(14px) saturate(120%); } }
 .lg-card:before { content: ''; position: absolute; inset: 0 0 auto; height: 4px; background: linear-gradient(90deg, #00a991, var(--lime), #00a991); background-size: 200% 100%; animation: lg-shimmer 4s linear infinite; }
 .lg-shine { position: absolute; inset: 0; pointer-events: none; border-radius: inherit; }
 .lg-brand { display: flex; align-items: center; justify-content: center; gap: 10px; color: var(--forest); font-size: 24px; font-weight: 600; letter-spacing: -.8px; }
@@ -113,10 +113,10 @@ function fogImage(seed) {
 
 // Deterministic pseudo-random so droplets stay put between renders.
 const random = seed => { const x = Math.sin(seed * 9301 + 49297) * 233280; return x - Math.floor(x); };
-const droplets = Array.from({ length: 34 }, (_, i) => {
-    const size = 5 + random(i + 1) * 17;
-    const slide = i % 6 === 0;
-    return { slide, style: { left: `${random(i + 50) * 100}%`, top: `${random(i + 90) * 100}%`, width: size, height: size * (slide ? 1.25 : 1.1), opacity: 0.45 + random(i + 7) * 0.5, ...(slide ? { animationDuration: `${14 + random(i) * 12}s`, animationDelay: `${-random(i + 3) * 14}s`, '--drip': `${70 + random(i + 5) * 140}px` } : {}) } };
+const droplets = Array.from({ length: 14 }, (_, i) => {
+    const size = 4 + random(i + 1) * 9;
+    const slide = false;
+    return { slide, style: { left: `${random(i + 50) * 100}%`, top: `${random(i + 90) * 100}%`, width: size, height: size * (slide ? 1.25 : 1.1), opacity: 0.2 + random(i + 7) * 0.25, ...(slide ? { animationDuration: `${14 + random(i) * 12}s`, animationDelay: `${-random(i + 3) * 14}s`, '--drip': `${70 + random(i + 5) * 140}px` } : {}) } };
 });
 
 const container = { hidden: {}, show: { transition: { staggerChildren: 0.07, delayChildren: 0.15 } } };
