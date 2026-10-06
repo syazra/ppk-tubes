@@ -48,6 +48,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/', 'index')->name('index');
         Route::get('/form', 'create')->name('form');
         Route::get('/slots', 'availableSlots')->name('slots');
+        Route::get('/facilities', 'facilities')->name('facilities');
+        Route::get('/facilities/{room}/slots', 'facilitySlots')->name('facility-slots');
         Route::post('/', 'store')->name('store');
         Route::get('/{reservation}/ticket', 'ticket')->name('ticket');
         Route::get('/{reservation}/qrcode', 'qrcode')->name('qrcode');
