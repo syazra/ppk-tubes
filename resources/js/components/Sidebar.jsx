@@ -4,8 +4,8 @@ import Icon, { initials } from './Icons';
 
 const userNavigation = [
     { key: 'dashboard', icon: 'home', label: 'Dasbor' },
-    { key: 'reservations', icon: 'calendar', label: 'Reservasi' },
-    { key: 'reports', icon: 'tool', label: 'Laporan' },
+    { key: 'reservations', icon: 'calendar', label: 'Reservasi Saya' },
+    { key: 'reports', icon: 'tool', label: 'Laporan Saya' },
 ];
 
 const adminNavigation = [

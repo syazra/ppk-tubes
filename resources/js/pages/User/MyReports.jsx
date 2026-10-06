@@ -80,7 +80,7 @@ export default function MyReports({ reports, user, auth, csrfToken, urls, error,
 			csrfToken={csrfToken}
 			urls={urls}
 			active="reports"
-			title="Riwayat Laporan Saya"
+			title="Laporan Saya"
 			subtitle="Pantau status laporan kerusakan fasilitas yang telah kamu kirimkan."
 			actions={(
 				<Link
@@ -91,7 +91,7 @@ export default function MyReports({ reports, user, auth, csrfToken, urls, error,
 				</Link>
 			)}
 		>
-			<Head title="Riwayat Laporan Saya" />
+			<Head title="Laporan Saya" />
 			<FilterTable
 				title="Daftar laporan"
 				description="Cari berdasarkan fasilitas atau deskripsi, lalu saring berdasarkan status laporan."
