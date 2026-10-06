@@ -6,6 +6,7 @@ use App\Http\Controllers\ReservationController;
 use App\Models\Report;
 use App\Models\Reservation;
 use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
 
 Route::middleware(['auth'])->group(function () {
     Route::middleware('verified')->group(function () {
@@ -18,7 +19,22 @@ Route::middleware(['auth'])->group(function () {
             $recentReservations = Reservation::with('room')->where('user_id', $user->id)->latest()->take(3)->get();
             $recentReports = Report::with('room')->where('user_id', $user->id)->latest()->take(3)->get();
 
-            return view('user.dashboard', compact('recentReservations', 'recentReports'));
+            return Inertia::render('User/Dashboard', [
+                'user' => $user->only('name', 'email', 'role', 'account_type'),
+                'csrfToken' => csrf_token(),
+                'recentReservations' => $recentReservations,
+                'recentReports' => $recentReports,
+                'urls' => [
+                    'dashboard' => route('user.dashboard'),
+                    'reservations' => route('reservations.index'),
+                    'reservationForm' => route('reservations.form'),
+                    'reports' => route('reports.index'),
+                    'reportCreate' => route('reports.create'),
+                    'profile' => route('profile.edit'),
+                    'guest' => route('landing'),
+                    'logout' => route('logout'),
+                ],
+            ]);
         })->name('user.dashboard');
     });
 

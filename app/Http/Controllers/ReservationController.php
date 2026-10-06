@@ -10,113 +10,100 @@ use Illuminate\Validation\Rule;
 use Carbon\Carbon;
 use Endroid\QrCode\Builder\Builder;
 use Endroid\QrCode\Writer\SvgWriter;
+use Inertia\Inertia;
 
 class ReservationController extends Controller
 {
     /**
      * Menampilkan reservasi user
      */
-    public function index()
+    public function index(Request $request)
     {
+        $filters = $request->validate([
+            'search' => ['nullable', 'string', 'max:255'],
+            'status' => ['nullable', Rule::in(['menunggu', 'disetujui', 'ditolak', 'dibatalkan'])],
+            'sort' => ['nullable', Rule::in(['reservation_near', 'reservation_far', 'created_near', 'created_far'])],
+        ]);
+
+        $sort = $filters['sort'] ?? 'created_near';
         $reservations = Reservation::with('room')
-            ->where('user_id', Auth::id())
-
-            // Pencarian
-            ->when(request('search'), function ($query) {
-
-                $search = request('search');
-
-                $query->where(function ($q) use ($search) {
-
-                    $q->whereHas('room', function ($room) use ($search) {
-                        $room->where('name', 'like', "%$search%")
-                            ->orWhere('type', 'like', "%$search%");
-                    })
-                    ->orWhere('date_to_reserv', 'like', "%$search%");
-
+            ->where('user_id', $request->user()->id)
+            ->when($filters['search'] ?? null, function ($query, string $search): void {
+                $query->where(function ($query) use ($search): void {
+                    $query->whereHas('room', function ($roomQuery) use ($search): void {
+                        $roomQuery->where('name', 'like', "%{$search}%")
+                            ->orWhere('type', 'like', "%{$search}%");
+                    })->orWhere('date_to_reserv', 'like', "%{$search}%");
                 });
-
             })
+            ->when($filters['status'] ?? null, fn ($query, string $status) => $query->where('status', $status))
+            ->when($sort === 'reservation_near', fn ($query) => $query->orderBy('date_to_reserv')->orderBy('start_time'))
+            ->when($sort === 'reservation_far', fn ($query) => $query->orderByDesc('date_to_reserv')->orderByDesc('start_time'))
+            ->when($sort === 'created_near', fn ($query) => $query->orderByDesc('created_at'))
+            ->when($sort === 'created_far', fn ($query) => $query->orderBy('created_at'))
+            ->paginate(10)
+            ->withQueryString()
+            ->through(fn (Reservation $reservation): array => [
+                'id' => $reservation->id,
+                'room' => [
+                    'name' => $reservation->room?->name,
+                    'type' => $reservation->room?->type,
+                ],
+                'date_to_reserv' => $reservation->date_to_reserv,
+                'start_time' => $reservation->start_time,
+                'end_time' => $reservation->end_time,
+                'desc' => $reservation->desc,
+                'status' => $reservation->status,
+                'can_cancel' => $reservation->status === 'menunggu' && $reservation->canStillBeProcessed(),
+                'cancel_url' => route('reservations.cancel', $reservation),
+                'ticket_url' => route('reservations.ticket', $reservation),
+                'qr_url' => route('reservations.qrcode', $reservation),
+            ]);
 
-
-            // Filter status
-            ->when(request('status'), function ($query) {
-
-                $query->where(
-                    'status',
-                    request('status')
-                );
-
-            })
-
-
-            // Sorting
-            ->when(request('sort'), function ($query) {
-
-                switch (request('sort')) {
-
-                    // waktu reservasi terdekat
-                    case 'reservation_near':
-                        $query->orderBy('date_to_reserv', 'asc')
-                            ->orderBy('start_time', 'asc');
-                        break;
-
-
-                    // waktu reservasi terjauh
-                    case 'reservation_far':
-                        $query->orderBy('date_to_reserv', 'desc')
-                            ->orderBy('start_time', 'desc');
-                        break;
-
-
-                    // pengajuan terbaru
-                    case 'created_near':
-                        $query->orderBy('created_at', 'desc');
-                        break;
-
-
-                    // pengajuan terlama
-                    case 'created_far':
-                        $query->orderBy('created_at', 'asc');
-                        break;
-
-
-                    default:
-                        $query->latest();
-                }
-
-            }, function ($query) {
-                // default kalau tidak pilih filter
-                $query->latest();
-            })
-
-
-            ->get();
-
-
-        if(request()->ajax()) {
-
-            return view(
-                'user.partials.reservation-table',
-                compact('reservations')
-            )->render();
-
-        }
-
-
-        return view(
-            'user.my-reservations',
-            compact('reservations')
-        );
+        return Inertia::render('User/MyReservations', [
+            'user' => $request->user()->only('name', 'email', 'role', 'account_type'),
+            'csrfToken' => csrf_token(),
+            'status' => $request->session()->get('success'),
+            'error' => $request->session()->get('error'),
+            'reservations' => $reservations,
+            'filters' => [
+                'search' => $filters['search'] ?? '',
+                'status' => $filters['status'] ?? '',
+                'sort' => $sort,
+            ],
+            'urls' => [
+                'dashboard' => route('user.dashboard'),
+                'reports' => route('reports.index'),
+                'reservations' => route('reservations.index'),
+                'profile' => route('profile.edit'),
+                'guest' => route('landing'),
+                'logout' => route('logout'),
+            ],
+        ]);
     }
 
     /**
      * Form reservasi
      */
-    public function create()
+    public function create(Request $request)
     {
-        $rooms = Room::where('is_avail', true)->get();
-        return view('user.reservation-form', compact('rooms'));
+        $rooms = Room::where('is_avail', true)->get(['id', 'name', 'location', 'type']);
+
+        return Inertia::render('User/ReservationForm', [
+            'user' => $request->user()->only('name', 'email', 'role', 'account_type'),
+            'csrfToken' => csrf_token(),
+            'rooms' => $rooms,
+            'urls' => [
+                'dashboard' => route('user.dashboard'),
+                'reports' => route('reports.index'),
+                'reservations' => route('reservations.index'),
+                'slots' => route('reservations.slots'),
+                'store' => route('reservations.store'),
+                'profile' => route('profile.edit'),
+                'guest' => route('landing'),
+                'logout' => route('logout'),
+            ],
+        ]);
     }
 
     
@@ -351,13 +338,11 @@ class ReservationController extends Controller
         );
 
 
-        $result = new Builder(
-            writer: new SvgWriter(),
-            data: $url,
-            size: 150
-        );
-
-        $result = $result->build();
+        $result = Builder::create()
+            ->writer(new SvgWriter())
+            ->data($url)
+            ->size(150)
+            ->build();
 
 
         return response($result->getString())
