@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Reservation;
 use App\Models\Room;
+use App\Models\RoomImage;
 use App\Services\RoomAvailability;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -88,31 +89,40 @@ class ReservationController extends Controller
     /**
      * Form reservasi
      */
-    public function create(Request $request): \Illuminate\View\View
+    public function create(Request $request, RoomAvailability $availability): \Inertia\Response
     {
-        $rooms = Room::where('is_avail', true)->get();
-        return view('user.reservation-form', compact('rooms') + $this->facilityBrowserData($request));
-    }
-
-    /**
-     * Detail tiket reservasi
-     */
-    public function ticket(Reservation $reservation)
-    {
-        abort_if(
-            $reservation->user_id != Auth::id(),
-            403
-        );
+        $browserData = $this->facilityBrowserData($request);
+        $facilities = $browserData['facilities']->through(fn (Room $room): array => $this->facilityCardData($room));
+        $oldInput = $request->session()->get('_old_input', []);
+        $oldRoomId = $oldInput['room_id'] ?? null;
+        $selectedRoom = is_numeric($oldRoomId)
+            ? Room::with('images')->find((int) $oldRoomId)
+            : null;
+        $formFields = array_intersect_key($oldInput, array_flip([
+            'room_id', 'date_to_reserv', 'desc', 'start_time', 'end_time',
+        ]));
 
         return Inertia::render('User/ReservationForm', [
             'user' => $request->user()->only('name', 'email', 'role', 'account_type'),
             'csrfToken' => csrf_token(),
-            'rooms' => $rooms,
+            'rooms' => Room::where('is_avail', true)->orderBy('name')->get(['id', 'name', 'location', 'type']),
+            'facilities' => $facilities,
+            'filters' => $browserData['filters'],
+            'types' => $browserData['types'],
+            'catalogDate' => $browserData['catalogDate'],
+            'timezone' => $browserData['timezone'],
+            'minimumDate' => $availability->earliestStart()->format('Y-m-d'),
+            'maxDurationMinutes' => RoomAvailability::MAX_DURATION_MINUTES,
+            'selectedFacility' => $selectedRoom ? $this->facilityCardData($selectedRoom) : null,
+            'oldInput' => $formFields,
+            'photoPlaceholderUrl' => asset('images/facility-placeholder-photo.jpg'),
+            'photoFallbackUrl' => asset('images/facility-placeholder.svg'),
             'urls' => [
                 'dashboard' => route('user.dashboard'),
                 'reports' => route('reports.index'),
                 'reservations' => route('reservations.index'),
-                'slots' => route('reservations.slots'),
+                'reservationForm' => route('reservations.form'),
+                'facilities' => route('reservations.facilities'),
                 'store' => route('reservations.store'),
                 'profile' => route('profile.edit'),
                 'guest' => route('landing'),
@@ -120,8 +130,6 @@ class ReservationController extends Controller
             ],
         ]);
     }
-
-    
 
     /**
      * Membatalkan reservasi
@@ -254,6 +262,29 @@ class ReservationController extends Controller
         return compact('facilities', 'filters', 'types', 'catalogDate') + ['timezone' => config('app.timezone')];
     }
 
+    /** @return array<string, mixed> */
+    private function facilityCardData(Room $room): array
+    {
+        return [
+            'id' => $room->id,
+            'name' => $room->name,
+            'location' => $room->location,
+            'type' => $room->type,
+            'capacity' => $room->capacity,
+            'description' => $room->desc,
+            'is_available' => $room->is_avail,
+            'slots_url' => route('reservations.facility-slots', ['room' => $room]),
+            'images' => $room->images->map(function (RoomImage $image): ?array {
+                $url = $image->publicUrl();
+
+                return $url === null ? null : [
+                    'url' => $url,
+                    'alt_text' => $image->alt_text,
+                ];
+            })->filter()->values()->all(),
+        ];
+    }
+
     /**
      * Simpan reservasi
      */
@@ -285,15 +316,14 @@ class ReservationController extends Controller
         ]);
 
         $reservationStart = Carbon::parse(
-            $validated['date_to_reserv'].' '.$validated['start_time']
+            $validated['date_to_reserv'].' '.$validated['start_time'],
+            config('app.timezone'),
         );
 
-        if($reservationStart->isBefore(now()->addHours(12))){
-            return back()
-                ->withErrors([
-                    'time' => 'Reservasi minimal dilakukan 12 jam sebelumnya.'
-                ])
-                ->withInput();
+        if ($reservationStart->lt($availability->earliestStart())) {
+            return back()->withErrors([
+                'time' => 'Reservasi harus dimulai minimal tiga jam dari sekarang.',
+            ])->withInput();
         }
 
         /*
@@ -335,8 +365,10 @@ class ReservationController extends Controller
                 ->withInput();
         }
 
-        if (Carbon::parse($validated['date_to_reserv'].' '.$validated['start_time'], config('app.timezone'))->lt($availability->earliestStart())) {
-            return back()->withErrors(['time' => 'Reservasi harus dimulai minimal tiga jam dari sekarang.'])->withInput();
+        if (($end - $start) > RoomAvailability::MAX_DURATION_MINUTES * 60) {
+            return back()->withErrors([
+                'time' => 'Durasi reservasi maksimal tiga jam.',
+            ])->withInput();
         }
 
         /*

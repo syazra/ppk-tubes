@@ -181,24 +181,9 @@
                     slot.setAttribute('aria-pressed', 'false');
 
                     if (booking) {
-                    // Cek apakah tanggal yang dipilih DAN jam slot sudah lewat dari waktu sekarang (+ buffer 3 jam jika ingin persis H-3 jam)
-                    // Menggunakan currentMinutes + 720 (12 jam) agar slot dalam rentang 12 jam ke depan ikut terkunci
-                    const booking = isBooked(m);
-                    const slotDateTime = new Date(`${selectedDate}T${value}:00`);
-                    const minimumBookingDateTime = new Date(Date.now() + 12 * 60 * 60 * 1000);
-
-                    const isPassed = slotDateTime < minimumBookingDateTime;
-
-                    if (isPassed) {
                         slot.classList.remove('bg-white');
                         slot.classList.add('bg-gray-400', 'cursor-not-allowed');
-                        slot.style.pointerEvents = 'none';
-                        
-                    } else if (booking){
-                        slot.classList.remove('bg-white');
-                        slot.classList.add('bg-gray-400', 'cursor-not-allowed');
-                        slot.style.pointerEvents = 'none';
-                    }else {
+                    } else {
                         hasAvailableSlot = true;
                         slot.classList.add('cursor-pointer');
                         slot.tabIndex = 0;
@@ -228,11 +213,11 @@
                 labels.innerHTML += `<div class="h-10 flex items-start pt-1 text-xs text-gray-500">20:00</div>`;
                 if (!hasAvailableSlot) {
                     grid.classList.add('opacity-30');
-                    noReservationMessage.classList.remove('hidden');
-                    slotMessage.classList.add('hidden')
+                    noReservationMessage?.classList.remove('hidden');
+                    slotMessage?.classList.add('hidden');
                 } else {
                     grid.classList.remove('opacity-30');
-                    noReservationMessage.classList.add('hidden');
+                    noReservationMessage?.classList.add('hidden');
                 }
                 paintSelection();
             }

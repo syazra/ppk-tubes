@@ -9,6 +9,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Testing\TestResponse;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class UserFacilityBrowsingTest extends TestCase
@@ -115,24 +116,20 @@ class UserFacilityBrowsingTest extends TestCase
         $this->signIn();
         $active = $this->facility();
         $inactive = $this->facility(['name' => 'Aula Nonaktif', 'type' => 'Aula', 'is_avail' => false]);
+        Storage::fake('public');
+        Storage::disk('public')->put('facilities/aula.jpg', 'photo');
+        $inactive->images()->create(['path' => 'facilities/aula.jpg', 'alt_text' => 'Foto aula']);
 
-        $response = $this->get(route('reservations.form', ['type' => 'Aula']))->assertOk();
-        $response->assertViewHas('facilities', fn ($facilities) => $facilities->pluck('id')->all() === [$inactive->id]);
-        $response->assertViewHas('rooms', fn ($rooms) => $rooms->pluck('id')->all() === [$active->id]);
-        $response->assertSee('action="'.route('reservations.store').'" method="POST"', false);
-        foreach (['room_id', 'date_to_reserv', 'desc', 'start_time', 'end_time'] as $field) {
-            $response->assertSee('name="'.$field.'"', false);
-        }
-        foreach (['time-grid', 'time-labels', 'time-grid-wrapper', 'selected-range-text'] as $id) {
-            $response->assertSee('id="'.$id.'"', false);
-        }
-        $response->assertSee('id="selected-facility"', false);
-        $response->assertSee('Belum ada fasilitas dipilih. Pilih fasilitas dari daftar di atas.');
-        $this->assertMatchesRegularExpression('/<input\b(?=[^>]*\btype="hidden")(?=[^>]*\bname="room_id")(?=[^>]*\bid="room_id")[^>]*>/i', $response->getContent());
-        $this->assertDoesNotMatchRegularExpression('/<select\b[^>]*(?:name|id)="room_id"/i', $response->getContent());
-        $response->assertSee('Nonaktif');
-        $response->assertSee('Form Reservasi');
-        $response->assertDontSee('data-select-facility="'.$inactive->id.'"', false);
+        $this->get(route('reservations.form', ['type' => 'Aula']))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('User/ReservationForm')
+                ->where('facilities.data.0.id', $inactive->id)
+            ->where('facilities.data.0.images.0.url', Storage::disk('public')->url('facilities/aula.jpg'))
+                ->where('rooms.0.id', $active->id)
+                ->where('selectedFacility', null)
+                ->where('urls.store', route('reservations.store'))
+            );
         $this->get(route('reservations.facilities', ['type' => 'Laboratorium']))->assertOk()
             ->assertSee('data-select-facility="'.$active->id.'"', false)
             ->assertSee('data-facility-label="'.$active->name.' · '.$active->location.'"', false);
@@ -383,7 +380,11 @@ class UserFacilityBrowsingTest extends TestCase
         $response = $this->getJson(route('reservations.slots', ['room_id' => $active->id, 'date' => '2026-10-06']))
             ->assertOk()->assertHeader('X-Reservation-Earliest-Start');
         $this->assertSame('2026-10-06T01:30:00+07:00', Carbon::parse($response->headers->get('X-Reservation-Earliest-Start'))->toIso8601String());
-        $this->get(route('reservations.form'))->assertOk()->assertViewHas('catalogDate', '2026-10-05');
+        $this->get(route('reservations.form'))->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('User/ReservationForm')
+                ->where('catalogDate', '2026-10-05')
+            );
     }
 
     public function test_legacy_slot_endpoint_retains_actual_booking_ranges_and_adds_timezone_cutoff_headers(): void
@@ -424,6 +425,26 @@ class UserFacilityBrowsingTest extends TestCase
         ]);
     }
 
+    public function test_reservation_submission_rejects_durations_longer_than_three_hours(): void
+    {
+        $this->signIn();
+        $room = $this->facility();
+
+        $this->post(route('reservations.store'), $this->reservationPayload($room, [
+            'date_to_reserv' => '2026-10-06',
+            'start_time' => '09:00',
+            'end_time' => '12:00',
+        ]))->assertSessionHasNoErrors()->assertRedirect(route('reservations.index'));
+
+        $this->post(route('reservations.store'), $this->reservationPayload($room, [
+            'date_to_reserv' => '2026-10-07',
+            'start_time' => '09:00',
+            'end_time' => '12:30',
+        ]))->assertSessionHasErrors('time');
+
+        $this->assertDatabaseCount('reservations', 1);
+    }
+
     public function test_failed_submission_keeps_the_original_form_values_and_displays_the_server_time_error(): void
     {
         $this->signIn();
@@ -437,14 +458,15 @@ class UserFacilityBrowsingTest extends TestCase
             ->assertSessionHasErrors(['time' => 'Reservasi harus dimulai minimal tiga jam dari sekarang.']);
 
         $this->withCookie(config('session.cookie'), $this->app['session']->getId());
-        $response = $this->get(route('reservations.form'))->assertOk()
-            ->assertSee('id="selected-facility"', false)
-            ->assertSee($room->name.' · '.$room->location)
-            ->assertSee('value="2026-10-05"', false)
-            ->assertSee('Kegiatan yang belum terkirim');
-        $this->assertMatchesRegularExpression('/<input\b(?=[^>]*\btype="hidden")(?=[^>]*\bid="room_id")(?=[^>]*\bvalue="'.$room->id.'")[^>]*>/i', $response->getContent());
-        $this->assertMatchesRegularExpression('/<p\b[^>]*\bid="selected-facility"[^>]*>Fasilitas dipilih: '.preg_quote($room->name.' · '.$room->location, '/').'<\/p>/u', $response->getContent());
-        $this->assertTrue(str_contains($response->getContent(), 'Reservasi harus dimulai minimal tiga jam dari sekarang.'), 'The server time error must be visible on the original reservation form.');
+        $this->get(route('reservations.form'))->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('User/ReservationForm')
+                ->where('errors.time', 'Reservasi harus dimulai minimal tiga jam dari sekarang.')
+                ->where('selectedFacility.id', $room->id)
+                ->where('oldInput.room_id', $room->id)
+                ->where('oldInput.date_to_reserv', '2026-10-05')
+                ->where('oldInput.desc', 'Kegiatan yang belum terkirim')
+            );
         $this->assertDatabaseCount('reservations', 0);
     }
 

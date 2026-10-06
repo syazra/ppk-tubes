@@ -14,6 +14,8 @@ class RoomAvailability
 
     public const STEP_MINUTES = 30;
 
+    public const MAX_DURATION_MINUTES = 180;
+
     public const LEAD_HOURS = 3;
 
     public const BLOCKING_STATUSES = ['menunggu', 'disetujui'];
