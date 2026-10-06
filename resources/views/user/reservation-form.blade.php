@@ -56,10 +56,18 @@
 
                     <div id="time-grid-wrapper" class="time-grid-layout hidden" role="group" aria-label="Ketersediaan Waktu">
                         <div id="time-labels" class="text-xs text-gray-500"></div>
-                        <div id="time-grid"></div>
+
+                        <div id="time-grid-container" class="relative">
+                            <div id="time-grid"></div>
+
+                            <div id="no-reservation-message" 
+                                class="hidden absolute inset-0 flex items-center justify-center text-gray-500">
+                                Sudah tidak dapat reservasi hari ini
+                            </div>
+                        </div>
                     </div>
 
-                    <p class="text-xs text-gray-400 mt-3">Klik slot awal, lalu klik slot akhir untuk memblok rentang waktu. Klik salah satu slot terpilih lagi untuk membatalkan pilihan.</p>
+                    <p id= "slot-message" class="text-xs text-gray-400 mt-3">Klik slot awal, lalu klik slot akhir untuk memblok rentang waktu. Klik salah satu slot terpilih lagi untuk membatalkan pilihan.</p>
                 </div>
                 <p id="selected-range-text" class="text-sm text-teal-700 font-medium mt-2" role="status" aria-live="polite"></p>
                 <x-input-error :messages="$errors->get('time')" class="mt-2" />
@@ -70,7 +78,9 @@
             {{-- Hidden Time --}}
             <input type="hidden" name="start_time" id="start_time">
             <input type="hidden" name="end_time" id="end_time">
-
+            <p id="booking-warning" class="text-sm text-red-600 mt-2 hidden">
+                Sudah tidak dapat reservasi untuk waktu tersebut.
+            </p>
             {{-- BUTTON --}}
             <div class="flex justify-end gap-3">
                 <x-secondary-button>
@@ -95,6 +105,8 @@
             const hint = document.getElementById('time-grid-hint');
             const wrapper = document.getElementById('time-grid-wrapper');
             const grid = document.getElementById('time-grid');
+            const noReservationMessage = document.getElementById('no-reservation-message');
+            const slotMessage = document.getElementById('slot-message');
             const labels = document.getElementById('time-labels');
             const startInput = document.getElementById('start_time');
             const endInput = document.getElementById('end_time');
@@ -104,7 +116,7 @@
             const CLOSE_MINUTES = toMinutes(@js(\App\Services\RoomAvailability::CLOSE_TIME));
             const STEP = @js(\App\Services\RoomAvailability::STEP_MINUTES);
             const AVAILABILITY_URL = "{{ route('reservations.slots') }}";
-
+            const warning = document.getElementById('booking-warning');
             let bookedRanges = [];
             let anchorMinutes = null;
             let earliestStartLocal = '';
@@ -141,6 +153,14 @@
                 grid.innerHTML = '';
                 labels.innerHTML = '';
 
+                // Ambil tanggal hari ini dengan format YYYY-MM-DD
+                const todayStr = new Date().toISOString().split('T')[0];
+                const selectedDate = dateInput.value;
+                
+                // Hitung total menit saat ini (misal jam 16:30 -> 16 * 60 + 30 = 990 menit)
+                const now = new Date();
+                const currentMinutes = now.getHours() * 60 + now.getMinutes();
+                let hasAvailableSlot = false;
                 for (let m = OPEN_MINUTES; m < CLOSE_MINUTES; m += STEP) {
                     const value = toHHMM(m);
                     if (m % 60 === 0) {
@@ -161,10 +181,25 @@
                     slot.setAttribute('aria-pressed', 'false');
 
                     if (booking) {
+                    // Cek apakah tanggal yang dipilih DAN jam slot sudah lewat dari waktu sekarang (+ buffer 3 jam jika ingin persis H-3 jam)
+                    // Menggunakan currentMinutes + 720 (12 jam) agar slot dalam rentang 12 jam ke depan ikut terkunci
+                    const booking = isBooked(m);
+                    const slotDateTime = new Date(`${selectedDate}T${value}:00`);
+                    const minimumBookingDateTime = new Date(Date.now() + 12 * 60 * 60 * 1000);
+
+                    const isPassed = slotDateTime < minimumBookingDateTime;
+
+                    if (isPassed) {
                         slot.classList.remove('bg-white');
                         slot.classList.add('bg-gray-400', 'cursor-not-allowed');
                         slot.style.pointerEvents = 'none';
-                    } else {
+                        
+                    } else if (booking){
+                        slot.classList.remove('bg-white');
+                        slot.classList.add('bg-gray-400', 'cursor-not-allowed');
+                        slot.style.pointerEvents = 'none';
+                    }else {
+                        hasAvailableSlot = true;
                         slot.classList.add('cursor-pointer');
                         slot.tabIndex = 0;
                         slot.addEventListener('keydown', function(event) {
@@ -190,7 +225,15 @@
                     grid.appendChild(slot);
                 }
 
-                labels.innerHTML += `<div class="h-10 flex items-start pt-1 text-xs text-gray-500">${toHHMM(CLOSE_MINUTES)}</div>`;
+                labels.innerHTML += `<div class="h-10 flex items-start pt-1 text-xs text-gray-500">20:00</div>`;
+                if (!hasAvailableSlot) {
+                    grid.classList.add('opacity-30');
+                    noReservationMessage.classList.remove('hidden');
+                    slotMessage.classList.add('hidden')
+                } else {
+                    grid.classList.remove('opacity-30');
+                    noReservationMessage.classList.add('hidden');
+                }
                 paintSelection();
             }
 

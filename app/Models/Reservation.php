@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Models;
-
+use carbon\carbon;
 use Illuminate\Database\Eloquent\Model;
 
 class Reservation extends Model
@@ -26,5 +26,19 @@ class Reservation extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+
+    public function getDeadlineTime()
+    {
+        return Carbon::parse(
+            $this->date_to_reserv . ' ' . $this->start_time
+        )->subHours(12);
+    }
+
+
+    public function canStillBeProcessed()
+    {
+        return now()->lt($this->getDeadlineTime());
     }
 }

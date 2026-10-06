@@ -11,20 +11,78 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Carbon\Carbon;
+use Endroid\QrCode\Builder\Builder;
+use Endroid\QrCode\Writer\SvgWriter;
+use Inertia\Inertia;
 
 class ReservationController extends Controller
 {
     /**
      * Menampilkan reservasi user
      */
-    public function index()
+    public function index(Request $request)
     {
-        $reservations = Reservation::with('room')
-            ->where('user_id', Auth::id())
-            ->latest()
-            ->get();
+        $filters = $request->validate([
+            'search' => ['nullable', 'string', 'max:255'],
+            'status' => ['nullable', Rule::in(['menunggu', 'disetujui', 'ditolak', 'dibatalkan'])],
+            'sort' => ['nullable', Rule::in(['reservation_near', 'reservation_far', 'created_near', 'created_far'])],
+        ]);
 
-        return view('user.my-reservations', compact('reservations'));
+        $sort = $filters['sort'] ?? 'created_near';
+        $reservations = Reservation::with('room')
+            ->where('user_id', $request->user()->id)
+            ->when($filters['search'] ?? null, function ($query, string $search): void {
+                $query->where(function ($query) use ($search): void {
+                    $query->whereHas('room', function ($roomQuery) use ($search): void {
+                        $roomQuery->where('name', 'like', "%{$search}%")
+                            ->orWhere('type', 'like', "%{$search}%");
+                    })->orWhere('date_to_reserv', 'like', "%{$search}%");
+                });
+            })
+            ->when($filters['status'] ?? null, fn ($query, string $status) => $query->where('status', $status))
+            ->when($sort === 'reservation_near', fn ($query) => $query->orderBy('date_to_reserv')->orderBy('start_time'))
+            ->when($sort === 'reservation_far', fn ($query) => $query->orderByDesc('date_to_reserv')->orderByDesc('start_time'))
+            ->when($sort === 'created_near', fn ($query) => $query->orderByDesc('created_at'))
+            ->when($sort === 'created_far', fn ($query) => $query->orderBy('created_at'))
+            ->paginate(10)
+            ->withQueryString()
+            ->through(fn (Reservation $reservation): array => [
+                'id' => $reservation->id,
+                'room' => [
+                    'name' => $reservation->room?->name,
+                    'type' => $reservation->room?->type,
+                ],
+                'date_to_reserv' => $reservation->date_to_reserv,
+                'start_time' => $reservation->start_time,
+                'end_time' => $reservation->end_time,
+                'desc' => $reservation->desc,
+                'status' => $reservation->status,
+                'can_cancel' => $reservation->status === 'menunggu' && $reservation->canStillBeProcessed(),
+                'cancel_url' => route('reservations.cancel', $reservation),
+                'ticket_url' => route('reservations.ticket', $reservation),
+                'qr_url' => route('reservations.qrcode', $reservation),
+            ]);
+
+        return Inertia::render('User/MyReservations', [
+            'user' => $request->user()->only('name', 'email', 'role', 'account_type'),
+            'csrfToken' => csrf_token(),
+            'status' => $request->session()->get('success'),
+            'error' => $request->session()->get('error'),
+            'reservations' => $reservations,
+            'filters' => [
+                'search' => $filters['search'] ?? '',
+                'status' => $filters['status'] ?? '',
+                'sort' => $sort,
+            ],
+            'urls' => [
+                'dashboard' => route('user.dashboard'),
+                'reports' => route('reports.index'),
+                'reservations' => route('reservations.index'),
+                'profile' => route('profile.edit'),
+                'guest' => route('landing'),
+                'logout' => route('logout'),
+            ],
+        ]);
     }
 
     /**
@@ -46,11 +104,24 @@ class ReservationController extends Controller
             403
         );
 
-        return view(
-            'user.reservation-ticket',
-            compact('reservation')
-        );
+        return Inertia::render('User/ReservationForm', [
+            'user' => $request->user()->only('name', 'email', 'role', 'account_type'),
+            'csrfToken' => csrf_token(),
+            'rooms' => $rooms,
+            'urls' => [
+                'dashboard' => route('user.dashboard'),
+                'reports' => route('reports.index'),
+                'reservations' => route('reservations.index'),
+                'slots' => route('reservations.slots'),
+                'store' => route('reservations.store'),
+                'profile' => route('profile.edit'),
+                'guest' => route('landing'),
+                'logout' => route('logout'),
+            ],
+        ]);
     }
+
+    
 
     /**
      * Membatalkan reservasi
@@ -80,6 +151,8 @@ class ReservationController extends Controller
                 'Reservasi berhasil dibatalkan'
             );
     }
+
+    
 
     /**
      * Mengambil jadwal booking ruangan (Time Blocking)
@@ -211,6 +284,18 @@ class ReservationController extends Controller
             ]
         ]);
 
+        $reservationStart = Carbon::parse(
+            $validated['date_to_reserv'].' '.$validated['start_time']
+        );
+
+        if($reservationStart->isBefore(now()->addHours(12))){
+            return back()
+                ->withErrors([
+                    'time' => 'Reservasi minimal dilakukan 12 jam sebelumnya.'
+                ])
+                ->withInput();
+        }
+
         /*
          * Cek jam operasional
          */
@@ -310,4 +395,52 @@ class ReservationController extends Controller
                 'Reservasi berhasil dibuat'
             );
     }
+
+    public function qrcode(Reservation $reservation)
+    {
+        abort_if(
+            $reservation->user_id != Auth::id(),
+            403
+        );
+
+
+        $url = route(
+            'reservations.ticket',
+            $reservation->id
+        );
+
+
+        $result = Builder::create()
+            ->writer(new SvgWriter())
+            ->data($url)
+            ->size(150)
+            ->build();
+
+
+        return response($result->getString())
+            ->header(
+                'Content-Type',
+                'image/svg+xml'
+            );
+
+        
+    }
+
+    public function ticket(Reservation $reservation)
+    {
+        abort_if(
+            $reservation->user_id != Auth::id(),
+            403
+        );
+
+        $reservation->load('room');
+
+        return view(
+            'user.ticket',
+            compact('reservation')
+        );
+    }
+
+
+
 }

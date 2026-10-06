@@ -119,6 +119,7 @@ export default function Reports({ user, status, csrfToken, urls, reports, filter
                         { label: 'Deskripsi', type: 'desc' },
                         { label: 'Bukti' },
                         { label: 'Status' },
+                        { label: 'Aksi' },
                         { label: 'Tanggal' },
                         { label: 'Estimasi Selesai' },
                     ]}
@@ -138,10 +139,10 @@ export default function Reports({ user, status, csrfToken, urls, reports, filter
                                     ? <a href={report.image_url} target="_blank" rel="noreferrer" className="font-medium text-teal-normal-01 underline">Lihat foto</a>
                                     : <span className="text-gray-400">Tidak ada foto</span>}
                             </td>
-                            {/* <td className="whitespace-nowrap px-4 py-3">
+                            <td className="whitespace-nowrap px-4 py-3">
                                 <StatusBadge color={getStatusColor(report.status)}>{statusLabel(report.status)}</StatusBadge>
-                            </td> */}
-                            <td className="whitespace-nowrap text-xs px-4 py-3 text-gray-600">{formatReportDate(report.created_at)}</td>
+                            </td>
+                            <td className="whitespace-nowrap px-4 py-3">
                                 <div className="flex gap-3">
                                     {report.status === 'baru' ? (
                                         <>
@@ -149,14 +150,12 @@ export default function Reports({ user, status, csrfToken, urls, reports, filter
                                             <button type="button" onClick={() => updateReport(report, 'reject')} className="font-medium text-red-600 underline">Tolak</button>
                                         </>
                                     ) : report.status === 'diproses' ? (
-                                        <>
-                                            <span className={`rounded px-2 py-1 text-xs font-semibold ${statusClass(report.status)}`}>{statusLabel(report.status)}</span>
-                                            <button type="button" onClick={() => updateReport(report, 'complete')} className="font-medium text-green-600 underline">Selesai</button>
-                                        </>
+                                        <button type="button" onClick={() => updateReport(report, 'complete')} className="font-medium text-green-600 underline">Selesai</button>
                                     ) : (
-                                        <span className={`rounded px-2 py-1 text-xs font-semibold ${statusClass(report.status)}`}>{statusLabel(report.status)}</span>
+                                        <span className="text-xs text-gray-400">Aksi tidak tersedia</span>
                                     )}
                                 </div>
+                            </td>
                             <td className="whitespace-nowrap px-4 py-3 text-gray-600">{formatReportDate(report.created_at)}</td>
 
                             <td className="whitespace-nowrap px-4 py-3 text-gray-600">

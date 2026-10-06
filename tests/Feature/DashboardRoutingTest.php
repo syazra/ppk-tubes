@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class DashboardRoutingTest extends TestCase
@@ -30,5 +31,21 @@ class DashboardRoutingTest extends TestCase
     public function test_guest_must_log_in_to_visit_dashboard(): void
     {
         $this->get('/dashboard')->assertRedirect('/login');
+    }
+
+    public function test_user_dashboard_renders_the_inertia_page_with_quick_action_urls(): void
+    {
+        $user = User::factory()->create(['role' => 'user']);
+
+        $this->actingAs($user)
+            ->get(route('user.dashboard'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('User/Dashboard')
+                ->has('recentReservations', 0)
+                ->has('recentReports', 0)
+                ->where('urls.reservationForm', route('reservations.form'))
+                ->where('urls.reportCreate', route('reports.create'))
+            );
     }
 }
