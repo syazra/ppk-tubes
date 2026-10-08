@@ -17,7 +17,6 @@ class Report extends Model
         'user_id',
         'room_id',
         'desc',
-        'image',
         'status',
         'estimated_completion_at',
         'rejection_reason',
@@ -38,5 +37,10 @@ class Report extends Model
     public function room()
     {
         return $this->belongsTo(Room::class);
+    }
+
+    public function images()
+    {
+        return $this->hasMany(ReportImage::class);
     }
 }
