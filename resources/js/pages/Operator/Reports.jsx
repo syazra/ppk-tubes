@@ -45,7 +45,6 @@ export default function Reports({ user, status, csrfToken, urls, reports, filter
     const [selectedReportForExtend, setSelectedReportForExtend] = useState(null);
     const extendForm = useForm({ estimated_completion_at: '' });
 
-    // State untuk Modal Tolak & Selesai (Resolusi)
     const [selectedReportForReject, setSelectedReportForReject] = useState(null);
     const rejectForm = useForm({ rejection_reason: '' });
 
@@ -86,7 +85,6 @@ export default function Reports({ user, status, csrfToken, urls, reports, filter
         });
     }
 
-    // Handler Tolak
     function handleOpenRejectModal(report) {
         setSelectedReportForReject(report);
         rejectForm.reset();
@@ -100,7 +98,6 @@ export default function Reports({ user, status, csrfToken, urls, reports, filter
         });
     }
 
-    // Handler Selesai (Resolusi)
     function handleOpenCompleteModal(report) {
         setSelectedReportForComplete(report);
         completeForm.reset();
@@ -113,10 +110,6 @@ export default function Reports({ user, status, csrfToken, urls, reports, filter
             onSuccess: () => setSelectedReportForComplete(null),
         });
     }
-
-    // function updateReport(report, decision) {
-    //     router.patch(`/operator/reports/${report.id}/${decision}`, {}, { preserveScroll: true });
-    // }
 
     return (
         <>
@@ -314,7 +307,7 @@ export default function Reports({ user, status, csrfToken, urls, reports, filter
             {/* MODAL TOLAK LAPORAN (Dengan Template & Ketik Manual) */}
                 {selectedReportForReject && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-                        <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl border border-gray-100">
+                        <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl border border-gray-100" style={{background: 'white'}}>
                             <h3 className="text-lg font-bold text-red-600 mb-2">Tolak Laporan</h3>
                             <p className="text-sm text-gray-500 mb-4">Gunakan template cepat di bawah atau ketik alasan penolakan secara manual.</p>
                             
@@ -367,7 +360,7 @@ export default function Reports({ user, status, csrfToken, urls, reports, filter
                 {/* MODAL SELESAI / RESOLUSI */}
                 {selectedReportForComplete && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-                        <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl border border-gray-100">
+                        <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl border border-gray-100" style={{background: 'white'}}>
                             <h3 className="text-lg font-bold text-green-600 mb-2">Selesaikan Laporan</h3>
                             <p className="text-sm text-gray-500 mb-4">Gunakan template cepat di bawah atau tulis resolusi secara manual.</p>
                             

@@ -15,24 +15,40 @@ const statusLabels = {
 function ReportActions({ report }) {
 	const cancelForm = useForm({});
 
-	if (report.status !== 'baru') {
-		return <span className="text-xs italic text-gray-400">Tidak tersedia</span>;
+	if (report.status == 'baru') {
+		return (
+			<button
+				type="button"
+				disabled={cancelForm.processing}
+				onClick={() => {
+					if (window.confirm('Apakah kamu yakin ingin membatalkan laporan ini?')) {
+						cancelForm.patch(`/reports/${report.id}/cancel`, { preserveScroll: true });
+					}
+				}}
+				className="rounded-md border border-red-300 bg-red-50 px-3 py-2 text-xs font-medium text-red-700 hover:bg-red-100 disabled:opacity-60"
+			>
+				{cancelForm.processing ? 'Memproses...' : 'Batalkan'}
+			</button>
+		);
 	}
 
-	return (
-		<button
-			type="button"
-			disabled={cancelForm.processing}
-			onClick={() => {
-				if (window.confirm('Apakah kamu yakin ingin membatalkan laporan ini?')) {
-					cancelForm.patch(`/reports/${report.id}/cancel`, { preserveScroll: true });
-				}
-			}}
-			className="rounded-md border border-red-300 bg-red-50 px-3 py-2 text-xs font-medium text-red-700 hover:bg-red-100 disabled:opacity-60"
-		>
-			{cancelForm.processing ? 'Memproses...' : 'Batalkan'}
-		</button>
-	);
+	if (report.status === 'ditolak') {
+        return (
+            <p className="text-xs text-red-600 font-medium">
+                {report.rejection_reason}
+            </p>
+        );
+    } 
+    
+    if (report.status === 'selesai') {
+        return (
+            <p className="text-xs text-green-600 font-medium">
+                {report.resolution}
+            </p>
+        );
+    }
+
+	return <span className="text-xs italic text-gray-400">Belum ada resolusi</span>;
 }
 
 function formatDate(value) {
@@ -163,7 +179,7 @@ export default function MyReports({ reports, user, auth, csrfToken, urls, error,
 							</StatusBadge>
 						</td>
 						<td className="whitespace-nowrap px-4 py-4 text-xs text-gray-500">{formatDate(report.created_at)}</td>
-						<td className="whitespace-nowrap px-4 py-4 text-center">
+						<td className="whitespace-nowrap px-4 py-4 text-left">
 							<ReportActions report={report} />
 						</td>
 					</>
