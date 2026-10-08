@@ -10,10 +10,42 @@ use Inertia\Inertia;
 
 Route::middleware(['auth', 'verified'])->prefix('operator')->name('operator.')->group(function () {
     Route::get('/dashboard', function (Request $request) {
+        $recentReservations = \App\Models\Reservation::with('room')
+            ->latest()
+            ->take(3)
+            ->get()
+            ->map(fn (\App\Models\Reservation $reservation): array => [
+                'id' => $reservation->id,
+                'room' => [
+                    'name' => $reservation->room?->name,
+                    'type' => $reservation->room?->type,
+                ],
+                'date_to_reserv' => $reservation->date_to_reserv,
+                'start_time' => $reservation->start_time,
+                'end_time' => $reservation->end_time,
+                'status' => $reservation->status,
+            ]);
+
+        $recentReports = \App\Models\Report::with('room')
+            ->latest()
+            ->take(3)
+            ->get()
+            ->map(fn (\App\Models\Report $report): array => [
+                'id' => $report->id,
+                'room' => [
+                    'name' => $report->room?->name,
+                ],
+                'desc' => $report->desc,
+                'status' => $report->status,
+                'created_at' => $report->created_at?->toIso8601String(),
+            ]);
+
         return Inertia::render('Operator/Dashboard', [
             'user' => $request->user()->only('name', 'email', 'role', 'account_type'),
             'status' => $request->session()->get('status'),
             'csrfToken' => csrf_token(),
+            'recentReservations' => $recentReservations,
+            'recentReports' => $recentReports,
             'urls' => [
                 'dashboard' => route('operator.dashboard'),
                 'reservations' => route('operator.reservations'),
