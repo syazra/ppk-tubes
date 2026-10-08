@@ -19,6 +19,8 @@ class Report extends Model
         'desc',
         'status',
         'estimated_completion_at',
+        'rejection_reason',
+        'resolution',
     ];
 
     /**

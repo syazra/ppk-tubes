@@ -45,6 +45,12 @@ export default function Reports({ user, status, csrfToken, urls, reports, filter
     const [selectedReportForExtend, setSelectedReportForExtend] = useState(null);
     const extendForm = useForm({ estimated_completion_at: '' });
 
+    const [selectedReportForReject, setSelectedReportForReject] = useState(null);
+    const rejectForm = useForm({ rejection_reason: '' });
+
+    const [selectedReportForComplete, setSelectedReportForComplete] = useState(null);
+    const completeForm = useForm({ resolution: '' });
+
     function applyFilters(event) {
         event.preventDefault();
         filterForm.get(urls.reports, { preserveState: true, preserveScroll: true, replace: true });
@@ -79,8 +85,30 @@ export default function Reports({ user, status, csrfToken, urls, reports, filter
         });
     }
 
-    function updateReport(report, decision) {
-        router.patch(`/operator/reports/${report.id}/${decision}`, {}, { preserveScroll: true });
+    function handleOpenRejectModal(report) {
+        setSelectedReportForReject(report);
+        rejectForm.reset();
+    }
+
+    function submitReject(event) {
+        event.preventDefault();
+        rejectForm.patch(`/operator/reports/${selectedReportForReject.id}/reject`, {
+            preserveScroll: true,
+            onSuccess: () => setSelectedReportForReject(null),
+        });
+    }
+
+    function handleOpenCompleteModal(report) {
+        setSelectedReportForComplete(report);
+        completeForm.reset();
+    }
+
+    function submitComplete(event) {
+        event.preventDefault();
+        completeForm.patch(`/operator/reports/${selectedReportForComplete.id}/complete`, {
+            preserveScroll: true,
+            onSuccess: () => setSelectedReportForComplete(null),
+        });
     }
 
     return (
@@ -118,10 +146,10 @@ export default function Reports({ user, status, csrfToken, urls, reports, filter
                         { label: 'Fasilitas' },
                         { label: 'Deskripsi', type: 'desc' },
                         { label: 'Bukti' },
-                        { label: 'Status' },
-                        { label: 'Aksi' },
                         { label: 'Tanggal' },
                         { label: 'Estimasi Selesai' },
+                        { label: 'Status' },
+                        { label: 'Aksi' },
                     ]}
                     renderRow={report => (
                         <>
@@ -139,27 +167,9 @@ export default function Reports({ user, status, csrfToken, urls, reports, filter
                                     ? <a href={report.image_url} target="_blank" rel="noreferrer" className="font-medium text-teal-normal-01 underline">Lihat foto</a>
                                     : <span className="text-gray-400">Tidak ada foto</span>}
                             </td>
-                            <td className="whitespace-nowrap px-4 py-3">
-                                <StatusBadge color={getStatusColor(report.status)}>{statusLabel(report.status)}</StatusBadge>
-                            </td>
-                            <td className="whitespace-nowrap px-4 py-3">
-                                <div className="flex gap-3">
-                                    {report.status === 'baru' ? (
-                                        <>
-                                            <button type="button" onClick={() => handleOpenProcessModal(report)} className="font-medium text-teal-normal-01 underline">Proses</button>
-                                            <button type="button" onClick={() => updateReport(report, 'reject')} className="font-medium text-red-600 underline">Tolak</button>
-                                        </>
-                                    ) : report.status === 'diproses' ? (
-                                        <button type="button" onClick={() => updateReport(report, 'complete')} className="font-medium text-green-600 underline">Selesai</button>
-                                    ) : (
-                                        <span className="text-xs text-gray-400">Aksi tidak tersedia</span>
-                                    )}
-                                </div>
-                            </td>
                             <td className="whitespace-nowrap px-4 py-3 text-gray-600">{formatReportDate(report.created_at)}</td>
-
                             <td className="whitespace-nowrap px-4 py-3 text-gray-600">
-                                <div className="flex items-center gap-2">
+                                <div className="flex flex-col items-start gap-1">
                                     <span>{report.estimated_completion_at ? formatReportDate(report.estimated_completion_at) : '—'}</span>
                                     {/* Tombol edit/perpanjang hanya muncul jika status laporan sedang 'diproses' */}
                                     {report.status === 'diproses' && (
@@ -172,6 +182,33 @@ export default function Reports({ user, status, csrfToken, urls, reports, filter
                                         </button>
                                     )}
                                 </div>
+                            </td>
+                            <td className="whitespace-nowrap px-4 py-3">
+                                <StatusBadge color={getStatusColor(report.status)}>{statusLabel(report.status)}</StatusBadge>
+                            </td>
+                            <td className="whitespace-nowrap px-4 py-3">
+                                <div className="flex flex-col gap-1">
+                                    {report.status === 'baru' ? (
+                                        <div className="flex gap-3">
+                                            <button type="button" onClick={() => handleOpenProcessModal(report)} className="font-medium text-teal-normal-01 underline">Proses</button>
+                                            <button type="button" onClick={() => handleOpenRejectModal(report)} className="font-medium text-red-600 underline">Tolak</button>
+                                        </div>
+                                    ) : report.status === 'diproses' ? (
+                                        <div className="flex gap-3">
+                                            <button type="button" onClick={() => handleOpenCompleteModal(report)} className="font-medium text-green-600 underline">Selesai</button>
+                                        </div>
+                                    ) : report.status === 'ditolak' ? (
+                                        <p className="text-xs text-red-600">
+                                            {report.rejection_reason || 'Fasilitas sedang dalam perbaikan'}
+                                        </p>
+                                    ) : report.status === 'selesai' ? (
+                                        <p className="text-xs text-green-600">
+                                            {report.resolution || 'Fasilitas sudah diperbaiki'}
+                                        </p>
+                                    ) : (
+                                        <span className="text-xs text-gray-400">—</span>
+                                    )}
+                                </div>                                
                             </td>
                         </>
                     )}
@@ -260,6 +297,112 @@ export default function Reports({ user, status, csrfToken, urls, reports, filter
                                         className="rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700 disabled:opacity-50"
                                     >
                                         Perbarui Estimasi
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                )}
+
+            {/* MODAL TOLAK LAPORAN (Dengan Template & Ketik Manual) */}
+                {selectedReportForReject && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+                        <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl border border-gray-100" style={{background: 'white'}}>
+                            <h3 className="text-lg font-bold text-red-600 mb-2">Tolak Laporan</h3>
+                            <p className="text-sm text-gray-500 mb-4">Gunakan template cepat di bawah atau ketik alasan penolakan secara manual.</p>
+                            
+                            <form onSubmit={submitReject}>
+                                <div className="mb-4">
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Template Alasan Cepat</label>
+                                    <button 
+                                        type="button"
+                                        onClick={() => rejectForm.setData('rejection_reason', 'Laporan tidak valid / Deskripsi kerusakan kurang jelas')}
+                                        className="mb-3 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-lg border border-gray-200 transition"
+                                    >
+                                        + Gunakan: "Laporan tidak valid / Deskripsi kerusakan kurang jelas"
+                                    </button>
+
+                                    <label htmlFor="rejection_reason" className="block text-sm font-medium text-gray-700 mb-1">Alasan Penolakan (Opsional / Edit Manual)</label>
+                                    <textarea 
+                                        id="rejection_reason"
+                                        rows="3"
+                                        value={rejectForm.data.rejection_reason}
+                                        onChange={e => rejectForm.setData('rejection_reason', e.target.value)}
+                                        placeholder="Kosongkan jika ingin memakai template default..."
+                                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-red-500 focus:outline-none"
+                                    ></textarea>
+                                    {rejectForm.errors.rejection_reason && (
+                                        <p className="mt-1 text-xs text-red-600">{rejectForm.errors.rejection_reason}</p>
+                                    )}
+                                </div>
+
+                                <div className="flex justify-end gap-2">
+                                    <button 
+                                        type="button" 
+                                        onClick={() => setSelectedReportForReject(null)}
+                                        className="rounded-lg px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100"
+                                    >
+                                        Batal
+                                    </button>
+                                    <button 
+                                        type="submit" 
+                                        disabled={rejectForm.processing}
+                                        className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
+                                    >
+                                        Konfirmasi Tolak
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                )}
+
+                {/* MODAL SELESAI / RESOLUSI */}
+                {selectedReportForComplete && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+                        <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl border border-gray-100" style={{background: 'white'}}>
+                            <h3 className="text-lg font-bold text-green-600 mb-2">Selesaikan Laporan</h3>
+                            <p className="text-sm text-gray-500 mb-4">Gunakan template cepat di bawah atau tulis resolusi secara manual.</p>
+                            
+                            <form onSubmit={submitComplete}>
+                                <div className="mb-4">
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Template Resolusi Cepat</label>
+                                    <button 
+                                        type="button"
+                                        onClick={() => completeForm.setData('resolution', 'Fasilitas sudah diperbaiki')}
+                                        className="mb-3 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-lg border border-gray-200 transition"
+                                    >
+                                        + Gunakan: "Fasilitas sudah diperbaiki"
+                                    </button>
+
+                                    <label htmlFor="resolution" className="block text-sm font-medium text-gray-700 mb-1">Resolusi / Catatan Perbaikan (Opsional)</label>
+                                    <textarea 
+                                        id="resolution"
+                                        rows="4"
+                                        value={completeForm.data.resolution}
+                                        onChange={e => completeForm.setData('resolution', e.target.value)}
+                                        placeholder="Kosongkan jika ingin memakai template default..."
+                                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-green-500 focus:outline-none"
+                                    ></textarea>
+                                    {completeForm.errors.resolution && (
+                                        <p className="mt-1 text-xs text-red-600">{completeForm.errors.resolution}</p>
+                                    )}
+                                </div>
+
+                                <div className="flex justify-end gap-2">
+                                    <button 
+                                        type="button" 
+                                        onClick={() => setSelectedReportForComplete(null)}
+                                        className="rounded-lg px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100"
+                                        >
+                                        Batal
+                                    </button>
+                                    <button 
+                                        type="submit" 
+                                        disabled={completeForm.processing}
+                                        className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
+                                        >
+                                        Tandai Selesai
                                     </button>
                                 </div>
                             </form>
