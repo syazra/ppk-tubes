@@ -5,6 +5,7 @@ import Icon, { initials } from './Icons';
 export default function Navbar({ user, auth, urls, title, collapsed, onToggleSidebar, onOpenMenu, mobileOpen }) {
     const currentUser = user || auth?.user;
     const userName = currentUser?.name || 'Pengguna';
+    const shouldHideBreadcrumbTitle = typeof title === 'string' && /selamat datang|beranda/i.test(title.trim());
 
     const getRoleLabel = (u) => {
         if (!u) return 'Pengguna';
@@ -30,8 +31,12 @@ export default function Navbar({ user, auth, urls, title, collapsed, onToggleSid
                 </motion.button>
                 <div className="flex min-w-0 items-center gap-2 text-sm">
                     <span className="hidden text-gray-500 sm:inline">Dasbor</span>
-                    <Icon name="chevron" className="hidden h-3.5 w-3.5 text-gray-400 sm:block" />
-                    <span className="truncate font-semibold text-teal-darker">{title}</span>
+                    {!shouldHideBreadcrumbTitle && (
+                        <>
+                            <Icon name="chevron" className="hidden h-3.5 w-3.5 text-gray-400 sm:block" />
+                            <span className="truncate font-semibold text-teal-darker">{title}</span>
+                        </>
+                    )}
                 </div>
             </div>
             <Link href={urls?.profile || '#'} className="app-navbar-profile" aria-label={`Buka profil ${userName}`}>

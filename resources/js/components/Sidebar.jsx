@@ -10,16 +10,16 @@ const userNavigation = [
 
 const adminNavigation = [
     { key: 'dashboard', icon: 'home', label: 'Dasbor' },
-    { key: 'registrations', icon: 'student', label: 'Registrasi' },
-    { key: 'facilities', icon: 'room', label: 'Fasilitas' },
+    { key: 'registrations', icon: 'student', label: 'Kelola Akun' },
+    { key: 'facilities', icon: 'room', label: 'Kelola Fasilitas' },
     { key: 'recap', icon: 'chart', label: 'Rekap Fasilitas' },
     { key: 'profile', icon: 'user', label: 'Profil' },
 ];
 
 const operatorNavigation = [
     { key: 'dashboard', icon: 'home', label: 'Dasbor' },
-    { key: 'reservations', icon: 'calendar', label: 'Reservasi' },
-    { key: 'reports', icon: 'tool', label: 'Laporan' },
+    { key: 'reservations', icon: 'calendar', label: 'Kelola Reservasi' },
+    { key: 'reports', icon: 'tool', label: 'Kelola Laporan' },
 ];
 
 export default function Sidebar({ 

@@ -1,6 +1,8 @@
 import { Head, useForm } from '@inertiajs/react';
 import { useState } from 'react';
 import AppLayout from '../../components/AppLayout';
+import Button from '../../components/Button';
+import ButtonGray from '../../components/ButtonGray';
 import FilterTable from '../../components/FilterTable';
 
 const inputClass = 'mt-1 block w-full rounded-xl border-gray-300 bg-white-01 px-4 py-3 text-sm text-teal-darker focus:border-teal-dark-01 focus:ring-teal-dark-01';
@@ -78,27 +80,50 @@ export default function Registrations({ user, csrfToken, urls, createdAccount, s
 
     return (
         <>
-            <Head title="Registrasi Akun" />
-            <AppLayout user={currentUser} csrfToken={csrfToken} urls={urls} active="registrations" title="Registrasi Akun" subtitle="Buat dan kelola akun pengguna serta petugas.">
+            <Head title="Kelola Akun" />
+            <AppLayout
+                user={currentUser} 
+                csrfToken={csrfToken} 
+                urls={urls} 
+                active="registrations" 
+                title="Kelola Registrasi Akun" 
+                subtitle="Buat dan kelola akun seluruh pengguna yang ada di Buana.">
 
                 {/* DAFTARKAN AKUN BARU */}
                 <section className="mb-6 w-full">
                     {createdAccount && (
                         <div role="status" className="mb-5 rounded-lg border border-teal-light-03 bg-teal-light-01 p-5 text-teal-darker">
-                            <h2 className="font-semibold">Akun berhasil dibuat</h2>
-                            <p className="mt-1 text-sm">Simpan kata sandi ini dan berikan kepada {createdAccount.name}. Kata sandi hanya ditampilkan setelah pembuatan akun.</p>
+                            <h2 className="font-bold">Akun berhasil dibuat</h2>
+                            <p className="mt-1 text-sm">Simpan kata sandi ini dan berikan kepada <span className="font-bold text-teal-darker">{createdAccount.name}</span>. Kata sandi hanya ditampilkan setelah pembuatan akun.</p>
                             <dl className="mt-4 grid gap-2 text-sm sm:grid-cols-2">
-                                <div><dt className="font-medium">Jenis akun</dt><dd>{accountTypeLabel(createdAccount.account_type)}</dd></div>
-                                <div><dt className="font-medium">Nomor induk</dt><dd>{createdAccount.identity_number}</dd></div>
-                                <div><dt className="font-medium">Email</dt><dd>{createdAccount.email}</dd></div>
-                                <div><dt className="font-medium">Kata sandi sementara</dt><dd className="flex items-center gap-2"><code className="rounded bg-white px-2 py-1 font-mono">{createdAccount.password}</code><button type="button" onClick={copyPassword} className="underline">{copied ? 'Tersalin' : 'Salin'}</button></dd></div>
+                                <div>
+                                    <dt className="font-semibold">Jenis akun</dt>
+                                    <dd className="text-teal-dark-03">{accountTypeLabel(createdAccount.account_type)}</dd>
+                                </div>
+                                <div>
+                                    <dt className="font-semibold">Nomor induk</dt>
+                                    <dd className="text-teal-dark-03">{createdAccount.identity_number}</dd>
+                                </div>
+                                <div>
+                                    <dt className="font-semibold">Email</dt>
+                                    <dd className="text-teal-dark-03">{createdAccount.email}</dd>
+                                </div>
+                                <div>
+                                    <dt className="font-semibold">Kata sandi sementara</dt>
+                                    <dd className="flex items-center gap-4 text-teal-dark-03">
+                                        <code className="rounded bg-white px-2 py-1 font-mono">{createdAccount.password}</code>
+                                        <button type="button" onClick={copyPassword} className="underline">
+                                            {copied ? 'Tersalin' : 'Salin'}
+                                        </button>
+                                    </dd>
+                                </div>
                             </dl>
                         </div>
                     )}
                     {status && <div role="status" className="mb-5 rounded-lg border border-teal-light-03 bg-teal-light-01 px-4 py-3 text-sm text-teal-darker">{status}</div>}
 
                     <div className="rounded-lg border border-green-light-03 bg-white-01 p-6 shadow-sm sm:p-8">
-                        <h2 className="text-xl font-bold text-teal-darker">Buat akun</h2>
+                        <h2 className="text-xl font-bold text-teal-darker">Buat akun pengguna</h2>
                         <p className="mt-1 text-sm text-gray-600">Kata sandi dibuat otomatis oleh sistem setelah formulir disimpan.</p>
 
                         <form onSubmit={submit} className="mt-6 space-y-5">
@@ -131,17 +156,17 @@ export default function Registrations({ user, csrfToken, urls, createdAccount, s
                                 </div>
                             </div>
                             
-                            <button type="submit" disabled={createForm.processing} className="rounded-xl bg-teal-dark-01 px-5 py-3 text-sm font-semibold text-white-01 transition hover:bg-teal-dark-02 focus:outline-none focus:ring-2 focus:ring-teal-dark-01 focus:ring-offset-2 disabled:opacity-60">
+                            <Button type="submit" disabled={createForm.processing}>
                                 {createForm.processing ? 'Menyimpan...' : 'Daftarkan akun'}
-                            </button>
+                            </Button>
                         </form>
                     </div>
                 </section>
 
                 {/* FILTERING DAN LIHAT SEMUA AKUN */}
                 <FilterTable
-                    title="Data akun"
-                    description="Daftar mahasiswa, dosen, staf, dan petugas."
+                    title="Daftar mahasiswa, dosen, staf, dan petugas."
+                    description=""
                     filterForm={filterForm}
                     onSubmit={applyFilters}
                     filterFields={[
@@ -190,6 +215,7 @@ export default function Registrations({ user, csrfToken, urls, createdAccount, s
                     <div role="dialog" aria-modal="true" aria-labelledby="edit-account-title" className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-lg bg-white-01 p-6 shadow-xl">
                         <h2 id="edit-account-title" className="text-xl font-bold text-teal-darker">Ubah akun</h2>
                         <form onSubmit={saveEdit} className="mt-5 space-y-4">
+                            {/* jenis */}
                             <div>
                                 <label htmlFor="edit-account-type" className="block text-sm font-semibold text-teal-darker">Jenis akun</label>
                                 <select id="edit-account-type" value={editForm.data.account_type} onChange={event => editForm.setData('account_type', event.target.value)} className={inputClass} required>
@@ -198,24 +224,31 @@ export default function Registrations({ user, csrfToken, urls, createdAccount, s
                                 </select>
                                 <FieldError id="edit-account-type" message={editForm.errors.account_type} />
                             </div>
+                            {/* nama */}
                             <div>
                                 <label htmlFor="edit-name" className="block text-sm font-semibold text-teal-darker">Nama lengkap</label>
                                 <input id="edit-name" value={editForm.data.name} onChange={event => editForm.setData('name', event.target.value)} className={inputClass} required />
                                 <FieldError id="edit-name" message={editForm.errors.name} />
                             </div>
+                            {/* nim/nip */}
                             <div>
                                 <label htmlFor="edit-identity-number" className="block text-sm font-semibold text-teal-darker">NIM/NIP</label>
                                 <input id="edit-identity-number" value={editForm.data.identity_number} onChange={event => editForm.setData('identity_number', event.target.value)} className={inputClass} required />
                                 <FieldError id="edit-identity-number" message={editForm.errors.identity_number} />
                             </div>
+                            {/* email */}
                             <div>
                                 <label htmlFor="edit-email" className="block text-sm font-semibold text-teal-darker">Email</label>
                                 <input id="edit-email" type="email" value={editForm.data.email} onChange={event => editForm.setData('email', event.target.value)} className={inputClass} required />
                                 <FieldError id="edit-email" message={editForm.errors.email} />
                             </div>
                             <div className="flex justify-end gap-3 pt-2">
-                                <button type="button" onClick={() => setEditing(null)} className="rounded-xl border border-gray-300 px-4 py-2.5 text-sm font-semibold text-gray-700">Batal</button>
-                                <button type="submit" disabled={editForm.processing} className="rounded-xl bg-teal-dark-01 px-5 py-2.5 text-sm font-semibold text-white-01 disabled:opacity-60">{editForm.processing ? 'Menyimpan...' : 'Simpan perubahan'}</button>
+                                <ButtonGray type="button" onClick={() => setEditing(null)}>
+                                    Batal
+                                </ButtonGray>
+                                <Button type="submit" disabled={editForm.processing}>
+                                    {editForm.processing ? 'Menyimpan...' : 'Simpan perubahan'}
+                                </Button>
                             </div>
                         </form>
                     </div>

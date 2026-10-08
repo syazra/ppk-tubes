@@ -1,7 +1,7 @@
 import { Head, Link } from '@inertiajs/react';
 import { motion, useReducedMotion } from 'motion/react';
 import AppLayout from '../../components/AppLayout';
-import EmptyState from '../../components/EmptyState';
+import ActionCard from '../../components/ActionCard';
 import StatusBadge, { getStatusColor } from '../../components/StatusBadge';
 import reservationImage from '../../../../background-preview.png';
 import reportImage from '../../../../background-composite-preview.png';
@@ -29,17 +29,6 @@ function formatTime(value) {
 	return value ? value.slice(0, 5) : '-';
 }
 
-function HistoryHeading({ title, href }) {
-	return (
-		<div className="app-section-heading">
-			<h2 className="text-lg font-bold text-teal-darker">{title}</h2>
-			<Link href={href} className="text-sm font-semibold text-teal-700 hover:text-teal-900 hover:underline">
-				Lihat lainnya
-			</Link>
-		</div>
-	);
-}
-
 export default function Dashboard({ user, csrfToken, urls, recentReservations = [], recentReports = [] }) {
 	const shouldReduceMotion = useReducedMotion();
 
@@ -49,8 +38,8 @@ export default function Dashboard({ user, csrfToken, urls, recentReservations = 
 			csrfToken={csrfToken}
 			urls={urls}
 			active="dashboard"
-			title="Beranda CampuSpace"
-			subtitle="Selamat datang di halaman beranda CampuSpace."
+			title={`Selamat datang, ${user?.name || 'Petugas'}`}
+			subtitle="Lihat aktivitas reservasi dan pelaporan kamu di Buana."
 		>
 			<Head title="Beranda CampuSpace" />
 
@@ -92,9 +81,23 @@ export default function Dashboard({ user, csrfToken, urls, recentReservations = 
 				</motion.article>
 			</section>
 
-			<section className="app-insights-grid">
-				<article className="app-panel flex min-h-[340px] flex-col">
-					<HistoryHeading title="Riwayat Reservasi" href={urls.reservations} />
+			<motion.section
+				className="app-insights-grid"
+				initial={{ opacity: 0, y: 16 }}
+				animate={{ opacity: 1, y: 0 }}
+				transition={{ duration: shouldReduceMotion ? 0 : 0.4, delay: shouldReduceMotion ? 0 : 0.25 }}
+				aria-label="Aktivitas kampus"
+			>
+				<ActionCard
+					title="Riwayat Reservasi"
+					href={urls.reservations}
+					emptyTitle="Belum ada reservasi"
+					emptyMessage={
+						<>
+							Belum pernah membuat reservasi. <Link href={urls.reservationForm} className="font-medium text-teal-700 hover:underline">Buat reservasi</Link> untuk mulai meminjam fasilitas.
+						</>
+					}
+				>
 					{recentReservations.length ? (
 						<div className="flex-1 divide-y divide-gray-100">
 							{recentReservations.map((reservation, index) => (
@@ -112,15 +115,19 @@ export default function Dashboard({ user, csrfToken, urls, recentReservations = 
 								</div>
 							))}
 						</div>
-					) : (
-						<EmptyState title="Belum ada reservasi">
-							Belum pernah membuat reservasi. <Link href={urls.reservationForm} className="font-medium text-teal-700 hover:underline">Buat reservasi</Link> untuk mulai meminjam fasilitas.
-						</EmptyState>
-					)}
-				</article>
+					) : null}
+				</ActionCard>
 
-				<article className="app-panel flex min-h-[340px] flex-col">
-					<HistoryHeading title="Riwayat Laporan" href={urls.reports} />
+				<ActionCard
+					title="Riwayat Laporan"
+					href={urls.reports}
+					emptyTitle="Belum ada laporan"
+					emptyMessage={
+						<>
+							Belum pernah membuat laporan. <Link href={urls.reportCreate} className="font-medium text-teal-700 hover:underline">Buat laporan</Link> jika menemukan fasilitas rusak.
+						</>
+					}
+				>
 					{recentReports.length ? (
 						<div className="flex-1 divide-y divide-gray-100">
 							{recentReports.map((report, index) => (
@@ -136,13 +143,9 @@ export default function Dashboard({ user, csrfToken, urls, recentReservations = 
 								</div>
 							))}
 						</div>
-					) : (
-						<EmptyState title="Belum ada laporan">
-							Belum pernah membuat laporan. <Link href={urls.reportCreate} className="font-medium text-teal-700 hover:underline">Buat laporan</Link> jika menemukan fasilitas rusak.
-						</EmptyState>
-					)}
-				</article>
-			</section>
+					) : null}
+				</ActionCard>
+			</motion.section>
 		</AppLayout>
 	);
 }
