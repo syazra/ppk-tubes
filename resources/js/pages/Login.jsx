@@ -33,7 +33,8 @@ const styles = `
 .lg-drop { position: absolute; z-index: 0; pointer-events: none; border-radius: 50% 50% 50% 50% / 58% 58% 42% 42%; background: radial-gradient(circle at 32% 26%, #ffffffd0 0 9%, #ffffff10 32%, #04302a22 72%, #ffffff40 100%); box-shadow: 0 1px 2px #00201c26, inset 0 -1px 2px #ffffff30; }
 .lg-drop.slide { animation: lg-drip linear infinite; }
 .lg-drop.slide:before { content: ''; position: absolute; left: 50%; bottom: 80%; width: 38%; height: var(--drip); transform: translateX(-50%); border-radius: 99px; background: linear-gradient(transparent, #ffffff33); }
-.lg-back { position: absolute; top: 24px; left: 28px; z-index: 2; display: inline-flex; align-items: center; gap: 8px; min-height: 44px; color: #e3eae1; font-size: 13px; text-decoration: none; transition: color .2s; }
+.lg-back-wrap { position: absolute; top: 24px; left: 28px; z-index: 2; }
+.lg-back { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; color: #e3eae1; font-size: 13px; text-decoration: none; transition: color .2s; }
 .lg-back:hover { color: var(--lime); }
 .lg-back svg { width: 16px; height: 16px; transform: rotate(180deg); transition: transform .2s; }
 .lg-back:hover svg { transform: rotate(180deg) translateX(3px); }
@@ -99,8 +100,8 @@ const styles = `
 @keyframes lg-shimmer { to { background-position: -200% 0; } }
 @keyframes lg-bob { 0%, 100% { transform: rotate(-4deg); } 50% { transform: rotate(4deg) translateY(-2px); } }
 @keyframes lg-spin { to { transform: rotate(360deg); } }
-@media (max-width: 520px) { .lg-card { padding: 36px 24px 28px; } .lg-title { font-size: 32px; } .lg-back { left: 16px; top: 14px; } }
-@media (prefers-reduced-motion: reduce) { .lg *, .lg *:before, .lg *:after { animation: none !important; transition: none !important; } .lg-drop.slide { animation: none; } .lg-spark { display: none; } }
+@media (max-width: 520px) { .lg { padding-top: 76px; } .lg-card { padding: 36px 24px 28px; } .lg-title { font-size: 32px; } .lg-back-wrap { left: 16px; top: 14px; } }
+@media (prefers-reduced-motion: reduce) { .lg *, .lg *:before, .lg *:after { animation: none !important; transition: none !important; } .lg-drop.slide { animation: none; } .lg-spark { display: none; } .lg-back:hover svg { transform: rotate(180deg); } .lg-submit:hover:not(:disabled) svg, .lg-chip:hover { transform: none; } .lg-submit:hover:not(:disabled):before { transform: translateX(-120%); } }
 @media (forced-colors: active) { .lg-card { border: 1px solid CanvasText; background: Canvas; } }
 `;
 
@@ -117,13 +118,14 @@ const droplets = Array.from({ length: 14 }, (_, i) => {
 });
 
 const sparks = Array.from({ length: 16 }, (_, i) => ({ left: `${(i * 7 + 5) % 100}%`, bottom: `-${(i % 4) * 20 + 10}px`, duration: `${10 + (i % 5) * 3}s`, delay: `${-(i * 1.9)}s` }));
-const item = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 220, damping: 24 } } };
+const animatedItem = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 220, damping: 24 } } };
 
 function FieldError({ id, message }) {
+    const reduced = useReducedMotion();
     return (
         <AnimatePresence initial={false}>
             {message && (
-                <motion.p id={id} role="alert" className="lg-error" initial={{ opacity: 0, height: 0, y: -4 }} animate={{ opacity: 1, height: 'auto', y: 0 }} exit={{ opacity: 0, height: 0 }}>
+                <motion.p id={id} role="alert" className="lg-error" initial={reduced ? false : { opacity: 0, height: 0, y: -4 }} animate={{ opacity: 1, height: 'auto', y: 0 }} exit={{ opacity: 0, height: 0 }} transition={reduced ? { duration: 0 } : undefined}>
                     <span>{message}</span>
                 </motion.p>
             )}
@@ -134,8 +136,9 @@ function FieldError({ id, message }) {
 export default function Login({ status, landingUrl = '/', demoAccounts = [] }) {
     const reduced = useReducedMotion();
     const intro = useIntro();
-    const introDelay = intro ? INTRO_DELAY : 0;
-    const container = { hidden: {}, show: { transition: { staggerChildren: 0.07, delayChildren: 0.15 + introDelay } } };
+    const introDelay = intro && !reduced ? INTRO_DELAY : 0;
+    const container = { hidden: {}, show: { transition: { staggerChildren: reduced ? 0 : 0.07, delayChildren: reduced ? 0 : 0.15 + introDelay } } };
+    const item = reduced ? { hidden: { opacity: 1, y: 0 }, show: { opacity: 1, y: 0, transition: { duration: 0 } } } : animatedItem;
     const { data, setData, post, processing, errors, clearErrors, reset } = useForm({ email: '', password: '', remember: false });
     const [showPassword, setShowPassword] = useState(false);
     const [capsLock, setCapsLock] = useState(false);
@@ -204,16 +207,16 @@ export default function Login({ status, landingUrl = '/', demoAccounts = [] }) {
                 {sparks.map((spark, index) => <i className="lg-spark" aria-hidden="true" key={index} style={{ left: spark.left, bottom: spark.bottom, animationDuration: spark.duration, animationDelay: spark.delay }} />)}
                 {droplets.map((drop, index) => <i className={`lg-drop${drop.slide ? ' slide' : ''}`} aria-hidden="true" key={index} style={drop.style} />)}
 
-                <motion.div initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4 + introDelay }}>
+                <motion.div className="lg-back-wrap" initial={reduced ? false : { opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} transition={reduced ? { duration: 0 } : { delay: 0.4 + introDelay }}>
                     <Link href={landingUrl} className="lg-back"><Icon name="landing-arrow" variant="landing" className="" />Kembali ke beranda</Link>
                 </motion.div>
 
                 <div className="lg-stage" onPointerMove={onPointerMove} onPointerLeave={onPointerLeave}>
-                    <motion.div initial={reduced ? false : { opacity: 0, y: 40, scale: 0.94 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ type: 'spring', stiffness: 120, damping: 18, delay: introDelay }}>
-                        <motion.div key={shakeKey} animate={cardAnimation} transition={{ duration: 0.45 }}>
+                    <motion.div initial={reduced ? false : { opacity: 0, y: 40, scale: 0.94 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={reduced ? { duration: 0 } : { type: 'spring', stiffness: 120, damping: 18, delay: introDelay }}>
+                        <motion.div key={shakeKey} animate={cardAnimation} transition={{ duration: reduced ? 0 : 0.45 }}>
                             <motion.main className="lg-card" style={reduced ? undefined : { rotateX, rotateY }}>
-                                <motion.div className="lg-shine" style={{ background: glare }} aria-hidden="true" />
-                                <motion.div variants={container} initial="hidden" animate="show" style={{ position: 'relative' }}>
+                                <motion.div className="lg-shine" style={{ background: reduced ? 'radial-gradient(420px circle at 50% 50%, #ffffff55, transparent 60%)' : glare }} aria-hidden="true" />
+                                <motion.div variants={container} initial={reduced ? false : 'hidden'} animate="show" style={{ position: 'relative' }}>
                                     <motion.header variants={item}>
                                         <div className="lg-brand"><Brand /></div>
                                         <h1 className="lg-title">Selamat datang <em>kembali</em></h1>
@@ -239,7 +242,7 @@ export default function Login({ status, landingUrl = '/', demoAccounts = [] }) {
                                                 <input id="password" name="password" type={showPassword ? 'text' : 'password'} className="lg-input has-toggle" value={data.password} onChange={event => setData('password', event.target.value)} onKeyUp={event => setCapsLock(event.getModifierState?.('CapsLock') ?? false)} onBlur={() => setCapsLock(false)} required autoComplete="current-password" aria-invalid={Boolean(errors.password)} aria-describedby={errors.password ? 'password-error' : undefined} />
                                                 <button type="button" className="lg-toggle" onClick={() => setShowPassword(value => !value)} aria-label={showPassword ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi'} aria-pressed={showPassword}>
                                                     <AnimatePresence mode="wait" initial={false}>
-                                                        <motion.span key={showPassword ? 'hide' : 'show'} initial={{ opacity: 0, scale: 0.6, rotate: -30 }} animate={{ opacity: 1, scale: 1, rotate: 0 }} exit={{ opacity: 0, scale: 0.6, rotate: 30 }} transition={{ duration: 0.15 }} style={{ display: 'grid' }}>
+                                                        <motion.span key={showPassword ? 'hide' : 'show'} initial={reduced ? false : { opacity: 0, scale: 0.6, rotate: -30 }} animate={{ opacity: 1, scale: 1, rotate: 0 }} exit={{ opacity: 0, scale: 0.6, rotate: 30 }} transition={{ duration: reduced ? 0 : 0.15 }} style={{ display: 'grid' }}>
                                                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                                                                 {showPassword
                                                                     ? <><path d="M3 3l18 18M10.6 10.6a2 2 0 0 0 2.8 2.8M9.9 5.1A9.8 9.8 0 0 1 12 5c5 0 9 4 10 7a11 11 0 0 1-3 4.2M6.5 6.6C4.4 8 2.9 10 2 12c1 3 5 7 10 7a9.700 9.700 0 0 0 4-.9" /></>
@@ -250,7 +253,7 @@ export default function Login({ status, landingUrl = '/', demoAccounts = [] }) {
                                                 </button>
                                             </div>
                                             <AnimatePresence initial={false}>
-                                                {capsLock && <motion.p className="lg-hint" role="status" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}>Caps Lock sedang aktif.</motion.p>}
+                                                {capsLock && <motion.p className="lg-hint" role="status" initial={reduced ? false : { opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} transition={reduced ? { duration: 0 } : undefined}>Caps Lock sedang aktif.</motion.p>}
                                             </AnimatePresence>
                                             <FieldError id="password-error" message={errors.password} />
                                         </motion.div>
@@ -267,8 +270,8 @@ export default function Login({ status, landingUrl = '/', demoAccounts = [] }) {
                                             <motion.button type="submit" className="lg-submit" disabled={processing} whileHover={reduced || processing ? undefined : { y: -2 }} whileTap={reduced || processing ? undefined : { scale: 0.98 }}>
                                                 <AnimatePresence mode="wait" initial={false}>
                                                     {processing
-                                                        ? <motion.span key="load" className="lg-spinner" initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} aria-hidden="true" />
-                                                        : <motion.span key="idle" style={{ display: 'inline-flex', alignItems: 'center', gap: 14 }} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>Masuk <Icon name="landing-arrow" variant="landing" className="" /></motion.span>}
+                                                        ? <motion.span key="load" className="lg-spinner" initial={reduced ? false : { opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} transition={reduced ? { duration: 0 } : undefined} aria-hidden="true" />
+                                                        : <motion.span key="idle" style={{ display: 'inline-flex', alignItems: 'center', gap: 14 }} initial={reduced ? false : { opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={reduced ? { duration: 0 } : undefined}>Masuk <Icon name="landing-arrow" variant="landing" className="" /></motion.span>}
                                                 </AnimatePresence>
                                                 {processing && <span>Memproses…</span>}
                                             </motion.button>

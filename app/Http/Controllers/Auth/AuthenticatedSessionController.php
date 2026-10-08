@@ -50,7 +50,7 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        $user = Auth::user(); 
+        $user = Auth::user();
 
         if ($user->isAdmin()) {
             return $this->toDashboard($request, route('admin.dashboard', absolute: false));
