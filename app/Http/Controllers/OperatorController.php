@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Reservation;
-use App\Models\Report; // Tambahkan model Report
+use App\Models\Report;
 
 class OperatorController extends Controller
 {
@@ -88,6 +88,10 @@ class OperatorController extends Controller
         $report = Report::findOrFail($id);
         $report->status = 'diproses'; // Status berubah diproses
         $report->estimated_completion_at = $request->estimated_completion_at; // Masuk ke kolom database ini
+
+        // Karena diproses, pastikan rejection_reason & resolution dibersihkan
+        $report->rejection_reason = null;
+        $report->resolution = null;
         $report->save();
 
         // Opsional: Ruangan jadi tidak tersedia sementara
@@ -102,10 +106,20 @@ class OperatorController extends Controller
     }
 
     // 2. Operator menandai laporan "selesai" (Fasilitas langsung dibuka kembali)
-    public function markAsCompleted($id)
+    public function markAsCompleted(Request $request, $id)
     {
+        // Validasi wajib isi resolusi
+        $request->validate([
+            'resolution' => 'nullable|string|max:1000',
+        ], [
+            'resolution.max' => 'Resolusi/catatan perbaikan maksimal 1000 karakter.',
+        ]);
+
         $report = Report::findOrFail($id);
+        $resolutionText = $request->input('resolution') ?: 'Fasilitas sudah diperbaiki';
         $report->status = 'selesai';
+        $report->resolution = $resolutionText;
+        $report->rejection_reason = null;
         $report->save();
 
         // Buka kembali fasilitas secara otomatis
@@ -140,10 +154,18 @@ class OperatorController extends Controller
         return back()->with('success', 'Waktu estimasi perbaikan berhasil diperpanjang.');
     }
 
-    public function rejectReport($id)
+    public function rejectReport(Request $request, $id)
     {
+        $request->validate([
+            'rejection_reason' => 'nullable|string|max:1000',
+        ]);
+
         $report = Report::findOrFail($id);
+        // Jika operator mengetik manual pakai input, ambil itu. Kalau kosong, pakai template default.
+        $reason = $request->input('rejection_reason') ?: 'Laporan tidak valid / Deskripsi kerusakan kurang jelas';
         $report->status = 'ditolak';
+        $report->rejection_reason = $reason; // Simpan alasan penolakan
+        $report->resolution = null;          // Kosongkan resolusi (XOR)
         $report->save();
 
         return back()->with('success', 'Report ditolak.');

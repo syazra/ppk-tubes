@@ -20,6 +20,8 @@ class Report extends Model
         'image',
         'status',
         'estimated_completion_at',
+        'rejection_reason',
+        'resolution',
     ];
 
     /**

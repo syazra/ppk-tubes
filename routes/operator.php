@@ -132,6 +132,8 @@ Route::middleware(['auth', 'verified'])->prefix('operator')->name('operator.')->
                 'status' => $report->status,
                 'created_at' => $report->created_at?->toIso8601String(),
                 'estimated_completion_at' => $report->estimated_completion_at,
+                'rejection_reason' => $report->rejection_reason,
+                'resolution' => $report->resolution,
             ]);
 
         return Inertia::render('Operator/Reports', [
