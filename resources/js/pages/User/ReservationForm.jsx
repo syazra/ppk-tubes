@@ -1,5 +1,5 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import FacilityCard from '../../components/FacilityCard';
 import useRoomSlots from '../../hooks/useRoomSlots';
 import AvailabilityTimeline from '../../components/AvailabilityTimeline';
@@ -44,7 +44,6 @@ export default function ReservationForm({
 	catalogDate,
 	timezone,
 	minimumDate,
-	maxDurationMinutes = 180,
 	selectedFacility: initialFacility = null,
 	oldInput = {},
 	photoPlaceholderUrl,
@@ -62,6 +61,7 @@ export default function ReservationForm({
 	const [selectedFacility, setSelectedFacility] = useState(initialFacility);
 	const [slotAnchor, setSlotAnchor] = useState(null);
 	const [slotMessage, setSlotMessage] = useState('');
+	const dateInputRef = useRef(null);
 	const mainSlotState = useRoomSlots(selectedFacility?.slots_url, form.data.date_to_reserv, Boolean(selectedFacility && form.data.date_to_reserv));
 	const slots = mainSlotState.slots;
 
@@ -96,7 +96,7 @@ export default function ReservationForm({
 	}
 
 	function selectSlot(index) {
-		const range = selectReservationRange(slots, index, slotAnchor, form.data.start_time, form.data.end_time, maxDurationMinutes);
+		const range = selectReservationRange(slots, index, slotAnchor, form.data.start_time, form.data.end_time);
 		if (!range) return;
 		setSlotAnchor(range.anchor);
 		setSlotMessage(range.message);
@@ -217,7 +217,14 @@ export default function ReservationForm({
 						<FieldError>{form.errors.room_id}</FieldError>
 						<div>
 							<label htmlFor="date_to_reserv" className="block text-sm font-semibold text-teal-darker">Hari / tanggal</label>
-							<input id="date_to_reserv" name="date_to_reserv" type="date" min={minimumDate} value={form.data.date_to_reserv} onChange={changeReservationDate} className={fieldClassName} required />
+							<input ref={dateInputRef}
+							id="date_to_reserv" name="date_to_reserv" type="date" min={minimumDate} value={form.data.date_to_reserv} onChange={changeReservationDate}
+							onClick={event => {
+								if (typeof event.currentTarget.showPicker === 'function') {
+									event.currentTarget.showPicker();
+								}
+							}}
+							className={fieldClassName} required />
 							<FieldError>{form.errors.date_to_reserv}</FieldError>
 						</div>
 						<div>

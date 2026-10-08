@@ -31,41 +31,42 @@ class ReportController extends Controller
 
     public function store(Request $request)
     {
-        // Validasi input dari form dengan pesan kustom bahasa Indonesia
         $request->validate([
             'room_id' => 'required|exists:rooms,id',
-            'desc'    => 'required|string',
-            'image'   => 'required|image|mimes:jpeg,png,jpg,gif|max:2048', 
+            'desc' => 'required|string',
+            'images' => 'required|array',
+            'images.*' => 'image|mimes:jpg,jpeg,png|max:2048',
         ], [
-            // Pesan error kustom
             'room_id.required' => 'Silakan pilih fasilitas atau ruangan terlebih dahulu.',
-            'room_id.exists'   => 'Fasilitas yang dipilih tidak valid.',
-            'desc.required'    => 'Deskripsi kerusakan wajib diisi.',
-            'desc.string'      => 'Deskripsi kerusakan harus berupa teks.',
-            'image.required'   => 'Bukti kerusakan (foto) wajib dilampirkan.',
-            'image.image'      => 'File yang diunggah harus berupa file gambar.',
-            'image.mimes'      => 'Format foto harus berjenis jpeg, png, jpg, atau gif.',
-            'image.max'        => 'Ukuran foto maksimal adalah 2MB.',
+            'room_id.exists' => 'Fasilitas yang dipilih tidak valid.',
+            'desc.required' => 'Deskripsi kerusakan wajib diisi.',
+            'desc.string' => 'Deskripsi kerusakan harus berupa teks.',
+            'images.required' => 'Bukti kerusakan (foto) wajib dilampirkan.',
+            'images.*.image' => 'File yang diunggah harus berupa file gambar.',
+            'images.*.mimes' => 'Format foto harus berjenis jpeg, png, atau jpg.',
+            'images.*.max' => 'Ukuran setiap foto maksimal adalah 2MB.',
         ]);
 
-        $imagePath = null;
+        // Simpan laporan utama
+        $report = Report::create([
+            'user_id' => Auth::id(),
+            'room_id' => $request->room_id,
+            'desc' => $request->desc,
+            'status' => 'baru',
+        ]);
 
-        // Cek apakah user mengupload foto bukti kerusakan
-        if ($request->hasFile('image')) {
-            $imagePath = $request->file('image')->store('reports', 'public');
+        // Simpan semua foto
+        foreach ($request->file('images') as $image) {
+            $imagePath = $image->store('reports', 'public');
+
+            $report->images()->create([
+                'image' => $imagePath,
+            ]);
         }
 
-        // Simpan data laporan ke database
-        Report::create([
-            'user_id' => Auth::id(),             // Mengambil ID user yang sedang login
-            'room_id' => $request->room_id,      // Pilihan ruangan dari form
-            'desc'    => $request->desc,         // Deskripsi kerusakan
-            'image'   => $imagePath,             // Path foto di storage (jika ada)
-            'status'  => 'baru',                 // Status awal laporan
-        ]);
-
-        // Redirect kembali ke halaman form dengan pesan sukses
-        return redirect()->route('reports.index')->with('success', 'Laporan kerusakan berhasil dikirim dan masuk ke daftar riwayat.');
+        return redirect()
+            ->route('reports.index')
+            ->with('success', 'Laporan kerusakan berhasil dikirim dan masuk ke daftar riwayat.');
     }
 
     public function index()

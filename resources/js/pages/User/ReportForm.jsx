@@ -11,17 +11,37 @@ function FieldError({ children }) {
 }
 
 export default function ReportForm({ rooms = [], user, auth, csrfToken, urls }) {
-	const form = useForm({ room_id: '', desc: '', image: null });
-	const [imagePreview, setImagePreview] = useState(null);
+	const form = useForm({ room_id: '', desc: '', images: [] });
+	const [imagePreviews, setImagePreviews] = useState([]);
 
-	useEffect(() => () => {
-		if (imagePreview) URL.revokeObjectURL(imagePreview);
-	}, [imagePreview]);
+	useEffect(() => {
+		return () => {
+			imagePreviews.forEach(preview => {
+				URL.revokeObjectURL(preview.url);
+			});
+		};
+	}, [imagePreviews]);
 
 	const handleImageChange = event => {
-		const image = event.target.files?.[0] ?? null;
-		form.setData('image', image);
-		setImagePreview(image ? URL.createObjectURL(image) : null);
+		const newImages = Array.from(event.target.files ?? []);
+
+		if (newImages.length === 0) return;
+
+		form.setData('images', [
+			...form.data.images,
+			...newImages,
+		]);
+
+		setImagePreviews(prev => [
+			...prev,
+			...newImages.map(image => ({
+				file: image,
+				url: URL.createObjectURL(image),
+			})),
+		]);
+
+		// supaya input bisa dipilih ulang
+		event.target.value = '';
 	};
 
 	const submit = event => {
@@ -87,39 +107,92 @@ export default function ReportForm({ rooms = [], user, auth, csrfToken, urls }) 
 					</div>
 
 					<div>
-						<label htmlFor="image" className="block text-sm font-semibold text-teal-darker">
+						<label htmlFor="images" className="block text-sm font-semibold text-teal-darker">
 							Bukti kerusakan (foto)
 						</label>
+
 						<div className="mt-1 flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 px-6 pt-6 pb-6 transition-colors duration-200 hover:border-gray-400">
-							{imagePreview ? (
-								<div className="mb-3 flex flex-col items-center">
-									<img src={imagePreview} alt="Pratinjau foto kerusakan" className="mb-2 h-28 w-auto max-w-[250px] rounded-lg border border-gray-200 object-cover shadow-sm" />
-									<span className="max-w-xs truncate text-xs font-medium text-gray-700">{form.data.image?.name}</span>
+
+							{imagePreviews.length > 0 ? (
+								<div className="mb-3 grid grid-cols-2 gap-3">
+									{imagePreviews.map((preview, index) => (
+										<div
+											key={preview.url}
+											className="flex flex-col items-center"
+										>
+											<img
+												src={preview.url}
+												alt={`Pratinjau foto kerusakan ${index + 1}`}
+												className="h-28 w-28 rounded-lg border border-gray-200 object-cover shadow-sm"
+											/>
+
+											<span className="mt-1 max-w-[120px] truncate text-xs font-medium text-gray-700">
+												{preview.file.name}
+											</span>
+										</div>
+									))}
 								</div>
 							) : (
-								<svg className="mb-2 h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
-									<path d="M28 8H12a4 4 0 0 0-4 4v20m32-12v8m0 0v8a4 4 0 0 1-4 4H12a4 4 0 0 1-4-4v-4m32-4-3.172-3.172a4 4 0 0 0-5.656 0L28 28M8 32l9.172-9.172a4 4 0 0 1 5.656 0L28 28m0 0 4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+								<svg
+									className="mb-2 h-12 w-12 text-gray-400"
+									stroke="currentColor"
+									fill="none"
+									viewBox="0 0 48 48"
+									aria-hidden="true"
+								>
+									<path
+										d="M28 8H12a4 4 0 0 0-4 4v20m32-12v8m0 0v8a4 4 0 0 1-4 4H12a4 4 0 0 1-4-4v-4m32-4-3.172-3.172a4 4 0 0 0-5.656 0L28 28M8 32l9.172-9.172a4 4 0 0 1 5.656 0L28 28m0 0 4 4m4-24h8m-4-4v8m-12 4h.02"
+										strokeWidth="2"
+										strokeLinecap="round"
+										strokeLinejoin="round"
+									/>
 								</svg>
 							)}
+
 							<input
-								id="image"
-								name="image"
+								id="images"
+								name="images[]"
 								type="file"
 								accept="image/*"
+								multiple
 								onChange={handleImageChange}
 								className="hidden"
-								aria-invalid={Boolean(form.errors.image)}
-								aria-describedby={form.errors.image ? 'image-error' : 'image-help'}
 							/>
+
 							<div className="my-2 flex w-full items-center justify-center gap-3">
-								<label htmlFor="image" className="shrink-0 cursor-pointer rounded-md border border-gray-300 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-widest text-gray-700 shadow-sm transition hover:bg-gray-50">
-									Pilih File
-								</label>
-								{!imagePreview && <span className="max-w-xs truncate text-xs text-gray-500">Belum ada file yang dipilih</span>}
+								{imagePreviews.length === 0 && (
+									<label
+										htmlFor="images"
+										className="shrink-0 cursor-pointer rounded-md border border-gray-300 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-widest text-gray-700 shadow-sm transition hover:bg-gray-50"
+									>
+										Pilih Foto
+									</label>
+								)}
+								{imagePreviews.length === 1 && (
+									<label
+										htmlFor="images"
+										className="shrink-0 cursor-pointer rounded-md border border-gray-300 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-widest text-gray-700 shadow-sm transition hover:bg-gray-50"
+									>
+										+ Tambah Foto
+									</label>
+								)}
+
+
+								{imagePreviews.length === 0 && (
+									<span className="max-w-xs truncate text-xs text-gray-500">
+										Belum ada file yang dipilih
+									</span>
+								)}
 							</div>
-							<p id="image-help" className="mt-1 text-xs text-gray-400">PNG, JPG, JPEG (Maks. 2MB)</p>
+
+							<p id="image-help" className="mt-1 text-xs text-gray-400">
+								PNG, JPG, JPEG (Maks. 2MB)
+							</p>
 						</div>
-						<div id="image-error"><FieldError>{form.errors.image}</FieldError></div>
+
+						<div id="image-error">
+							<FieldError>{form.errors.images}</FieldError>
+						</div>
 					</div>
 
 					<div className="flex flex-wrap justify-end gap-3 border-t border-gray-100 pt-5">

@@ -28,9 +28,8 @@ test('selection cannot cross a blocked slot', () => {
     assert.match(selectReservationRange(blocked, 5, 2, '08:00', '08:30').message, /tidak tersedia/);
     assert.equal(selectReservationRange(blocked, 3, null, '', ''), null);
 });
-test('three hours is allowed and a longer range clears the selection', () => {
-    assert.equal(selectReservationRange(slots, 5, 0, '07:00', '07:30').endTime, '10:00');
-    const tooLong = selectReservationRange(slots, 6, 0, '07:00', '07:30');
-    assert.equal(tooLong.startTime, '');
-    assert.match(tooLong.message, /maksimal 3 jam/);
+test('frontend permits longer available ranges as in main', () => {
+    assert.deepEqual(selectReservationRange(slots, 7, 0, '07:00', '07:30'), {
+        anchor: null, startTime: '07:00', endTime: '11:00', message: '',
+    });
 });
