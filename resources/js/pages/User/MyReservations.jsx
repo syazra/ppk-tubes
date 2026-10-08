@@ -209,7 +209,7 @@ export default function MyReservations({ user, csrfToken, urls, reservations, fi
 
 									<span style="
 										display:inline-flex;
-										
+
 										justify-content:center;
 										width: 110px;
 										height: 40px;

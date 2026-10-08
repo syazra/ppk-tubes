@@ -38,7 +38,10 @@ class UserReservationsPageTest extends TestCase
                 ->component('User/ReservationForm')
                 ->has('rooms', 1)
                 ->where('rooms.0.id', $availableRoom->id)
-                ->where('urls.slots', route('reservations.slots'))
+                ->has('facilities.data', 2)
+                ->where('facilities.data.0.id', $availableRoom->id)
+                ->where('facilities.data.0.slots_url', route('reservations.facility-slots', $availableRoom))
+                ->where('facilities.data.0.images', [])
             );
     }
 

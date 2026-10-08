@@ -176,7 +176,7 @@ export default function ReportForm({ rooms = [], user, auth, csrfToken, urls }) 
 										+ Tambah Foto
 									</label>
 								)}
-							
+
 
 								{imagePreviews.length === 0 && (
 									<span className="max-w-xs truncate text-xs text-gray-500">

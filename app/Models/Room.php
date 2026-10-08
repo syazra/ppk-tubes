@@ -21,7 +21,8 @@ class Room extends Model
         return ['is_avail' => 'boolean', 'capacity' => 'integer'];
     }
 
-    public function reservations()
+    /** @return HasMany<Reservation, $this> */
+    public function reservations(): HasMany
     {
         return $this->hasMany(Reservation::class);
     }

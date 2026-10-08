@@ -1,0 +1,76 @@
+@font-face { font-family: 'CampuSpace Ogg'; src: url('../fonts/ogg-regular.otf') format('opentype'); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: 'CampuSpace Ogg'; src: url('../fonts/ogg-regular-italic.otf') format('opentype'); font-weight: 400; font-style: italic; font-display: swap; }
+
+.ga { --ink: #163f35; --muted: #5b6e62; --teal: #007f6d; min-height: 100vh; background: #f8f9f3; color: var(--ink); font-family: Figtree, ui-sans-serif, system-ui, sans-serif; line-height: 1.6; }
+.ga * { box-sizing: border-box; }
+.ga h1, .ga h2, .ga h3, .ga p { margin: 0; }
+.ga a { color: inherit; text-decoration: none; }
+.ga svg { display: block; }
+.ga :focus-visible { outline: 3px solid var(--teal); outline-offset: 5px; }
+.ga main { padding-top: 80px; }
+.ga-wrap { width: min(1240px, calc(100% - 96px)); margin-inline: auto; }
+.ga-skip { position: fixed; top: 10px; left: 12px; z-index: 60; padding: 12px 20px; background: #d3e9a6; transform: translateY(-160%); }
+.ga-skip:focus { transform: none; }
+.ga-intro { background: linear-gradient(120deg, #edf5e8, #f8f9f3); border-bottom: 1px solid #dce5d5; }
+.ga-intro-grid { display: grid; grid-template-columns: 1.15fr 1fr; gap: 80px; align-items: center; padding-block: 84px 92px; }
+.ga-eyebrow { display: flex; align-items: center; gap: 10px; margin-bottom: 20px !important; color: var(--teal); font-size: 11px; font-weight: 600; letter-spacing: .15em; text-transform: uppercase; }
+.ga-eyebrow::before { content: ''; width: 24px; height: 1px; background: currentColor; }
+.ga h1, .ga h2 { font-family: 'CampuSpace Ogg', Georgia, serif; font-weight: 400; letter-spacing: -.035em; line-height: 1.2; }
+.ga h1 { font-size: clamp(44px, 4.8vw, 66px); }
+.ga h1 em { color: var(--teal); font-weight: 400; }
+.ga-copy { color: var(--muted); font-size: 16px; line-height: 1.85; overflow-wrap: anywhere; }
+.ga-intro .ga-copy { max-width: 460px; }
+.ga-story { padding-block: 80px; }
+.ga-story-grid { display: grid; grid-template-columns: 1.15fr 1fr; gap: 80px; }
+.ga-story-heading { max-width: 400px; }
+.ga-story-heading h2 { font-size: clamp(32px, 3.2vw, 42px); }
+.ga-icon { width: 24px; height: 24px; flex: none; }
+.ga-feature-icon, .ga-role-icon { display: flex; align-items: center; justify-content: center; width: 48px; height: 48px; margin-bottom: 24px; background: #e6f0de; color: var(--teal); border-radius: 12px; }
+.ga-story-content { display: grid; gap: 22px; }
+.ga .ga-link { display: inline-flex; align-items: center; gap: 12px; justify-self: start; min-height: 44px; color: var(--teal); font-size: 14px; font-weight: 600; text-underline-offset: 5px; }
+.ga-link:hover { text-decoration: underline; }
+.ga-link .ga-icon { width: 18px; height: 18px; }
+.ga-roles { padding-block: 72px 80px; border-top: 1px solid #dce5d5; background: #edf3e8; }
+.ga-roles h2 { font-size: clamp(34px, 3.6vw, 48px); }
+.ga-role-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; margin-top: 36px; }
+.ga-role { min-width: 0; padding: 30px; background: #ffffffb8; border: 1px solid #d9e4d1; border-radius: 16px; }
+.ga-role h3 { font-size: 19px; font-weight: 600; margin-bottom: 14px; }
+.ga-role .ga-copy { font-size: 15px; }
+.ga-role-icon { margin-bottom: 22px; }
+.ga-footer { background: #f1f5ee; border-top: 1px solid #d9e4d1; }
+.ga-footer-inner { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding-block: 28px; }
+.ga-brand { display: inline-flex; align-items: center; gap: 10px; font-size: 20px; font-weight: 600; letter-spacing: -.8px; white-space: nowrap; }
+.ga-brand .cs-brand-mark { width: 28px; height: 28px; color: var(--teal); }
+.ga-brand span span { font-weight: 400; }
+.ga-footer p, .ga-footer nav { color: var(--muted); font-size: 12px; }
+.ga-footer nav { display: flex; gap: 22px; }
+.ga-footer nav a:hover { color: var(--teal); }
+
+@media (max-width: 1100px) {
+    .ga-wrap { width: calc(100% - 64px); }
+    .ga-intro-grid, .ga-story-grid { gap: 44px; }
+    .ga-role { padding: 24px; }
+}
+@media (max-width: 900px) {
+    .ga main { padding-top: 72px; }
+    .ga-role-grid { grid-template-columns: 1fr; }
+    .ga-role { display: grid; grid-template-columns: 48px 1fr; column-gap: 20px; }
+    .ga-role-icon { grid-row: 1 / 3; margin-bottom: 0; }
+}
+@media (max-width: 760px) {
+    .ga-wrap { width: calc(100% - 40px); }
+    .ga-intro-grid, .ga-story-grid { grid-template-columns: 1fr; gap: 28px; }
+    .ga-intro-grid { padding-block: 52px 56px; }
+    .ga h1 { font-size: clamp(40px, 8vw, 58px); }
+    .ga-story, .ga-roles { padding-block: 48px; }
+    .ga-copy { font-size: 15px; }
+    .ga-story-heading { max-width: 340px; }
+    .ga-role-grid { gap: 16px; margin-top: 28px; }
+    .ga-role { padding: 22px; column-gap: 16px; }
+    .ga-footer-inner { flex-wrap: wrap; gap: 18px; }
+    .ga-footer p { order: 3; width: 100%; }
+}
+@media (forced-colors: active) {
+    .ga-intro, .ga-roles, .ga-footer { background: Canvas; color: CanvasText; }
+    .ga-role, .ga-feature-icon, .ga-role-icon { border: 1px solid ButtonText; }
+}

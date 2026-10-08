@@ -7,39 +7,61 @@ use App\Http\Requests\Auth\LoginRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\View\View;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class AuthenticatedSessionController extends Controller
 {
     /**
      * Display the login view.
      */
-    public function create(): View
+    public function create(): Response
     {
-        return view('auth.login');
+        return Inertia::render('Login', [
+            'status' => session('status'),
+            'landingUrl' => route('landing'),
+            'demoAccounts' => app()->environment('local') ? [
+                ['label' => 'Mahasiswa', 'email' => 'ruthseptriana@students.kampus.ac.id'],
+                ['label' => 'Dosen', 'email' => 'sandykurniawan@lecturer.kampus.ac.id'],
+                ['label' => 'Staf', 'email' => 'benynugroho@staff.kampus.ac.id'],
+                ['label' => 'Operator', 'email' => 'anangardiyanto@operator.kampus.ac.id'],
+                ['label' => 'Admin', 'email' => 'arispujiw@admin.kampus.ac.id'],
+            ] : [],
+        ]);
+    }
+
+    /**
+     * Redirect to the intended page; use a full page visit for Inertia requests
+     * since dashboards may be Blade-rendered.
+     */
+    private function toDashboard(Request $request, string $default): RedirectResponse|\Symfony\Component\HttpFoundation\Response
+    {
+        $redirect = redirect()->intended($default);
+
+        return $request->header('X-Inertia') ? Inertia::location($redirect->getTargetUrl()) : $redirect;
     }
 
     /**
      * Handle an incoming authentication request.
      */
-    public function store(LoginRequest $request): RedirectResponse
+    public function store(LoginRequest $request): RedirectResponse|\Symfony\Component\HttpFoundation\Response
     {
         $request->authenticate();
 
         $request->session()->regenerate();
 
-        $user = Auth::user(); 
+        $user = Auth::user();
 
         if ($user->isAdmin()) {
-            return redirect()->intended(route('admin.dashboard', absolute: false));
+            return $this->toDashboard($request, route('admin.dashboard', absolute: false));
         }
 
         if ($user->isOperator()) {
-            return redirect()->intended(route('operator.dashboard', absolute: false));
+            return $this->toDashboard($request, route('operator.dashboard', absolute: false));
         }
 
         if ($user->isUser()) {
-            return redirect()->intended(route('user.dashboard', absolute: false));
+            return $this->toDashboard($request, route('user.dashboard', absolute: false));
         }
 
         // Paksa logout dan kembalikan ke halaman login dengan pesan error!

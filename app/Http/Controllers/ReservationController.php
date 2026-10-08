@@ -112,7 +112,6 @@ class ReservationController extends Controller
             'catalogDate' => $browserData['catalogDate'],
             'timezone' => $browserData['timezone'],
             'minimumDate' => $availability->earliestStart()->format('Y-m-d'),
-            'maxDurationMinutes' => RoomAvailability::MAX_DURATION_MINUTES,
             'selectedFacility' => $selectedRoom ? $this->facilityCardData($selectedRoom) : null,
             'oldInput' => $formFields,
             'photoPlaceholderUrl' => asset('images/facility-placeholder-photo.jpg'),
@@ -363,12 +362,6 @@ class ReservationController extends Controller
                     'time' => 'Durasi harus kelipatan 30 menit'
                 ])
                 ->withInput();
-        }
-
-        if (($end - $start) > RoomAvailability::MAX_DURATION_MINUTES * 60) {
-            return back()->withErrors([
-                'time' => 'Durasi reservasi maksimal tiga jam.',
-            ])->withInput();
         }
 
         /*
