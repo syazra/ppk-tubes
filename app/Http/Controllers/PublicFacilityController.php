@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Room;
+use App\Models\RoomImage;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -34,7 +35,7 @@ class PublicFacilityController extends Controller
             ->when($filters['type'] !== '', fn ($query) => $query->where('type', $filters['type']))
             ->when($filters['location'] !== '', fn ($query) => $query->where('location', $filters['location']))
             ->when($filters['capacity'] !== '', fn ($query) => $query->where('capacity', '>=', (int) $filters['capacity']))
-            ->with(['reservations' => fn ($query) => $query
+            ->with(['images', 'reservations' => fn ($query) => $query
                 ->select(['room_id', 'start_time', 'end_time'])
                 ->where('date_to_reserv', $filters['date'])
                 ->where('status', 'disetujui')])
@@ -51,6 +52,11 @@ class PublicFacilityController extends Controller
                 'capacity' => $room->capacity,
                 'desc' => $room->desc,
                 'is_avail' => $room->is_avail,
+                'images' => $room->images->map(function (RoomImage $image): ?array {
+                    $url = $image->publicUrl();
+
+                    return $url === null ? null : ['url' => $url, 'alt_text' => $image->alt_text];
+                })->filter()->values()->all(),
                 'slots' => $this->slots($room),
             ]);
 
@@ -60,6 +66,8 @@ class PublicFacilityController extends Controller
             'types' => Room::query()->distinct()->orderBy('type')->pluck('type'),
             'locations' => Room::query()->distinct()->orderBy('location')->pluck('location'),
             'today' => $today,
+            'photoPlaceholderUrl' => asset('images/facility-placeholder-photo.jpg'),
+            'photoFallbackUrl' => asset('images/facility-placeholder.svg'),
             'urls' => [
                 'landing' => route('landing'),
                 'facilities' => route('facilities.index'),

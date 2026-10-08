@@ -1,0 +1,54 @@
+.fc-card { min-width: 0; overflow: hidden; border: 1px solid #dce7e2; border-radius: 16px; background: #fff; color: #193f36; font-family: inherit; line-height: 1.6; box-shadow: 0 4px 16px #163f3504; transition: border-color .2s, box-shadow .2s; }
+.fc-card *, .fc-card *::before, .fc-card *::after { box-sizing: border-box; }
+.fc-card[data-selected="true"] { border-color: #249780; box-shadow: 0 0 0 3px #e0f2ec, 0 6px 20px #16473e08; }
+.fc-card h3, .fc-card p, .fc-card dl, .fc-card dd { margin: 0; }
+.fc-card button { font: inherit; cursor: pointer; }
+.fc-card :focus-visible { outline: 3px solid #007f6d; outline-offset: 4px; }
+.fc-card .fc-icon { display: block; width: 18px; height: 18px; flex: none; }
+.fc-photo { position: relative; min-height: 190px; background: #eef4ef; }
+.fc-photo > img { display: block; width: 100%; height: 190px; object-fit: cover; }
+.fc-photo-label { position: absolute; right: 12px; bottom: 12px; padding: 4px 9px; border-radius: 6px; background: #fffffff0; color: #566d61; font-size: 10px; }
+.fc-body { padding: 22px; }
+.fc-heading { display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; }
+.fc-heading h3 { min-width: 0; color: #16473e; font-size: 18px; font-weight: 650; line-height: 1.4; letter-spacing: -.02em; overflow-wrap: anywhere; }
+.fc-status { display: inline-flex; align-items: center; gap: 5px; flex: none; padding: 4px 9px; border-radius: 20px; background: #f0f2f1; color: #68766f; font-size: 10px; font-weight: 600; }
+.fc-status-active { background: #eaf5ee; color: #26775d; }
+.fc-status i, .fc-slot-status i { width: 5px; height: 5px; border-radius: 50%; background: currentColor; flex: none; }
+.fc-metadata { display: grid; grid-template-columns: 78px minmax(0, 1fr); gap: 5px 14px; margin-top: 17px !important; font-size: 12px; }
+.fc-metadata dt { color: #738578; }
+.fc-metadata dd { color: #36584b; overflow-wrap: anywhere; }
+.fc-description { margin-top: 15px !important; color: #60776a; font-size: 12px; line-height: 1.8; overflow-wrap: anywhere; }
+.fc-schedule { margin-top: 20px; border: 1px solid #dfebe4; border-radius: 10px; overflow: hidden; }
+.fc-schedule summary { display: flex; align-items: center; gap: 11px; min-height: 65px; padding: 12px 14px; background: #f6faf7; list-style: none; cursor: pointer; transition: background .2s; }
+.fc-schedule summary::-webkit-details-marker { display: none; }
+.fc-schedule summary:hover { background: #edf6f0; }
+.fc-schedule-icon { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 8px; background: #e4f1e9; color: #287a65; flex: none; }
+.fc-schedule-copy { display: grid; gap: 2px; flex: 1; min-width: 0; }
+.fc-schedule-copy > span { color: #246e5c; font-size: 12px; font-weight: 600; }
+.fc-schedule-copy small { color: #738578; font-size: 10px; }
+.fc-chevron { color: #49816d; transition: transform .2s; }
+.fc-schedule[open] .fc-chevron { transform: rotate(180deg); }
+.fc-schedule-body { padding: 14px; border-top: 1px solid #dfebe4; }
+.fc-schedule-date { margin-bottom: 12px !important; color: #738578; font-size: 10px; }
+.fc-slots { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; padding: 0; margin: 0; list-style: none; }
+.fc-slot { min-width: 0; padding: 9px 8px; border: 1px solid #e1e5e2; border-radius: 7px; background: #f5f6f5; color: #718075; }
+.fc-slot-available { background: #edf7ef; border-color: #d7e9db; color: #37724a; }
+.fc-slot-time { display: block; font-size: 11px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.fc-slot-status { display: flex; align-items: center; gap: 5px; margin-top: 4px; font-size: 10px; }
+.fc-action { margin-top: 18px; }
+.fc-card .fc-select { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; min-height: 46px; padding: 12px 16px; border: 1px solid #007f6d; border-radius: 10px; background: #007f6d; color: #fff; font-size: 13px; font-weight: 600; transition: background .2s, box-shadow .2s; }
+.fc-card .fc-select:hover { background: #006c5c; box-shadow: 0 4px 12px #007f6d1a; }
+.fc-card .fc-select.fc-select-selected, .fc-card .fc-select.fc-select-selected:hover { border-color: #b2d9c5; background: #e8f5ed; color: #28694e; cursor: default; opacity: 1; box-shadow: none; }
+.fc-gallery { margin-top: 16px; }
+.fc-gallery-toggle { display: inline-flex; align-items: center; gap: 7px; min-height: 36px; padding: 7px 10px; border: 1px solid #d9e8df; border-radius: 8px; background: #fff; color: #36785f; font-size: 11px !important; font-weight: 600 !important; }
+.fc-gallery-toggle:hover { background: #f2f8f4; }
+.fc-gallery-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 12px; }
+.fc-gallery-grid a { min-width: 0; color: #60776a; text-decoration: none; }
+.fc-gallery-grid img { display: block; width: 100%; aspect-ratio: 4/3; border-radius: 8px; object-fit: cover; }
+.fc-gallery-grid span { display: block; overflow: hidden; margin-top: 4px; text-overflow: ellipsis; white-space: nowrap; font-size: 10px; }
+.fc-card .fc-inactive, .fc-message { margin-top: 12px !important; color: #738578; font-size: 12px; }
+.fc-error { display: grid; gap: 8px; color: #963c2c; font-size: 12px; }
+.fc-error button { justify-self: start; padding: 0; border: 0; background: none; color: inherit; font-weight: 600; text-decoration: underline; }
+@media (max-width: 400px) { .fc-body { padding: 19px; } .fc-photo, .fc-photo > img { min-height: 170px; height: 170px; } .fc-heading h3 { font-size: 17px; } }
+@media (prefers-reduced-motion: reduce) { .fc-card, .fc-card * { transition: none !important; } }
+@media (forced-colors: active) { .fc-card, .fc-select, .fc-schedule, .fc-status, .fc-slot { border: 1px solid ButtonText; } }

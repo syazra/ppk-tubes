@@ -7,6 +7,7 @@ use App\Models\Room;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
@@ -192,11 +193,36 @@ class PublicFacilityTest extends TestCase
 
         $response = $this->get(route('facilities.index'))->assertOk();
         $publicRoom = $response->inertiaProps('rooms.data.0');
-        $this->assertSame(['id', 'name', 'location', 'type', 'capacity', 'desc', 'is_avail', 'slots'], array_keys($publicRoom));
+        $this->assertSame(['id', 'name', 'location', 'type', 'capacity', 'desc', 'is_avail', 'images', 'slots'], array_keys($publicRoom));
         $this->assertSame(['start_time', 'end_time', 'available'], array_keys($publicRoom['slots'][0]));
         $response->assertDontSee('Pemohon Privat')
             ->assertDontSee('private@example.com')
             ->assertDontSee('Tujuan privat rapat pemohon');
+    }
+
+    public function test_guests_receive_ordered_public_photos_without_storage_metadata_or_missing_files(): void
+    {
+        Storage::fake('public');
+        $disk = Storage::disk('public');
+        $disk->put('facilities/front.jpg', 'photo');
+        $disk->put('facilities/side view.jpg', 'photo');
+        $room = $this->facility();
+        $room->images()->create(['path' => 'facilities/side view.jpg', 'alt_text' => 'Tampak samping', 'display_order' => 2]);
+        $room->images()->create(['path' => 'facilities/front.jpg', 'alt_text' => 'Tampak depan', 'display_order' => 1]);
+        $room->images()->create(['path' => 'facilities/missing.jpg']);
+        $room->images()->create(['path' => '../private.jpg']);
+
+        $response = $this->get(route('facilities.index'))->assertOk();
+
+        $this->assertSame([
+            ['url' => $disk->url('facilities/front.jpg'), 'alt_text' => 'Tampak depan'],
+            ['url' => $disk->url('facilities/side%20view.jpg'), 'alt_text' => 'Tampak samping'],
+        ], $response->inertiaProps('rooms.data.0.images'));
+        $response->assertInertia(fn (Assert $page) => $page
+            ->where('photoPlaceholderUrl', asset('images/facility-placeholder-photo.jpg'))
+            ->where('photoFallbackUrl', asset('images/facility-placeholder.svg'))
+            ->etc());
+        $response->assertDontSee('facilities/missing.jpg')->assertDontSee('../private.jpg');
     }
 
     public function test_default_date_uses_jakarta_and_slot_status_does_not_apply_booking_lead_time(): void

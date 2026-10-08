@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import Icon from '../../components/Icons';
 import PublicBrand from '../../components/PublicBrand';
 import PublicNavbar from '../../components/PublicNavbar';
+import FacilityCard from '../../components/FacilityCard';
 import '../../../css/guest-facilities.css';
 
 const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
@@ -12,53 +13,13 @@ function dateLabel(date) {
     return monthNames[Number(month) - 1] ? `${Number(day)} ${monthNames[Number(month) - 1]} ${year}` : date;
 }
 
-function FacilityCard({ room, date }) {
-    const slots = room.slots ?? [];
-    const availableCount = slots.filter(slot => slot.available).length;
-
-    return (
-        <article className="gf-card">
-            <div className="gf-card-heading">
-                <span className="gf-facility-icon"><Icon name="landing-room" className="gf-icon" /></span>
-                <span className="gf-type">{room.type}</span>
-            </div>
-            <h3>{room.name}</h3>
-            <dl className="gf-metadata">
-                <div><dt><Icon name="campus" className="gf-icon" /> Lokasi</dt><dd>{room.location}</dd></div>
-                <div><dt><Icon name="people" className="gf-icon" /> Kapasitas</dt><dd>{room.capacity} orang</dd></div>
-            </dl>
-            {room.desc && <p className="gf-description">{room.desc}</p>}
-            {!room.is_avail && <p className="gf-inactive"><Icon name="close" className="gf-icon" /> Fasilitas sedang tidak tersedia.</p>}
-            <details className="gf-schedule">
-                <summary>
-                    <span><span className="gf-schedule-label">Lihat slot waktu</span><span className="gf-schedule-count">{availableCount} dari {slots.length} slot tersedia</span></span>
-                    <Icon name="landing-chevron" className="gf-icon gf-chevron" />
-                </summary>
-                <div className="gf-schedule-body">
-                    <p className="gf-schedule-date"><Icon name="calendar" className="gf-icon" /><span>{dateLabel(date)} · WIB</span></p>
-                    {slots.length > 0 ? (
-                        <ul className="gf-slots" aria-label={`Ketersediaan ${room.name} pada ${dateLabel(date)}`}>
-                            {slots.map(slot => (
-                                <li key={slot.start_time} className={slot.available ? 'gf-slot gf-slot-available' : 'gf-slot gf-slot-unavailable'}>
-                                    <span className="gf-slot-time">{slot.start_time}–{slot.end_time}</span>
-                                    <span className="gf-slot-status"><span className="gf-status-dot" aria-hidden="true" />{slot.available ? 'Tersedia' : 'Tidak tersedia'}</span>
-                                </li>
-                            ))}
-                        </ul>
-                    ) : <p className="gf-no-slots">Belum ada jadwal untuk tanggal ini.</p>}
-                </div>
-            </details>
-        </article>
-    );
-}
-
 function paginationLabel(link, index, total) {
     if (index === 0) return 'Sebelumnya';
     if (index === total - 1) return 'Berikutnya';
     return /^\d+$/.test(link.label) ? link.label : '…';
 }
 
-export default function Facilities({ rooms, filters = {}, types = [], locations = [], today, urls }) {
+export default function Facilities({ rooms, filters = {}, types = [], locations = [], today, urls, photoPlaceholderUrl, photoFallbackUrl }) {
     const { errors = {} } = usePage().props;
     const selectedDate = filters.date || today;
     const [query, setQuery] = useState({ search: filters.search || '', type: filters.type || '', location: filters.location || '', capacity: filters.capacity || '', date: selectedDate });
@@ -139,7 +100,7 @@ export default function Facilities({ rooms, filters = {}, types = [], locations 
                     <section id="daftar-fasilitas" className="gf-results" aria-labelledby="gf-results-heading" aria-busy={processing}>
                         <div className="gf-results-heading"><div><p className="gf-eyebrow">Temukan fasilitasmu</p><h2 id="gf-results-heading">Daftar fasilitas</h2></div><div className="gf-results-date"><Icon name="calendar" className="gf-icon" /><span>Ketersediaan <strong>{dateLabel(selectedDate)}</strong></span></div></div>
                         <div className="gf-results-meta"><p role="status">{rooms.total > 0 ? `Menampilkan ${rooms.from}–${rooms.to} dari ${rooms.total} fasilitas` : '0 fasilitas ditemukan'}</p><p>Buka slot waktu untuk melihat jadwal.</p></div>
-                        {roomList.length > 0 ? <div className="gf-card-grid">{roomList.map(room => <FacilityCard key={room.id} room={room} date={selectedDate} />)}</div> : <div className="gf-empty"><span className="gf-empty-icon"><Icon name="room" className="gf-note-icon" /></span><h3>Belum ada fasilitas yang sesuai</h3><p>Coba ubah tipe, lokasi, atau kapasitas untuk menemukan fasilitas lainnya.</p><button className="gf-button gf-button-forest" type="button" onClick={reset} disabled={processing}>Reset filter<Icon name="landing-arrow" className="gf-icon" /></button></div>}
+                        {roomList.length > 0 ? <div className="gf-card-grid">{roomList.map(room => <FacilityCard key={room.id} facility={{ ...room, description: room.desc, is_available: room.is_avail }} slots={room.slots} date={selectedDate} photoPlaceholderUrl={photoPlaceholderUrl} photoFallbackUrl={photoFallbackUrl} />)}</div> : <div className="gf-empty"><span className="gf-empty-icon"><Icon name="room" className="gf-note-icon" /></span><h3>Belum ada fasilitas yang sesuai</h3><p>Coba ubah tipe, lokasi, atau kapasitas untuk menemukan fasilitas lainnya.</p><button className="gf-button gf-button-forest" type="button" onClick={reset} disabled={processing}>Reset filter<Icon name="landing-arrow" className="gf-icon" /></button></div>}
                         {rooms.last_page > 1 && <nav className="gf-pagination" aria-label="Halaman daftar fasilitas">{pagination.map((link, index) => {
                             const label = paginationLabel(link, index, pagination.length);
                             return link.active ? <span className="gf-page gf-page-active" key={index} aria-current="page" aria-label={`Halaman ${label}`}>{label}</span> : link.url ? <Link className="gf-page" href={link.url} key={index} preserveScroll preserveState aria-label={/^\d+$/.test(label) ? `Halaman ${label}` : label} onStart={() => setProcessing(true)} onFinish={() => setProcessing(false)}>{label}</Link> : <span className="gf-page gf-page-disabled" key={index} aria-disabled="true">{label}</span>;
