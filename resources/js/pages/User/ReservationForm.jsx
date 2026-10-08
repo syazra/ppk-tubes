@@ -2,22 +2,14 @@ import { Head, Link, router, useForm } from '@inertiajs/react';
 import { useState } from 'react';
 import FacilityCard from '../../components/FacilityCard';
 import useRoomSlots from '../../hooks/useRoomSlots';
+import AvailabilityTimeline from '../../components/AvailabilityTimeline';
+import { selectReservationRange } from '../../lib/reservationRange';
 import AppLayout from '../../components/AppLayout';
 
 const fieldClassName = 'mt-2 block w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm text-gray-800 focus:border-teal-dark-01 focus:ring-teal-dark-01';
-const slotStep = 30;
 
 function FieldError({ children }) {
 	return children ? <p role="alert" className="mt-2 text-sm text-red-700">{children}</p> : null;
-}
-
-function formatTime(value) {
-	return value?.slice(0, 5) ?? '-';
-}
-
-function timeToMinutes(value) {
-	const [hour, minute] = value.split(':').map(Number);
-	return hour * 60 + minute;
 }
 
 function formatDate(value) {
@@ -96,49 +88,19 @@ export default function ReservationForm({
 		}));
 	}
 
-	function clearSelectedRange(message = '') {
+	function changeReservationDate(event) {
+		const date = event.target.value;
 		setSlotAnchor(null);
-		form.setData(data => ({ ...data, start_time: '', end_time: '' }));
-		setSlotMessage(message);
+		setSlotMessage('');
+		form.setData(data => ({ ...data, date_to_reserv: date, start_time: '', end_time: '' }));
 	}
 
 	function selectSlot(index) {
-		setSlotMessage('');
-		const slot = slots[index];
-		if (!slot || slot.status !== 'available') return;
-
-		if (form.data.start_time && form.data.end_time
-			&& slot.start_time >= form.data.start_time && slot.start_time < form.data.end_time) {
-			clearSelectedRange();
-			return;
-		}
-
-		if (slotAnchor === null) {
-			setSlotAnchor(index);
-			form.setData(data => ({ ...data, start_time: slot.start_time, end_time: slot.end_time }));
-			return;
-		}
-
-		const first = Math.min(slotAnchor, index);
-		const last = Math.max(slotAnchor, index);
-		const selectedSlots = slots.slice(first, last + 1);
-		const duration = selectedSlots.length * slotStep;
-		if (duration > maxDurationMinutes) {
-			setSlotAnchor(null);
-			clearSelectedRange(`Durasi reservasi maksimal ${maxDurationMinutes / 60} jam.`);
-			return;
-		}
-		if (selectedSlots.length !== last - first + 1 || selectedSlots.some(item => item.status !== 'available')) {
-			clearSelectedRange('Rentang waktu melewati slot yang tidak tersedia. Pilih rentang lain.');
-			return;
-		}
-
-		setSlotAnchor(null);
-		form.setData(data => ({
-			...data,
-			start_time: selectedSlots[0].start_time,
-			end_time: selectedSlots.at(-1).end_time,
-		}));
+		const range = selectReservationRange(slots, index, slotAnchor, form.data.start_time, form.data.end_time, maxDurationMinutes);
+		if (!range) return;
+		setSlotAnchor(range.anchor);
+		setSlotMessage(range.message);
+		form.setData(data => ({ ...data, start_time: range.startTime, end_time: range.endTime }));
 	}
 
 	function submitReservation(event) {
@@ -149,6 +111,10 @@ export default function ReservationForm({
 		}
 		if (!form.data.start_time || !form.data.end_time || slotAnchor !== null) {
 			setSlotMessage('Pilih slot awal dan slot akhir terlebih dahulu.');
+			return;
+		}
+		if (mainSlotState.loading || mainSlotState.error || !slots.length) {
+			setSlotMessage('Tunggu sampai jadwal selesai dimuat sebelum mengirim reservasi.');
 			return;
 		}
 		form.post(urls.store, { preserveScroll: true });
@@ -204,7 +170,7 @@ export default function ReservationForm({
 								<span>{facilities.total} fasilitas ditemukan</span>
 								<span>Slot untuk {formatDate(catalogDate)}</span>
 							</div>
-							<div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+							<div className="grid items-start gap-4 md:grid-cols-2 xl:grid-cols-3">
 								{facilities.data.map(facility => (
 									<FacilityCard
 									key={facility.id}
@@ -238,6 +204,7 @@ export default function ReservationForm({
 				</section>
 
 				<form onSubmit={submitReservation} className="space-y-6 rounded-md border border-gray-200 bg-white p-5 sm:p-6">
+					<div className="reservation-schedule-layout">
 					<section aria-labelledby="reservation-details-title" className="space-y-5">
 						<div>
 							<h2 id="reservation-details-title" className="text-lg font-bold text-teal-darker">Detail reservasi</h2>
@@ -250,7 +217,7 @@ export default function ReservationForm({
 						<FieldError>{form.errors.room_id}</FieldError>
 						<div>
 							<label htmlFor="date_to_reserv" className="block text-sm font-semibold text-teal-darker">Hari / tanggal</label>
-							<input id="date_to_reserv" name="date_to_reserv" type="date" min={minimumDate} value={form.data.date_to_reserv} onChange={event => form.setData('date_to_reserv', event.target.value)} className={fieldClassName} required />
+							<input id="date_to_reserv" name="date_to_reserv" type="date" min={minimumDate} value={form.data.date_to_reserv} onChange={changeReservationDate} className={fieldClassName} required />
 							<FieldError>{form.errors.date_to_reserv}</FieldError>
 						</div>
 						<div>
@@ -260,14 +227,10 @@ export default function ReservationForm({
 						</div>
 					</section>
 
-					<section aria-labelledby="time-availability-title">
+					<section aria-labelledby="time-availability-title" className="reservation-schedule-panel">
 						<div className="mb-3 flex flex-wrap items-center justify-between gap-3">
 							<h2 id="time-availability-title" className="text-sm font-semibold text-teal-darker">Ketersediaan waktu</h2>
-							<div className="flex flex-wrap gap-4 text-xs text-gray-500">
-								<span className="inline-flex items-center gap-1"><span className="h-3 w-3 rounded border bg-white" />Tersedia</span>
-								<span className="inline-flex items-center gap-1"><span className="h-3 w-3 rounded bg-teal-600" />Dipilih</span>
-								<span className="inline-flex items-center gap-1"><span className="h-3 w-3 rounded bg-gray-400" />Tidak tersedia</span>
-							</div>
+							<span className="text-xs text-gray-500">{timezone === 'Asia/Jakarta' ? 'WIB' : timezone}</span>
 						</div>
 						<div className="rounded-xl border bg-gray-50 p-4 sm:p-5">
 							{!selectedFacility || !form.data.date_to_reserv ? (
@@ -280,27 +243,7 @@ export default function ReservationForm({
 									<button type="button" onClick={mainSlotState.retry} className="font-semibold underline">Coba lagi</button>
 								</div>
 							) : (
-								<div className="grid grid-cols-[3.5rem_minmax(0,1fr)] gap-3">
-									<div className="grid grid-rows-[repeat(27,2.5rem)] text-xs text-gray-500">
-										{slots.map(slot => <div key={slot.start_time} className="flex items-start pt-1">{slot.start_time.endsWith(':00') ? slot.start_time : ''}</div>)}
-										<div className="flex items-start pt-1">20:00</div>
-									</div>
-									<div className="grid grid-rows-[repeat(26,2.5rem)] overflow-hidden rounded border border-gray-200">
-										{slots.map((slot, index) => {
-											const unavailable = slot.status !== 'available';
-											const startSelected = form.data.start_time && slot.start_time >= form.data.start_time;
-											const endSelected = form.data.end_time && slot.start_time < form.data.end_time;
-											const selected = Boolean(startSelected && endSelected);
-											return (
-												<button key={slot.start_time} type="button" disabled={unavailable} onClick={() => selectSlot(index)} aria-pressed={selected}
-													aria-label={`${slot.start_time} sampai ${slot.end_time}${unavailable ? ', tidak tersedia' : ', tersedia'}`}
-													className={`h-10 border-b border-gray-200 text-xs transition ${unavailable ? 'cursor-not-allowed bg-gray-400' : selected ? 'bg-teal-600 text-white' : 'cursor-pointer bg-white hover:bg-teal-100'}`}>
-													<span className="sr-only">{slot.start_time} - {slot.end_time}</span>
-												</button>
-											);
-										})}
-									</div>
-								</div>
+								<AvailabilityTimeline slots={slots} label={`Ketersediaan waktu ${selectedFacility.name}`} onSelect={selectSlot} startTime={form.data.start_time} endTime={form.data.end_time} />
 							)}
 							{form.data.start_time && form.data.end_time && <p role="status" className="mt-3 text-sm font-medium text-teal-700">Waktu terpilih: {form.data.start_time} - {form.data.end_time}</p>}
 							{slotMessage && <p role="alert" className="mt-2 text-sm text-red-700">{slotMessage}</p>}
@@ -310,6 +253,7 @@ export default function ReservationForm({
 						</div>
 					</section>
 
+					</div>
 					<div className="flex flex-wrap justify-end gap-3 border-t border-gray-100 pt-5">
 						<Link href={urls.reservations} className="inline-flex items-center rounded-md border border-gray-300 px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50">Batal</Link>
 						<button type="submit" disabled={form.processing} className="inline-flex min-h-11 items-center rounded-md bg-teal-normal-01 px-5 py-2.5 text-sm font-semibold text-white-01 hover:bg-teal-normal-02 disabled:cursor-not-allowed disabled:opacity-60">

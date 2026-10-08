@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import Icon from './Icons';
 import useRoomSlots from '../hooks/useRoomSlots';
+import AvailabilityTimeline, { isSlotAvailable } from './AvailabilityTimeline';
 import '../../css/facility-card.css';
 
 function formatDate(value) {
@@ -24,8 +25,7 @@ function SlotDetails({ facility, date, timezone, providedSlots }) {
     const hasProvidedSlots = Array.isArray(providedSlots);
     const remote = useRoomSlots(facility.slots_url, date, open && !hasProvidedSlots);
     const slots = hasProvidedSlots ? providedSlots : remote.slots;
-    const available = slot => typeof slot.available === 'boolean' ? slot.available : slot.status === 'available';
-    const availableCount = slots.filter(available).length;
+    const availableCount = slots.filter(isSlotAvailable).length;
 
     return (
         <details className="fc-schedule" onToggle={event => setOpen(event.currentTarget.open)}>
@@ -35,15 +35,10 @@ function SlotDetails({ facility, date, timezone, providedSlots }) {
                 <Icon name="landing-chevron" className="fc-icon fc-chevron" />
             </summary>
             <div className="fc-schedule-body" aria-live="polite" aria-atomic="true">
-                <p className="fc-schedule-date">{formatDate(date)} · {timezone} · interval 30 menit</p>
+                <p className="fc-schedule-date">{formatDate(date)} · {timezone === 'Asia/Jakarta' ? 'WIB' : timezone}</p>
                 {!hasProvidedSlots && remote.loading && <p className="fc-message" role="status">Memuat slot waktu…</p>}
                 {!hasProvidedSlots && remote.error && <div className="fc-error" role="alert"><span>{remote.error}</span><button type="button" onClick={remote.retry}>Coba lagi</button></div>}
-                {slots.length > 0 && <ul className="fc-slots" aria-label={`Ketersediaan slot ${facility.name}`}>
-                    {slots.map(slot => <li key={slot.start_time} className={`fc-slot ${available(slot) ? 'fc-slot-available' : 'fc-slot-unavailable'}`}>
-                        <span className="fc-slot-time">{slot.start_time.slice(0, 5)}–{slot.end_time.slice(0, 5)}</span>
-                        <span className="fc-slot-status"><i aria-hidden="true" />{available(slot) ? 'Tersedia' : 'Tidak tersedia'}</span>
-                    </li>)}
-                </ul>}
+                {slots.length > 0 && <AvailabilityTimeline slots={slots} compact label={`Ketersediaan slot ${facility.name}`} />}
                 {hasProvidedSlots && !slots.length && <p className="fc-message">Belum ada jadwal untuk tanggal ini.</p>}
             </div>
         </details>

@@ -13,7 +13,7 @@
 .fc-heading h3 { min-width: 0; color: #16473e; font-size: 18px; font-weight: 650; line-height: 1.4; letter-spacing: -.02em; overflow-wrap: anywhere; }
 .fc-status { display: inline-flex; align-items: center; gap: 5px; flex: none; padding: 4px 9px; border-radius: 20px; background: #f0f2f1; color: #68766f; font-size: 10px; font-weight: 600; }
 .fc-status-active { background: #eaf5ee; color: #26775d; }
-.fc-status i, .fc-slot-status i { width: 5px; height: 5px; border-radius: 50%; background: currentColor; flex: none; }
+.fc-status i { width: 5px; height: 5px; border-radius: 50%; background: currentColor; flex: none; }
 .fc-metadata { display: grid; grid-template-columns: 78px minmax(0, 1fr); gap: 5px 14px; margin-top: 17px !important; font-size: 12px; }
 .fc-metadata dt { color: #738578; }
 .fc-metadata dd { color: #36584b; overflow-wrap: anywhere; }
@@ -30,11 +30,6 @@
 .fc-schedule[open] .fc-chevron { transform: rotate(180deg); }
 .fc-schedule-body { padding: 14px; border-top: 1px solid #dfebe4; }
 .fc-schedule-date { margin-bottom: 12px !important; color: #738578; font-size: 10px; }
-.fc-slots { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; padding: 0; margin: 0; list-style: none; }
-.fc-slot { min-width: 0; padding: 9px 8px; border: 1px solid #e1e5e2; border-radius: 7px; background: #f5f6f5; color: #718075; }
-.fc-slot-available { background: #edf7ef; border-color: #d7e9db; color: #37724a; }
-.fc-slot-time { display: block; font-size: 11px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.fc-slot-status { display: flex; align-items: center; gap: 5px; margin-top: 4px; font-size: 10px; }
 .fc-action { margin-top: 18px; }
 .fc-card .fc-select { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; min-height: 46px; padding: 12px 16px; border: 1px solid #007f6d; border-radius: 10px; background: #007f6d; color: #fff; font-size: 13px; font-weight: 600; transition: background .2s, box-shadow .2s; }
 .fc-card .fc-select:hover { background: #006c5c; box-shadow: 0 4px 12px #007f6d1a; }
@@ -51,4 +46,4 @@
 .fc-error button { justify-self: start; padding: 0; border: 0; background: none; color: inherit; font-weight: 600; text-decoration: underline; }
 @media (max-width: 400px) { .fc-body { padding: 19px; } .fc-photo, .fc-photo > img { min-height: 170px; height: 170px; } .fc-heading h3 { font-size: 17px; } }
 @media (prefers-reduced-motion: reduce) { .fc-card, .fc-card * { transition: none !important; } }
-@media (forced-colors: active) { .fc-card, .fc-select, .fc-schedule, .fc-status, .fc-slot { border: 1px solid ButtonText; } }
+@media (forced-colors: active) { .fc-card, .fc-select, .fc-schedule, .fc-status { border: 1px solid ButtonText; } }
