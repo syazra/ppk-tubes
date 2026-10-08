@@ -1,5 +1,5 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import AppLayout from '../../components/AppLayout';
 
 const fieldClassName = 'mt-2 block w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm text-gray-800 focus:border-teal-dark-01 focus:ring-teal-dark-01';
@@ -203,7 +203,6 @@ export default function ReservationForm({
 	catalogDate,
 	timezone,
 	minimumDate,
-	maxDurationMinutes = 180,
 	selectedFacility: initialFacility = null,
 	oldInput = {},
 	photoPlaceholderUrl,
@@ -221,6 +220,7 @@ export default function ReservationForm({
 	const [selectedFacility, setSelectedFacility] = useState(initialFacility);
 	const [slotAnchor, setSlotAnchor] = useState(null);
 	const [slotMessage, setSlotMessage] = useState('');
+	const dateInputRef = useRef(null);
 	const mainSlotState = useRoomSlots(selectedFacility?.slots_url, form.data.date_to_reserv, Boolean(selectedFacility && form.data.date_to_reserv));
 	const slots = mainSlotState.slots;
 
@@ -273,12 +273,7 @@ export default function ReservationForm({
 		const first = Math.min(slotAnchor, index);
 		const last = Math.max(slotAnchor, index);
 		const selectedSlots = slots.slice(first, last + 1);
-		const duration = selectedSlots.length * slotStep;
-		if (duration > maxDurationMinutes) {
-			setSlotAnchor(null);
-			clearSelectedRange(`Durasi reservasi maksimal ${maxDurationMinutes / 60} jam.`);
-			return;
-		}
+		
 		if (selectedSlots.length !== last - first + 1 || selectedSlots.some(item => item.status !== 'available')) {
 			clearSelectedRange('Rentang waktu melewati slot yang tidak tersedia. Pilih rentang lain.');
 			return;
@@ -401,7 +396,14 @@ export default function ReservationForm({
 						<FieldError>{form.errors.room_id}</FieldError>
 						<div>
 							<label htmlFor="date_to_reserv" className="block text-sm font-semibold text-teal-darker">Hari / tanggal</label>
-							<input id="date_to_reserv" name="date_to_reserv" type="date" min={minimumDate} value={form.data.date_to_reserv} onChange={event => form.setData('date_to_reserv', event.target.value)} className={fieldClassName} required />
+							<input ref={dateInputRef} 
+							id="date_to_reserv" name="date_to_reserv" type="date" min={minimumDate} value={form.data.date_to_reserv} onChange={event => form.setData('date_to_reserv', event.target.value)} 
+							onClick={event => {
+								if (typeof event.currentTarget.showPicker === 'function') {
+									event.currentTarget.showPicker();
+								}
+							}}
+							className={fieldClassName} required />
 							<FieldError>{form.errors.date_to_reserv}</FieldError>
 						</div>
 						<div>
