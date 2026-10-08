@@ -4,122 +4,132 @@ namespace App\Http\Controllers;
 
 use App\Models\Reservation;
 use App\Models\Room;
+use App\Models\RoomImage;
+use App\Services\RoomAvailability;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Carbon\Carbon;
 use Endroid\QrCode\Builder\Builder;
 use Endroid\QrCode\Writer\SvgWriter;
+use Inertia\Inertia;
 
 class ReservationController extends Controller
 {
     /**
      * Menampilkan reservasi user
      */
-    public function index()
+    public function index(Request $request)
     {
+        $filters = $request->validate([
+            'search' => ['nullable', 'string', 'max:255'],
+            'status' => ['nullable', Rule::in(['menunggu', 'disetujui', 'ditolak', 'dibatalkan'])],
+            'sort' => ['nullable', Rule::in(['reservation_near', 'reservation_far', 'created_near', 'created_far'])],
+        ]);
+
+        $sort = $filters['sort'] ?? 'created_near';
         $reservations = Reservation::with('room')
-            ->where('user_id', Auth::id())
-
-            // Pencarian
-            ->when(request('search'), function ($query) {
-
-                $search = request('search');
-
-                $query->where(function ($q) use ($search) {
-
-                    $q->whereHas('room', function ($room) use ($search) {
-                        $room->where('name', 'like', "%$search%")
-                            ->orWhere('type', 'like', "%$search%");
-                    })
-                    ->orWhere('date_to_reserv', 'like', "%$search%");
-
+            ->where('user_id', $request->user()->id)
+            ->when($filters['search'] ?? null, function ($query, string $search): void {
+                $query->where(function ($query) use ($search): void {
+                    $query->whereHas('room', function ($roomQuery) use ($search): void {
+                        $roomQuery->where('name', 'like', "%{$search}%")
+                            ->orWhere('type', 'like', "%{$search}%");
+                    })->orWhere('date_to_reserv', 'like', "%{$search}%");
                 });
-
             })
+            ->when($filters['status'] ?? null, fn ($query, string $status) => $query->where('status', $status))
+            ->when($sort === 'reservation_near', fn ($query) => $query->orderBy('date_to_reserv')->orderBy('start_time'))
+            ->when($sort === 'reservation_far', fn ($query) => $query->orderByDesc('date_to_reserv')->orderByDesc('start_time'))
+            ->when($sort === 'created_near', fn ($query) => $query->orderByDesc('created_at'))
+            ->when($sort === 'created_far', fn ($query) => $query->orderBy('created_at'))
+            ->paginate(10)
+            ->withQueryString()
+            ->through(fn (Reservation $reservation): array => [
+                'id' => $reservation->id,
+                'room' => [
+                    'name' => $reservation->room?->name,
+                    'type' => $reservation->room?->type,
+                ],
+                'date_to_reserv' => $reservation->date_to_reserv,
+                'start_time' => $reservation->start_time,
+                'end_time' => $reservation->end_time,
+                'desc' => $reservation->desc,
+                'status' => $reservation->status,
+                'can_cancel' => $reservation->status === 'menunggu' && $reservation->canStillBeProcessed(),
+                'cancel_url' => route('reservations.cancel', $reservation),
+                'ticket_url' => route('reservations.ticket', $reservation),
+                'qr_url' => route('reservations.qrcode', $reservation),
+            ]);
 
-
-            // Filter status
-            ->when(request('status'), function ($query) {
-
-                $query->where(
-                    'status',
-                    request('status')
-                );
-
-            })
-
-
-            // Sorting
-            ->when(request('sort'), function ($query) {
-
-                switch (request('sort')) {
-
-                    // waktu reservasi terdekat
-                    case 'reservation_near':
-                        $query->orderBy('date_to_reserv', 'asc')
-                            ->orderBy('start_time', 'asc');
-                        break;
-
-
-                    // waktu reservasi terjauh
-                    case 'reservation_far':
-                        $query->orderBy('date_to_reserv', 'desc')
-                            ->orderBy('start_time', 'desc');
-                        break;
-
-
-                    // pengajuan terbaru
-                    case 'created_near':
-                        $query->orderBy('created_at', 'desc');
-                        break;
-
-
-                    // pengajuan terlama
-                    case 'created_far':
-                        $query->orderBy('created_at', 'asc');
-                        break;
-
-
-                    default:
-                        $query->latest();
-                }
-
-            }, function ($query) {
-                // default kalau tidak pilih filter
-                $query->latest();
-            })
-
-
-            ->get();
-
-
-        if(request()->ajax()) {
-
-            return view(
-                'user.partials.reservation-table',
-                compact('reservations')
-            )->render();
-
-        }
-
-
-        return view(
-            'user.my-reservations',
-            compact('reservations')
-        );
+        return Inertia::render('User/MyReservations', [
+            'user' => $request->user()->only('name', 'email', 'role', 'account_type'),
+            'csrfToken' => csrf_token(),
+            'status' => $request->session()->get('success'),
+            'error' => $request->session()->get('error'),
+            'reservations' => $reservations,
+            'filters' => [
+                'search' => $filters['search'] ?? '',
+                'status' => $filters['status'] ?? '',
+                'sort' => $sort,
+            ],
+            'urls' => [
+                'dashboard' => route('user.dashboard'),
+                'reports' => route('reports.index'),
+                'reservations' => route('reservations.index'),
+                'profile' => route('profile.edit'),
+                'guest' => route('landing'),
+                'logout' => route('logout'),
+            ],
+        ]);
     }
 
     /**
      * Form reservasi
      */
-    public function create()
+    public function create(Request $request, RoomAvailability $availability): \Inertia\Response
     {
-        $rooms = Room::where('is_avail', true)->get();
-        return view('user.reservation-form', compact('rooms'));
-    }
+        $browserData = $this->facilityBrowserData($request);
+        $facilities = $browserData['facilities']->through(fn (Room $room): array => $this->facilityCardData($room));
+        $oldInput = $request->session()->get('_old_input', []);
+        $oldRoomId = $oldInput['room_id'] ?? null;
+        $selectedRoom = is_numeric($oldRoomId)
+            ? Room::with('images')->find((int) $oldRoomId)
+            : null;
+        $formFields = array_intersect_key($oldInput, array_flip([
+            'room_id', 'date_to_reserv', 'desc', 'start_time', 'end_time',
+        ]));
 
-    
+        return Inertia::render('User/ReservationForm', [
+            'user' => $request->user()->only('name', 'email', 'role', 'account_type'),
+            'csrfToken' => csrf_token(),
+            'rooms' => Room::where('is_avail', true)->orderBy('name')->get(['id', 'name', 'location', 'type']),
+            'facilities' => $facilities,
+            'filters' => $browserData['filters'],
+            'types' => $browserData['types'],
+            'catalogDate' => $browserData['catalogDate'],
+            'timezone' => $browserData['timezone'],
+            'minimumDate' => $availability->earliestStart()->format('Y-m-d'),
+            'maxDurationMinutes' => RoomAvailability::MAX_DURATION_MINUTES,
+            'selectedFacility' => $selectedRoom ? $this->facilityCardData($selectedRoom) : null,
+            'oldInput' => $formFields,
+            'photoPlaceholderUrl' => asset('images/facility-placeholder-photo.jpg'),
+            'photoFallbackUrl' => asset('images/facility-placeholder.svg'),
+            'urls' => [
+                'dashboard' => route('user.dashboard'),
+                'reports' => route('reports.index'),
+                'reservations' => route('reservations.index'),
+                'reservationForm' => route('reservations.form'),
+                'facilities' => route('reservations.facilities'),
+                'store' => route('reservations.store'),
+                'profile' => route('profile.edit'),
+                'guest' => route('landing'),
+                'logout' => route('logout'),
+            ],
+        ]);
+    }
 
     /**
      * Membatalkan reservasi
@@ -157,17 +167,18 @@ class ReservationController extends Controller
      * Hanya status 'disetujui' dan 'menunggu' yang memblok slot waktu.
      * Status 'dibatalkan' dan 'ditolak' membebaskan slot waktu agar tersedia kembali.
      */
-    public function availableSlots(Request $request)
+    public function availableSlots(Request $request, RoomAvailability $availability): \Illuminate\Http\JsonResponse
     {
         $request->validate([
             'room_id' => [
                 'required',
+                'integer',
                 Rule::exists('rooms', 'id')->where('is_avail', true)
             ],
 
             'date' => [
                 'required',
-                'date'
+                'date_format:Y-m-d'
             ]
         ]);
 
@@ -181,13 +192,9 @@ class ReservationController extends Controller
             )
 
             // yang masih dianggap memakai ruangan
-            ->where(
-                'status',
-                'disetujui'
-                
-            )
+            ->whereIn('status', RoomAvailability::BLOCKING_STATUSES)
 
-            ->get();
+            ->get(['start_time', 'end_time']);
 
         return response()->json(
             $reservations->map(function($reservation){
@@ -196,18 +203,98 @@ class ReservationController extends Controller
                     'end_time' => $reservation->end_time
                 ];
             })
-        );
+        )->header('X-Reservation-Earliest-Start', $availability->earliestStart()->format('Y-m-d\TH:i:s.uP'))
+            ->header('X-Reservation-Timezone', config('app.timezone'))
+            ->header('Cache-Control', 'private, no-store');
+    }
+
+    public function facilities(Request $request): \Illuminate\View\View
+    {
+        return view('user.partials.facility-list', $this->facilityBrowserData($request));
+    }
+
+    public function facilitySlots(Request $request, Room $room, RoomAvailability $availability): \Illuminate\Http\JsonResponse
+    {
+        $validated = $request->validate(['date' => ['required', 'date_format:Y-m-d']]);
+
+        return response()->json([
+            'room_id' => $room->id,
+            'date' => $validated['date'],
+            'slots' => $availability->slots($room, $validated['date']),
+        ])->header('Cache-Control', 'private, no-store');
+    }
+
+    /** @return array<string, mixed> */
+    private function facilityBrowserData(Request $request): array
+    {
+        $types = ['Ruang Kelas', 'Aula', 'Laboratorium', 'Lapangan'];
+        $validator = Validator::make($request->query(), [
+            'type' => ['nullable', 'string', Rule::in($types)],
+            'location' => ['nullable', 'string', 'max:100'],
+            'capacity' => ['nullable', 'integer', 'min:1', 'max:100000'],
+            'date' => ['nullable', 'date_format:Y-m-d'],
+            'page' => ['nullable', 'integer', 'min:1', 'max:100000'],
+        ]);
+        if ($validator->fails()) {
+            throw (new ValidationException($validator))->errorBag('facilityFilters')->redirectTo(route('reservations.form'));
+        }
+        $validated = $validator->validated();
+        $filters = [
+            'type' => $validated['type'] ?? '',
+            'location' => $validated['location'] ?? '',
+            'capacity' => $validated['capacity'] ?? '',
+        ];
+        $catalogDate = $validated['date'] ?? Carbon::now(config('app.timezone'))->format('Y-m-d');
+        $query = Room::query()->with('images');
+        if ($filters['type'] !== '') {
+            $query->where('type', $filters['type']);
+        }
+        if ($filters['location'] !== '') {
+            $location = str_replace(['!', '%', '_'], ['!!', '!%', '!_'], mb_strtolower($filters['location']));
+            $query->whereRaw("LOWER(location) LIKE ? ESCAPE '!'", ['%'.$location.'%']);
+        }
+        if ($filters['capacity'] !== '') {
+            $query->where('capacity', '>=', $filters['capacity']);
+        }
+        $facilities = $query->orderBy('name')->orderBy('id')->paginate(6)
+            ->withPath(route('reservations.form'))->appends($filters + ['date' => $catalogDate]);
+
+        return compact('facilities', 'filters', 'types', 'catalogDate') + ['timezone' => config('app.timezone')];
+    }
+
+    /** @return array<string, mixed> */
+    private function facilityCardData(Room $room): array
+    {
+        return [
+            'id' => $room->id,
+            'name' => $room->name,
+            'location' => $room->location,
+            'type' => $room->type,
+            'capacity' => $room->capacity,
+            'description' => $room->desc,
+            'is_available' => $room->is_avail,
+            'slots_url' => route('reservations.facility-slots', ['room' => $room]),
+            'images' => $room->images->map(function (RoomImage $image): ?array {
+                $url = $image->publicUrl();
+
+                return $url === null ? null : [
+                    'url' => $url,
+                    'alt_text' => $image->alt_text,
+                ];
+            })->filter()->values()->all(),
+        ];
     }
 
     /**
      * Simpan reservasi
      */
-    public function store(Request $request)
+    public function store(Request $request, RoomAvailability $availability): \Illuminate\Http\RedirectResponse
     {
 
         $validated = $request->validate([
             'room_id' => [
                 'required',
+                'integer',
                 Rule::exists('rooms', 'id')->where('is_avail', true)
             ],
             'desc' => [
@@ -216,7 +303,7 @@ class ReservationController extends Controller
             ],
             'date_to_reserv' => [
                 'required',
-                'date'
+                'date_format:Y-m-d'
             ],
             'start_time' => [
                 'required',
@@ -229,24 +316,23 @@ class ReservationController extends Controller
         ]);
 
         $reservationStart = Carbon::parse(
-            $validated['date_to_reserv'].' '.$validated['start_time']
+            $validated['date_to_reserv'].' '.$validated['start_time'],
+            config('app.timezone'),
         );
 
-        if($reservationStart->isBefore(now()->addHours(12))){
-            return back()
-                ->withErrors([
-                    'time' => 'Reservasi minimal dilakukan 12 jam sebelumnya.'
-                ])
-                ->withInput();
+        if ($reservationStart->lt($availability->earliestStart())) {
+            return back()->withErrors([
+                'time' => 'Reservasi harus dimulai minimal tiga jam dari sekarang.',
+            ])->withInput();
         }
 
         /*
          * Cek jam operasional
          */
         if(
-            $validated['start_time'] < '07:00'
+            $validated['start_time'] < RoomAvailability::OPEN_TIME
             ||
-            $validated['end_time'] > '20:00'
+            $validated['end_time'] > RoomAvailability::CLOSE_TIME
         ){
             return back()
                 ->withErrors([
@@ -268,13 +354,21 @@ class ReservationController extends Controller
         if(
             ($end - $start) <= 0
             ||
-            (($end-$start)%1800 !=0)
+            (($end-$start)%(RoomAvailability::STEP_MINUTES * 60) !=0)
+            || (int) substr($validated['start_time'], 3) % RoomAvailability::STEP_MINUTES != 0
+            || (int) substr($validated['end_time'], 3) % RoomAvailability::STEP_MINUTES != 0
         ){
             return back()
                 ->withErrors([
                     'time' => 'Durasi harus kelipatan 30 menit'
                 ])
                 ->withInput();
+        }
+
+        if (($end - $start) > RoomAvailability::MAX_DURATION_MINUTES * 60) {
+            return back()->withErrors([
+                'time' => 'Durasi reservasi maksimal tiga jam.',
+            ])->withInput();
         }
 
         /*
@@ -288,22 +382,19 @@ class ReservationController extends Controller
                 'date_to_reserv',
                 $validated['date_to_reserv']
             )
-            ->where(
-                'status',
-                'disetujui'
-            )
+            ->whereIn('status', RoomAvailability::BLOCKING_STATUSES)
 
             ->where(function($query) use ($validated){
                 $query
-                    ->where(
+                    ->whereTime(
                         'start_time',
                         '<',
-                        $validated['end_time']
+                        $validated['end_time'].':00'
                     )
-                    ->where(
+                    ->whereTime(
                         'end_time',
                         '>',
-                        $validated['start_time']
+                        $validated['start_time'].':00'
                     );
             })
             ->exists();
@@ -351,13 +442,11 @@ class ReservationController extends Controller
         );
 
 
-        $result = new Builder(
-            writer: new SvgWriter(),
-            data: $url,
-            size: 150
-        );
-
-        $result = $result->build();
+        $result = Builder::create()
+            ->writer(new SvgWriter())
+            ->data($url)
+            ->size(150)
+            ->build();
 
 
         return response($result->getString())
