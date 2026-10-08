@@ -425,7 +425,7 @@ class UserFacilityBrowsingTest extends TestCase
         ]);
     }
 
-    public function test_reservation_submission_rejects_durations_longer_than_three_hours(): void
+    public function test_reservation_submission_accepts_durations_longer_than_three_hours(): void
     {
         $this->signIn();
         $room = $this->facility();
@@ -439,10 +439,16 @@ class UserFacilityBrowsingTest extends TestCase
         $this->post(route('reservations.store'), $this->reservationPayload($room, [
             'date_to_reserv' => '2026-10-07',
             'start_time' => '09:00',
-            'end_time' => '12:30',
-        ]))->assertSessionHasErrors('time');
+            'end_time' => '13:00',
+        ]))->assertSessionHasNoErrors()->assertRedirect(route('reservations.index'));
 
-        $this->assertDatabaseCount('reservations', 1);
+        $this->assertDatabaseCount('reservations', 2);
+        $this->assertDatabaseHas('reservations', [
+            'room_id' => $room->id,
+            'date_to_reserv' => '2026-10-07',
+            'start_time' => '09:00',
+            'end_time' => '13:00',
+        ]);
     }
 
     public function test_failed_submission_keeps_the_original_form_values_and_displays_the_server_time_error(): void

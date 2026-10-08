@@ -85,7 +85,7 @@ class PublicFacilityTest extends TestCase
             ->etc());
     }
 
-    public function test_facility_filters_combine_exact_type_location_and_minimum_capacity(): void
+    public function test_facility_filters_combine_type_location_and_minimum_capacity(): void
     {
         $match = $this->facility(['name' => 'Lab Utama', 'capacity' => 60]);
         $this->facility(['name' => 'Lab Kecil', 'capacity' => 20]);
@@ -102,6 +102,19 @@ class PublicFacilityTest extends TestCase
             ->where('filters.type', 'Laboratorium')
             ->where('filters.location', 'Gedung A')
             ->where('filters.capacity', '60')
+            ->etc());
+    }
+
+    public function test_location_search_matches_partial_building_names(): void
+    {
+        $match = $this->facility(['location' => 'Gedung A Lantai 3']);
+        $this->facility(['location' => 'Gedung B']);
+
+        $this->get(route('facilities.index', ['location' => 'Gedung A']))
+            ->assertOk()->assertInertia(fn (Assert $page) => $page
+            ->has('rooms.data', 1)
+            ->where('rooms.data.0.id', $match->id)
+            ->where('filters.location', 'Gedung A')
             ->etc());
     }
 

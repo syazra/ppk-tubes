@@ -4,6 +4,7 @@ import Icon from '../../components/Icons';
 import PublicBrand from '../../components/PublicBrand';
 import PublicNavbar from '../../components/PublicNavbar';
 import FacilityCard from '../../components/FacilityCard';
+import GuestFacilityFilters from '../../components/GuestFacilityFilters';
 import '../../../css/guest-facilities.css';
 
 const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
@@ -43,8 +44,6 @@ export default function Facilities({ rooms, filters = {}, types = [], locations 
         setQuery(values);
         visit(values);
     };
-    const fields = ['search', 'type', 'location', 'capacity', 'date'];
-    const hasErrors = fields.some(field => errors[field]);
     const roomList = rooms.data ?? [];
     const pagination = rooms.links ?? [];
 
@@ -65,38 +64,7 @@ export default function Facilities({ rooms, filters = {}, types = [], locations 
                     </div>
                 </section>
                 <div className="gf-wrap gf-content">
-                    <section className="gf-filter-panel" aria-labelledby="gf-filter-heading">
-                        <div className="gf-filter-heading"><div><h2 id="gf-filter-heading">Cari fasilitas</h2><p>Pilih kebutuhan dan tanggal kegiatanmu.</p></div><span className="gf-filter-note"><Icon name="clock" className="gf-icon" /> Waktu dalam WIB</span></div>
-                        <form onSubmit={submit} className="gf-filter-form">
-                            <div className="gf-field gf-search-field">
-                                <label htmlFor="gf-search">Nama fasilitas</label>
-                                <input id="gf-search" type="search" name="search" value={query.search} onChange={updateField} placeholder="Cari nama fasilitas" maxLength={100} aria-invalid={Boolean(errors.search)} aria-describedby={errors.search ? 'gf-search-error' : undefined} />
-                                {errors.search && <p id="gf-search-error" className="gf-field-error">{errors.search}</p>}
-                            </div>
-                            <div className="gf-field">
-                                <label htmlFor="gf-type">Tipe</label>
-                                <select id="gf-type" name="type" value={query.type} onChange={updateField} aria-invalid={Boolean(errors.type)} aria-describedby={errors.type ? 'gf-type-error' : undefined}><option value="">Semua tipe</option>{types.map(type => <option key={type} value={type}>{type}</option>)}</select>
-                                {errors.type && <p id="gf-type-error" className="gf-field-error">{errors.type}</p>}
-                            </div>
-                            <div className="gf-field">
-                                <label htmlFor="gf-location">Lokasi</label>
-                                <select id="gf-location" name="location" value={query.location} onChange={updateField} aria-invalid={Boolean(errors.location)} aria-describedby={errors.location ? 'gf-location-error' : undefined}><option value="">Semua lokasi</option>{locations.map(location => <option key={location} value={location}>{location}</option>)}</select>
-                                {errors.location && <p id="gf-location-error" className="gf-field-error">{errors.location}</p>}
-                            </div>
-                            <div className="gf-field">
-                                <label htmlFor="gf-capacity">Kapasitas minimum</label>
-                                <input id="gf-capacity" type="number" name="capacity" value={query.capacity} onChange={updateField} min="1" max="100000" step="1" placeholder="Jumlah orang" aria-invalid={Boolean(errors.capacity)} aria-describedby={errors.capacity ? 'gf-capacity-error' : undefined} />
-                                {errors.capacity && <p id="gf-capacity-error" className="gf-field-error">{errors.capacity}</p>}
-                            </div>
-                            <div className="gf-field">
-                                <label htmlFor="gf-date">Tanggal</label>
-                                <input id="gf-date" type="date" name="date" value={query.date} onChange={updateField} required aria-invalid={Boolean(errors.date)} aria-describedby={errors.date ? 'gf-date-error' : undefined} />
-                                {errors.date && <p id="gf-date-error" className="gf-field-error">{errors.date}</p>}
-                            </div>
-                            <div className="gf-filter-actions"><button type="submit" className="gf-button gf-button-forest" disabled={processing}>{processing ? 'Memuat…' : 'Cari fasilitas'}<Icon name="landing-arrow" className="gf-icon" /></button><button type="button" className="gf-reset" onClick={reset} disabled={processing}>Reset filter</button></div>
-                            {hasErrors && <p className="gf-form-error" role="alert">Periksa kembali isian filter yang ditandai.</p>}
-                        </form>
-                    </section>
+                    <GuestFacilityFilters values={query} types={types} locations={locations} errors={errors} processing={processing} onChange={updateField} onSubmit={submit} onReset={reset} />
                     <section id="daftar-fasilitas" className="gf-results" aria-labelledby="gf-results-heading" aria-busy={processing}>
                         <div className="gf-results-heading"><div><p className="gf-eyebrow">Temukan fasilitasmu</p><h2 id="gf-results-heading">Daftar fasilitas</h2></div><div className="gf-results-date"><Icon name="calendar" className="gf-icon" /><span>Ketersediaan <strong>{dateLabel(selectedDate)}</strong></span></div></div>
                         <div className="gf-results-meta"><p role="status">{rooms.total > 0 ? `Menampilkan ${rooms.from}–${rooms.to} dari ${rooms.total} fasilitas` : '0 fasilitas ditemukan'}</p><p>Buka slot waktu untuk melihat jadwal.</p></div>

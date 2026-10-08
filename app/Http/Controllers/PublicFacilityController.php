@@ -33,7 +33,7 @@ class PublicFacilityController extends Controller
             ->select(['id', 'name', 'location', 'type', 'capacity', 'desc', 'is_avail'])
             ->when($filters['search'] !== '', fn ($query) => $query->where('name', 'like', '%'.$filters['search'].'%'))
             ->when($filters['type'] !== '', fn ($query) => $query->where('type', $filters['type']))
-            ->when($filters['location'] !== '', fn ($query) => $query->where('location', $filters['location']))
+            ->when($filters['location'] !== '', fn ($query) => $query->where('location', 'like', '%'.$filters['location'].'%'))
             ->when($filters['capacity'] !== '', fn ($query) => $query->where('capacity', '>=', (int) $filters['capacity']))
             ->with(['images', 'reservations' => fn ($query) => $query
                 ->select(['room_id', 'start_time', 'end_time'])
