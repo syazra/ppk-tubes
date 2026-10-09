@@ -13,7 +13,8 @@ class Reservation extends Model
         'date_to_reserv',
         'start_time',
         'end_time',
-        'status'
+        'status',
+        'rejection_reason',
     ];
 
 

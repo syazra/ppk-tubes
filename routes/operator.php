@@ -24,6 +24,7 @@ Route::middleware(['auth', 'role:operator', 'verified'])->prefix('operator')->na
                 'start_time' => $reservation->start_time,
                 'end_time' => $reservation->end_time,
                 'status' => $reservation->status,
+                'rejection_reason' => $reservation->rejection_reason,
             ]);
 
         $recentReports = \App\Models\Report::with('room')
@@ -97,6 +98,7 @@ Route::middleware(['auth', 'role:operator', 'verified'])->prefix('operator')->na
                 'end_time' => $reservation->end_time,
                 'desc' => $reservation->desc,
                 'status' => $reservation->status,
+                'rejection_reason' => $reservation->rejection_reason,
             ]);
 
         return Inertia::render('Operator/Reservations', [

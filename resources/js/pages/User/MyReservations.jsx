@@ -41,6 +41,16 @@ function ReservationActions({ reservation, onShowTicket }) {
 		);
 	}
 
+	if (reservation.status === 'ditolak') {
+        return (
+            <div className="text-xs">
+                <p className="text-gray-500 italic mt-0.5">
+                    {reservation.rejection_reason ?? 'Tidak ada alasan'}
+                </p>
+            </div>
+        );
+    }
+
 	if (reservation.can_cancel) {
 		return (
 			<button

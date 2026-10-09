@@ -199,13 +199,13 @@ export default function Reports({ user, status, csrfToken, urls, reports, filter
                                             <button type="button" onClick={() => handleOpenCompleteModal(report)} className="font-medium text-green-600 underline">Selesai</button>
                                         </div>
                                     ) : report.status === 'ditolak' ? (
-                                        <p className="text-xs text-red-600">
+                                        <span className="text-xs text-gray-400 italic">
                                             {report.rejection_reason || 'Fasilitas sedang dalam perbaikan'}
-                                        </p>
+                                        </span>
                                     ) : report.status === 'selesai' ? (
-                                        <p className="text-xs text-green-600">
+                                        <span className="text-xs text-gray-400 italic">
                                             {report.resolution || 'Fasilitas sudah diperbaiki'}
-                                        </p>
+                                        </span>
                                     ) : (
                                         <span className="text-xs text-gray-400">—</span>
                                     )}

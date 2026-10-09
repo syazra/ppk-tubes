@@ -108,7 +108,13 @@ export default function Reservations({ user, status, csrfToken, urls, reservatio
                                             <button type="button" onClick={() => updateReservation(reservation, 'approve')} className="font-medium text-teal-normal-01 underline">Setujui</button>
                                             <button type="button" onClick={() => updateReservation(reservation, 'reject')} className="font-medium text-red-600 underline">Tolak</button>
                                         </>
-                                    ) : <span className="text-xs text-gray-400">Aksi tidak tersedia</span>}
+                                    ) : reservation.status === 'ditolak' ? (
+                                        <span className="text-xs text-gray-400 italic">
+                                            {reservation.rejection_reason ?? 'Tidak ada alasan'}
+                                        </span>
+                                    ) : (
+                                        <span className="text-xs text-gray-400 italic">Aksi tidak tersedia</span>
+                                    )}
                                 </div>
                             </td>
                         </>
