@@ -41,6 +41,10 @@ export default function Reservations({ user, status, csrfToken, urls, reservatio
     }
 
     function updateReservation(reservation, decision) {
+        const actionText = decision === 'approve' ? 'menyetujui' : 'menolak';
+        if (!window.confirm(`Yakin ingin ${actionText} reservasi dari ${reservation.user?.name ?? 'peminjam'} ?`)) {
+            return;
+        }
         router.patch(`${urls[decision]}/${reservation.id}/${decision}`, {}, { preserveScroll: true });
     }
 

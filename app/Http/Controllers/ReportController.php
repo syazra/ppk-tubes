@@ -73,7 +73,7 @@ class ReportController extends Controller
     {
         $reports = Report::with(['room', 'images'])
                     ->where('user_id', Auth::id())
-                    ->oldest()
+                    ->latest()
                     ->get();
 
         return Inertia::render('User/MyReports', [
