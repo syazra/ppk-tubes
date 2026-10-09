@@ -2,8 +2,11 @@
 
 namespace App\Http\Middleware;
 
+use Closure;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 use Inertia\Middleware;
+use Symfony\Component\HttpFoundation\Response;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -15,6 +18,24 @@ class HandleInertiaRequests extends Middleware
      * @var string
      */
     protected $rootView = 'app';
+
+    public function handle(Request $request, Closure $next): Response
+    {
+        $authenticated = $request->user() !== null;
+        Inertia::encryptHistory($authenticated);
+
+        if (! $authenticated) {
+            Inertia::clearHistory();
+        }
+
+        $response = parent::handle($request, $next);
+
+        if ($authenticated || $request->is('login')) {
+            $response->headers->set('Cache-Control', 'private, no-store, max-age=0');
+        }
+
+        return $response;
+    }
 
     /**
      * Determines the current asset version.

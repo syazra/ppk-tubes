@@ -4,11 +4,13 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use Illuminate\Auth\SessionGuard;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
+use LogicException;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -51,6 +53,15 @@ class AuthenticatedSessionController extends Controller
         $request->session()->regenerate();
 
         $user = Auth::user();
+        $guard = Auth::guard('web');
+
+        if (! $guard instanceof SessionGuard) {
+            throw new LogicException('Login requires the web session guard.');
+        }
+
+        // Record the password at login, before the next request can adopt a changed hash.
+        $request->session()->put('password_hash_web', $guard->hashPasswordForCookie($user->getAuthPassword()));
+        Inertia::clearHistory();
 
         if ($user->isAdmin()) {
             return $this->toDashboard($request, route('admin.dashboard', absolute: false));
@@ -68,6 +79,8 @@ class AuthenticatedSessionController extends Controller
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
+
+        Inertia::clearHistory();
 
         return back()->withErrors([
             'email' => 'Akun ini tidak memiliki peran yang diizinkan untuk mengakses sistem.',
@@ -87,6 +100,8 @@ class AuthenticatedSessionController extends Controller
         $request->session()->invalidate();
 
         $request->session()->regenerateToken();
+
+        Inertia::clearHistory();
 
         return redirect('/');
     }

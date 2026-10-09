@@ -4,6 +4,7 @@ namespace Tests\Feature\Auth;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 class PasswordConfirmationTest extends TestCase
@@ -40,5 +41,49 @@ class PasswordConfirmationTest extends TestCase
         ]);
 
         $response->assertSessionHasErrors();
+    }
+
+    #[DataProvider('malformedPasswords')]
+    public function test_malformed_passwords_are_rejected_without_confirming_the_session(mixed $password): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->post('/confirm-password', [
+            'password' => $password,
+        ])->assertSessionHasErrors('password')
+            ->assertSessionMissing('auth.password_confirmed_at');
+    }
+
+    public static function malformedPasswords(): array
+    {
+        return [
+            'missing' => [null],
+            'empty' => [''],
+            'array' => [['password']],
+        ];
+    }
+
+    public function test_password_confirmation_attempts_are_rate_limited_and_recover_after_the_limit_expires(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        $this->travelTo(now()->startOfSecond());
+
+        for ($attempt = 0; $attempt < 6; $attempt++) {
+            $this->post('/confirm-password', [
+                'password' => 'wrong-password',
+            ])->assertSessionHasErrors('password')
+                ->assertSessionMissing('auth.password_confirmed_at');
+        }
+
+        $this->post('/confirm-password', ['password' => 'password'])
+            ->assertStatus(429)
+            ->assertSessionMissing('auth.password_confirmed_at');
+
+        $this->travel(61)->seconds();
+        $this->post('/confirm-password', ['password' => 'password'])
+            ->assertRedirect()
+            ->assertSessionHasNoErrors()
+            ->assertSessionHas('auth.password_confirmed_at');
     }
 }

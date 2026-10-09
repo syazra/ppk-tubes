@@ -41,7 +41,7 @@ Route::middleware(['auth'])->group(function () {
     Route::controller(ProfileController::class)->prefix('profile')->name('profile.')->group(function () {
         Route::get('/', 'edit')->name('edit');
         Route::patch('/', 'update')->name('update');
-        Route::delete('/', 'destroy')->name('destroy');
+        Route::delete('/', 'destroy')->middleware('throttle:6,1')->name('destroy');
     });
 
     Route::controller(ReservationController::class)->prefix('reservations')->name('reservations.')->group(function () {
