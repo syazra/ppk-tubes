@@ -46,6 +46,20 @@ export default function ReportForm({ rooms = [], user, auth, csrfToken, urls }) 
 		event.target.value = '';
 	};
 
+	const handleRemoveImage = index => {
+		const preview = imagePreviews[index];
+
+		URL.revokeObjectURL(preview.url);
+
+		form.setData(
+			'images',
+			form.data.images.filter((_, i) => i !== index)
+		);
+
+		setImagePreviews(prev =>
+			prev.filter((_, i) => i !== index)
+		);
+	};
 	const submit = event => {
 		event.preventDefault();
 		form.post('/report/store', { forceFormData: true, preserveScroll: true });
@@ -117,17 +131,27 @@ export default function ReportForm({ rooms = [], user, auth, csrfToken, urls }) 
 
 					<div className="mt-1 flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 px-6 pt-6 pb-6 transition-colors duration-200 hover:border-gray-400">
 						{imagePreviews.length > 0 ? (
-							<div className="mb-3 grid grid-cols-2 gap-3">
+							<div className="mb-3 flex flex-wrap justify-center gap-3">
 								{imagePreviews.map((preview, index) => (
 									<div
 										key={preview.url}
-										className="flex flex-col items-center"
+										className="relative flex flex-col items-center"
 									>
 										<img
 											src={preview.url}
 											alt={`Pratinjau foto kerusakan ${index + 1}`}
 											className="h-28 w-28 rounded-lg border border-gray-200 object-cover shadow-sm"
 										/>
+										<button
+											type="button"
+											onClick={() => handleRemoveImage(index)}
+											className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center leading none bg-gray-200/80 text-gray-700 shadow-sm
+											transition-colors hover:bg-white-01
+											hover:text-gray-800"
+											aria-label={`Hapus foto ${index + 1}`}
+										>
+											x
+										</button>
 
 										<span className="mt-1 max-w-[120px] truncate text-xs font-medium text-gray-700">
 											{preview.file.name}
@@ -171,13 +195,14 @@ export default function ReportForm({ rooms = [], user, auth, csrfToken, urls }) 
 									Pilih Foto
 								</label>
 							)}
-							{imagePreviews.length === 1 && (
+							{imagePreviews.length >= 1 && (
 								<label
 									htmlFor="images"
 									className="shrink-0 cursor-pointer rounded-md border border-gray-300 bg-white-01 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-gray-700 shadow-sm transition hover:bg-gray-50"
 								>
 									+ Tambah Foto
 								</label>
+								
 							)}
 
 							{imagePreviews.length === 0 && (
