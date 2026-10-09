@@ -71,7 +71,7 @@ class ReportController extends Controller
 
     public function index()
     {
-        $reports = Report::with('room')
+        $reports = Report::with(['room', 'images'])
                     ->where('user_id', Auth::id())
                     ->oldest()
                     ->get();
