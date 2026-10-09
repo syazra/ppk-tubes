@@ -7,6 +7,8 @@
 
 ---
 
+## Penjelasan Umum
+
 ## Panduan Menjalankan Proyek
 
 ### 1. Clone Repository & Masuk ke Direktori
@@ -54,12 +56,13 @@ Jika sudah pernah menjalankan `./setup.bat` satu kali, berikutnya cukup jalankan
 
 Berikut adalah daftar akun siap pakai untuk kebutuhan pengujian (*testing*) dan demonstrasi sistem berdasarkan peran (*role*) masing-masing:
 
-| No | Nama | Email | Role | Password Default |
-|---|---|---|---|---|
-| 1 | **Admin Kampus** | `admin@admin.kampus.ac.id` | `admin` | `password` |
-| 2 | **Operator Kampus** | `operator@operator.kampus.ac.id` | `operator` | `password` |
-| 3 | **Mahasiswa Kampus** | `student@students.kampus.ac.id` | `user` | `password` | 
-| 4 | **Dosen Kampus** | `lecturer@lecturer.kampus.ac.id` | `user` | `password` |
-| 5 | **Pengunjung (Guest)** | *Tanpa Akun (Publik)* | `guest` | — |
+| No | Email | Password Default | Role |
+|---|---|---|---|
+| 1 | `arispujiw@admin.kampus.ac.id` | `password` | Admin |
+| 2 | `anangardiyanto@operator.kampus.ac.id` | `password` | Petugas |
+| 3 | `ruthseptriana@students.kampus.ac.id` | `password` | Mahasiswa |
+| 4 | `sandykurniawan@lecturer.kampus.ac.id` | `password` | Dosen |
+| 5 | `benynugroho@staff.kampus.ac.id` | `password` | Staff |
+| 6 |  *Tanpa Akun (Publik)* | — | Tamu |
 
 ---
