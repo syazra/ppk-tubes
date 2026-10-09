@@ -7,13 +7,15 @@ const variantClasses = {
 };
 
 const Button = forwardRef(function Button(
-    { children, type = 'button', variant = 'primary', className = '', ...props },
+    { children, as: Component = 'button', type = 'button', variant = 'primary', className = '', ...props },
     ref,
 ) {
+    const isButtonElement = Component === 'button';
+
     return (
-        <button
+        <Component
             ref={ref}
-            type={type}
+            type={isButtonElement ? type : undefined}
             className={[
                 'inline-flex items-center justify-center rounded-xl px-5 py-3 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-teal-dark-01 focus:ring-offset-2 disabled:opacity-60',
                 variantClasses[variant] ?? variantClasses.primary,
@@ -22,7 +24,7 @@ const Button = forwardRef(function Button(
             {...props}
         >
             {children}
-        </button>
+        </Component>
     );
 });
 

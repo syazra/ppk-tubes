@@ -143,7 +143,7 @@ export default function Facilities({ user, csrfToken, urls, status, rooms, filte
                         <td className="whitespace-nowrap px-4 py-3">{room.is_avail ? 'Aktif' : 'Nonaktif'}</td>
                         <td className="whitespace-nowrap px-4 py-3">
                             <button type="button" onClick={() => edit(room)} className="mr-4 font-semibold text-teal-dark-01 underline">Ubah</button>
-                            <button type="button" disabled={changingId === room.id} onClick={() => changeAvailability(room)} className="font-semibold text-teal-dark-01 underline disabled:opacity-50">{room.is_avail ? 'Nonaktifkan' : 'Aktifkan'}</button>
+                            <button type="button" disabled={changingId === room.id} onClick={() => changeAvailability(room)} className="font-semibold text-red-600 underline disabled:opacity-50">{room.is_avail ? 'Nonaktifkan' : 'Aktifkan'}</button>
                         </td>
                     </>
                 )}

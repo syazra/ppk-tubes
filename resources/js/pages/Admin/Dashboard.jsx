@@ -1,5 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
 import { motion, useReducedMotion } from 'motion/react';
+import Button from '../../components/Button';
 import Icon from '../../components/Icons';
 import AppLayout from '../../components/AppLayout';
 import ActionCard from '../../components/ActionCard';
@@ -29,7 +30,18 @@ export default function Dashboard({ user, status, csrfToken, urls, summary }) {
                 active="dashboard"
                 title={`Selamat datang, ${currentUser?.name || 'Petugas'}`}
                 subtitle="Lihat dan kelola ringkasan aktivitas layanan fasilitas Buana."
-                actions={<div className="flex flex-wrap gap-2"><Link href={urls?.registrations || '#'} className="app-primary-link"><Icon name="student" className="h-4 w-4" />Kelola akun</Link><Link href={urls.facilities} className="app-primary-link"><Icon name="room" className="h-4 w-4" />Kelola fasilitas</Link></div>}>
+                actions={(
+                    <div className="flex flex-wrap gap-3">
+                        <Button as={Link} href={urls?.registrations || '#'} className="gap-2">
+                            <Icon name="student" className="h-4 w-4" />
+                            Kelola akun
+                        </Button>
+                        <Button as={Link} href={urls.facilities} className="gap-2">
+                            <Icon name="room" className="h-4 w-4" />
+                            Kelola fasilitas
+                        </Button>
+                    </div>
+                )}>
                 {status && <div role="status" className="mb-5 rounded-xl border border-teal-light-03 bg-teal-light-01 px-4 py-3 text-sm text-teal-darker">{status}</div>}
 
                 {/* RINGKASAN */}

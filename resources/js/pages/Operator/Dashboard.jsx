@@ -1,14 +1,15 @@
 import { Head, Link } from '@inertiajs/react';
 import { motion, useReducedMotion } from 'motion/react';
+import Button from '../../components/Button';
 import Icon from '../../components/Icons';
 import AppLayout from '../../components/AppLayout';
 import ActionCard from '../../components/ActionCard';
 import StatusBadge, { getStatusColor } from '../../components/StatusBadge';
 
 const statusLabels = {
-    baru: 'Menunggu diproses',
+    baru: 'Baru',
     menunggu: 'Menunggu',
-    diproses: 'Sedang diproses',
+    diproses: 'Diproses',
     selesai: 'Selesai',
     disetujui: 'Disetujui',
     ditolak: 'Ditolak',
@@ -42,15 +43,15 @@ export default function Dashboard({ user, status, csrfToken, urls, recentReserva
                 title={`Selamat datang, ${user?.name || 'Petugas'}`}
                 subtitle="Ringkasan aktivitas reservasi dan pelaporan fasilitas Buana."
                 actions={
-                    <div className="flex flex-wrap gap-2">
-                        <Link href={urls?.reservations || '#'} className="app-primary-link">
+                    <div className="flex flex-wrap gap-3">
+                        <Button as={Link} href={urls?.reservations || '#'} className="gap-2">
                             <Icon name="calendar" className="h-4 w-4" />
                             Lihat reservasi
-                        </Link>
-                        <Link href={urls?.reports || '#'} className="app-primary-link">
+                        </Button>
+                        <Button as={Link} href={urls?.reports || '#'} className="gap-2">
                             <Icon name="tool" className="h-4 w-4" />
                             Lihat laporan
-                        </Link>
+                        </Button>
                     </div>
                 }
             >
