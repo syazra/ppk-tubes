@@ -157,20 +157,29 @@ export default function MyReports({ reports, user, auth, csrfToken, urls, error,
 						<td className="break-words whitespace-normal px-4 py-4 text-gray-600">
 							{report.desc}
 						</td>
+						
 						<td className="whitespace-nowrap px-4 py-4">
-							{report.image ? (
-								<a
-									href={report.image.startsWith('http') ? report.image : `/storage/${report.image.replace(/^\//, '')}`}
-									target="_blank"
-									rel="noreferrer"
-									className="text-sm font-semibold text-teal-dark-01 hover:underline"
-								>
-									Lihat foto
-								</a>
+							{report.images?.length > 0 ? (
+								<div className="flex flex-col gap-2">
+									{report.images.map((image, index) => (
+										<a
+											key={image.id ?? index}
+											href={`/storage/${image.image.replace(/^\/+/, '')}`}
+											target="_blank"
+											rel="noreferrer"
+											className="text-sm font-semibold text-teal-dark-01 hover:underline"
+										>
+											Lihat foto {index + 1}
+										</a>
+									))}
+								</div>
 							) : (
-								<span className="text-xs text-gray-400">Tidak ada</span>
+								<span className="text-xs text-gray-400">
+									Tidak ada
+								</span>
 							)}
 						</td>
+
 						<td className="whitespace-nowrap px-4 py-4">
 							<StatusBadge color={getStatusColor(report.status)}>
 								{statusLabels[report.status]}
