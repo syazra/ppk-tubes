@@ -35,17 +35,17 @@ function ReportActions({ report }) {
 
 	if (report.status === 'ditolak') {
         return (
-            <p className="text-xs text-red-600 font-medium">
+            <span className="text-xs text-gray-400 italic">
                 {report.rejection_reason}
-            </p>
+            </span>
         );
     } 
     
     if (report.status === 'selesai') {
         return (
-            <p className="text-xs text-green-600 font-medium">
+            <span className="text-xs text-gray-400 italic">
                 {report.resolution}
-            </p>
+            </span>
         );
     }
 

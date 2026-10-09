@@ -58,6 +58,7 @@ class ReservationController extends Controller
                 'end_time' => $reservation->end_time,
                 'desc' => $reservation->desc,
                 'status' => $reservation->status,
+                'rejection_reason' => $reservation->rejection_reason,
                 'can_cancel' => $reservation->status === 'menunggu' && $reservation->canStillBeProcessed(),
                 'cancel_url' => route('reservations.cancel', $reservation),
                 'ticket_url' => route('reservations.ticket', $reservation),

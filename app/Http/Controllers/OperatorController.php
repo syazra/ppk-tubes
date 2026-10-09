@@ -51,7 +51,8 @@ class OperatorController extends Controller
 
         })
         ->update([
-            'status' => 'ditolak'
+            'status' => 'ditolak',
+            'rejection_reason' => 'Fasilitas sudah dipinjam'
         ]);
 
 
@@ -86,21 +87,22 @@ class OperatorController extends Controller
         ]);
 
         $report = Report::findOrFail($id);
-        $report->status = 'diproses'; // Status berubah diproses
-        $report->estimated_completion_at = $request->estimated_completion_at; // Masuk ke kolom database ini
+        $report->status = 'diproses';
+        $report->estimated_completion_at = $request->estimated_completion_at;
 
-        // Karena diproses, pastikan rejection_reason & resolution dibersihkan
         $report->rejection_reason = null;
         $report->resolution = null;
         $report->save();
 
-        // Opsional: Ruangan jadi tidak tersedia sementara
         $report->room()->update(['is_avail' => false]);
 
         Reservation::where('room_id', $report->room_id)
             ->whereIn('status', ['menunggu', 'disetujui'])
             ->where('date_to_reserv', '<=', $request->estimated_completion_at)
-            ->update(['status' => 'ditolak']);
+            ->update([
+                'status' => 'ditolak',
+                'rejection_reason' => 'Fasilitas sedang dalam perbaikan'
+            ]);
 
         return back()->with('success', 'Laporan diproses, estimasi disimpan, dan reservasi terkait otomatis ditolak.');
     }
@@ -108,7 +110,6 @@ class OperatorController extends Controller
     // 2. Operator menandai laporan "selesai" (Fasilitas langsung dibuka kembali)
     public function markAsCompleted(Request $request, $id)
     {
-        // Validasi wajib isi resolusi
         $request->validate([
             'resolution' => 'nullable|string|max:1000',
         ], [
@@ -122,7 +123,6 @@ class OperatorController extends Controller
         $report->rejection_reason = null;
         $report->save();
 
-        // Buka kembali fasilitas secara otomatis
         $report->room()->update(['is_avail' => true]);
 
         return back()->with('success', 'Laporan diselesaikan dan fasilitas langsung dibuka kembali.');
@@ -137,7 +137,6 @@ class OperatorController extends Controller
 
         $report = Report::findOrFail($id);
         
-        // Pastikan statusnya masih 'diproses'
         if ($report->status !== 'diproses') {
             return back()->with('error', 'Hanya laporan yang sedang diproses yang dapat diperpanjang estimasinya.');
         }
@@ -145,11 +144,13 @@ class OperatorController extends Controller
         $report->estimated_completion_at = $request->estimated_completion_at;
         $report->save();
 
-        // Opsional: Jika waktu diperpanjang, tolak juga reservasi baru yang masuk pada rentang waktu perpanjangan tersebut
         Reservation::where('room_id', $report->room_id)
             ->whereIn('status', ['menunggu', 'disetujui'])
             ->where('date_to_reserv', '<=', $request->estimated_completion_at)
-            ->update(['status' => 'ditolak']);
+            ->update([
+                'status' => 'ditolak',
+                'rejection_reason' => 'Fasilitas sedang dalam perbaikan'
+            ]);
 
         return back()->with('success', 'Waktu estimasi perbaikan berhasil diperpanjang.');
     }
@@ -161,11 +162,10 @@ class OperatorController extends Controller
         ]);
 
         $report = Report::findOrFail($id);
-        // Jika operator mengetik manual pakai input, ambil itu. Kalau kosong, pakai template default.
         $reason = $request->input('rejection_reason') ?: 'Laporan tidak valid / Deskripsi kerusakan kurang jelas';
         $report->status = 'ditolak';
-        $report->rejection_reason = $reason; // Simpan alasan penolakan
-        $report->resolution = null;          // Kosongkan resolusi (XOR)
+        $report->rejection_reason = $reason;
+        $report->resolution = null;
         $report->save();
 
         return back()->with('success', 'Report ditolak.');
