@@ -21,7 +21,9 @@ function paginationLabel(link, index, total) {
 }
 
 export default function Facilities({ rooms, filters = {}, types = [], locations = [], today, urls, photoPlaceholderUrl, photoFallbackUrl }) {
-    const { errors = {} } = usePage().props;
+    const { errors = {}, auth } = usePage().props;
+    const accountUrl = auth?.user ? auth.dashboardUrl : urls.login;
+    const accountLabel = auth?.user ? 'Kembali ke dasbor' : 'Masuk';
     const selectedDate = filters.date || today;
     const [query, setQuery] = useState({ search: filters.search || '', type: filters.type || '', location: filters.location || '', capacity: filters.capacity || '', date: selectedDate });
     const [processing, setProcessing] = useState(false);
@@ -74,7 +76,7 @@ export default function Facilities({ rooms, filters = {}, types = [], locations 
                             return link.active ? <span className="gf-page gf-page-active" key={index} aria-current="page" aria-label={`Halaman ${label}`}>{label}</span> : link.url ? <Link className="gf-page" href={link.url} key={index} preserveScroll preserveState aria-label={/^\d+$/.test(label) ? `Halaman ${label}` : label} onStart={() => setProcessing(true)} onFinish={() => setProcessing(false)}>{label}</Link> : <span className="gf-page gf-page-disabled" key={index} aria-disabled="true">{label}</span>;
                         })}</nav>}
                     </section>
-                    <aside className="gf-reserve-note"><div><h2>Sudah menemukan fasilitas yang sesuai?</h2><p>Masuk dengan akun kampus untuk mengajukan reservasi.</p></div><a href={urls.login} className="gf-button gf-button-forest">Masuk <Icon name="landing-arrow" className="gf-icon" /></a></aside>
+                    <aside className="gf-reserve-note"><div><h2>Sudah menemukan fasilitas yang sesuai?</h2><p>{auth?.user ? 'Kembali ke dasbor untuk melanjutkan aktivitas akun.' : 'Masuk dengan akun kampus untuk mengajukan reservasi.'}</p></div><a href={accountUrl} className="gf-button gf-button-forest">{accountLabel} <Icon name="landing-arrow" className="gf-icon" /></a></aside>
                 </div>
             </main>
             <footer className="gf-footer"><div className="gf-wrap gf-footer-inner"><a href={urls.landing} className="cs-brand" aria-label="CampuSpace — Beranda"><PublicBrand /></a><p>Layanan fasilitas kampus.</p><nav aria-label="Navigasi footer"><a href={urls.landing}>Beranda</a><a href={urls.about}>Tentang</a></nav></div></footer>

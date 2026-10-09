@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Support\LoginRedirect;
 use Illuminate\Auth\SessionGuard;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -36,9 +37,9 @@ class AuthenticatedSessionController extends Controller
      * Redirect to the intended page; use a full page visit for Inertia requests
      * since dashboards may be Blade-rendered.
      */
-    private function toDashboard(Request $request, string $default): RedirectResponse|\Symfony\Component\HttpFoundation\Response
+    private function toDashboard(Request $request): RedirectResponse|\Symfony\Component\HttpFoundation\Response
     {
-        $redirect = redirect()->intended($default);
+        $redirect = redirect(app(LoginRedirect::class)->destination($request));
 
         return $request->header('X-Inertia') ? Inertia::location($redirect->getTargetUrl()) : $redirect;
     }
@@ -63,16 +64,8 @@ class AuthenticatedSessionController extends Controller
         $request->session()->put('password_hash_web', $guard->hashPasswordForCookie($user->getAuthPassword()));
         Inertia::clearHistory();
 
-        if ($user->isAdmin()) {
-            return $this->toDashboard($request, route('admin.dashboard', absolute: false));
-        }
-
-        if ($user->isOperator()) {
-            return $this->toDashboard($request, route('operator.dashboard', absolute: false));
-        }
-
-        if ($user->isUser()) {
-            return $this->toDashboard($request, route('user.dashboard', absolute: false));
+        if ($user->dashboardRouteName() !== null) {
+            return $this->toDashboard($request);
         }
 
         // Paksa logout dan kembalikan ke halaman login dengan pesan error!

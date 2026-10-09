@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -29,7 +29,7 @@ use Illuminate\Support\Str;
  */
 #[Fillable(['name', 'email', 'role', 'account_type', 'identity_number', 'password', 'account', 'akun'])]
 #[Hidden(['password', 'remember_token'])]
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
@@ -121,5 +121,21 @@ class User extends Authenticatable
     public function isPengguna(): bool
     {
         return $this->isUser();
+    }
+
+    public function hasRole(string ...$roles): bool
+    {
+        return in_array($this->role, $roles, true)
+            || (in_array('user', $roles, true) && $this->isUser());
+    }
+
+    public function dashboardRouteName(): ?string
+    {
+        return match ($this->role) {
+            'admin' => 'admin.dashboard',
+            'operator' => 'operator.dashboard',
+            'user', 'pengguna' => 'user.dashboard',
+            default => null,
+        };
     }
 }

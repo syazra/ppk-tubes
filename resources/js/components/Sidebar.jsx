@@ -1,4 +1,4 @@
-import { Link } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 import { motion } from 'motion/react';
 import Icon, { initials } from './Icons';
 
@@ -92,7 +92,10 @@ export default function Sidebar({
                         </span>
                     )}
                 </Link>
-                <form method="post" action={urls?.logout || '#'}>
+                <form method="post" action={urls?.logout || '#'} onSubmit={event => {
+                    event.preventDefault();
+                    router.post(urls?.logout || '/logout', {}, { preserveState: false });
+                }}>
                     {csrfToken && <input type="hidden" name="_token" value={csrfToken} />}
                     <button type="submit" className="app-logout">
                         <Icon name="logout" className="h-5 w-5 shrink-0" />

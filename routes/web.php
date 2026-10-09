@@ -2,15 +2,48 @@
 
 use App\Http\Controllers\PublicFacilityController;
 use App\Models\Room;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 // 1. Route Publik & Guest
-Route::get('/', function () {
+Route::get('/', function (Request $request) {
+    $user = $request->user();
+    $reservationRoute = match ($user?->role) {
+        'admin' => 'admin.dashboard',
+        'operator' => 'operator.reservations',
+        default => 'reservations.index',
+    };
+    $createReservationRoute = $user && ! $user->isUser() ? $reservationRoute : 'reservations.form';
+    $reportRoute = match ($user?->role) {
+        'admin' => 'admin.dashboard',
+        'operator' => 'operator.reports',
+        'user', 'pengguna' => 'reports.create',
+        default => 'login',
+    };
+
     return Inertia::render('Landing', [
         'loginUrl' => route('login'),
-        'reservationUrl' => route('reservations.index'),
-        'createReservationUrl' => route('reservations.form'),
+        'reservationUrl' => route($reservationRoute),
+        'createReservationUrl' => route($createReservationRoute),
+        'canCreateReservation' => $user === null || $user->isUser(),
+        'reservationActionLabel' => match ($user?->role) {
+            'admin' => 'Kembali ke dasbor',
+            'operator' => 'Kelola reservasi',
+            default => 'Ajukan reservasi',
+        },
+        'reservationListLabel' => match ($user?->role) {
+            'admin' => 'Kembali ke dasbor',
+            'operator' => 'Lihat reservasi',
+            default => 'Buka Reservasi Saya',
+        },
+        'reportUrl' => route($reportRoute),
+        'reportActionLabel' => match ($user?->role) {
+            'admin' => 'Kembali ke dasbor',
+            'operator' => 'Kelola laporan',
+            'user', 'pengguna' => 'Lapor kerusakan',
+            default => 'Masuk untuk melapor',
+        },
         'facilityUrl' => route('facilities.index'),
         'aboutUrl' => route('about'),
         'facilityTypes' => Room::query()->distinct()->orderBy('type')->pluck('type'),
