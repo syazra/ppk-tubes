@@ -395,7 +395,7 @@ export default function MyReservations({ user, csrfToken, urls, reservations, fi
 				format: [pdfWidth, pdfHeight],
 			});
 
-			// Cukup SATU KALI addImage
+			
 			pdf.addImage(
 				imgData,
 				'PNG',

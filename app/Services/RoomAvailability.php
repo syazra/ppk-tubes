@@ -16,7 +16,7 @@ class RoomAvailability
 
     public const LEAD_HOURS = 3;
 
-    public const BLOCKING_STATUSES = ['menunggu', 'disetujui'];
+    public const BLOCKING_STATUSES = ['disetujui'];
 
     public function earliestStart(): CarbonImmutable
     {

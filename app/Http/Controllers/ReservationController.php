@@ -163,7 +163,7 @@ class ReservationController extends Controller
 
     /**
      * Mengambil jadwal booking ruangan (Time Blocking)
-     * Hanya status 'disetujui' dan 'menunggu' yang memblok slot waktu.
+     * Hanya status 'disetujui' yang memblok slot waktu.
      * Status 'dibatalkan' dan 'ditolak' membebaskan slot waktu agar tersedia kembali.
      */
     public function availableSlots(Request $request, RoomAvailability $availability): \Illuminate\Http\JsonResponse
