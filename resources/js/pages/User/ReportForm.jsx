@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import AppLayout from '../../components/AppLayout';
 import Button from '../../components/Button';
 import ButtonGray from '../../components/ButtonGray';
+import UploadFile from '../../components/UploadFile';
 
 const fieldClassName = 'mt-2 block w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm text-gray-800 focus:border-teal-dark-01 focus:ring-teal-dark-01';
 
@@ -123,104 +124,16 @@ export default function ReportForm({ rooms = [], user, auth, csrfToken, urls }) 
 					<div id="description-error"><FieldError>{form.errors.desc}</FieldError></div>
 				</div>
 
-				{/* UPLOAD GAMBAR */}
-				<div>
-					<label htmlFor="images" className="block text-sm font-semibold text-teal-darker">
-						Bukti kerusakan (foto)
-					</label>
-
-					<div className="mt-1 flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 px-6 pt-6 pb-6 transition-colors duration-200 hover:border-gray-400">
-						{imagePreviews.length > 0 ? (
-							<div className="mb-3 flex flex-wrap justify-center gap-3">
-								{imagePreviews.map((preview, index) => (
-									<div
-										key={preview.url}
-										className="relative flex flex-col items-center"
-									>
-										<img
-											src={preview.url}
-											alt={`Pratinjau foto kerusakan ${index + 1}`}
-											className="h-28 w-28 rounded-lg border border-gray-200 object-cover shadow-sm"
-										/>
-										<button
-											type="button"
-											onClick={() => handleRemoveImage(index)}
-											className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center leading none bg-gray-200/80 text-gray-700 shadow-sm
-											transition-colors hover:bg-white-01
-											hover:text-gray-800"
-											aria-label={`Hapus foto ${index + 1}`}
-										>
-											x
-										</button>
-
-										<span className="mt-1 max-w-[120px] truncate text-xs font-medium text-gray-700">
-											{preview.file.name}
-										</span>
-									</div>
-								))}
-							</div>
-						) : (
-							<svg
-								className="mb-2 h-12 w-12 text-gray-400"
-								stroke="currentColor"
-								fill="none"
-								viewBox="0 0 48 48"
-								aria-hidden="true"
-							>
-								<path
-									d="M28 8H12a4 4 0 0 0-4 4v20m32-12v8m0 0v8a4 4 0 0 1-4 4H12a4 4 0 0 1-4-4v-4m32-4-3.172-3.172a4 4 0 0 0-5.656 0L28 28M8 32l9.172-9.172a4 4 0 0 1 5.656 0L28 28m0 0 4 4m4-24h8m-4-4v8m-12 4h.02"
-									strokeWidth="2"
-									strokeLinecap="round"
-									strokeLinejoin="round"
-								/>
-							</svg>
-						)}
-
-						<input
-							id="images"
-							name="images[]"
-							type="file"
-							accept="image/*"
-							multiple
-							onChange={handleImageChange}
-							className="hidden"
-						/>
-
-						<div className="my-2 flex w-full items-center justify-center gap-3">
-							{imagePreviews.length === 0 && (
-								<label
-									htmlFor="images"
-									className="shrink-0 cursor-pointer rounded-md border border-gray-300 bg-white-01 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-gray-700 shadow-sm transition hover:bg-gray-50"
-								>
-									Pilih Foto
-								</label>
-							)}
-							{imagePreviews.length >= 1 && (
-								<label
-									htmlFor="images"
-									className="shrink-0 cursor-pointer rounded-md border border-gray-300 bg-white-01 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-gray-700 shadow-sm transition hover:bg-gray-50"
-								>
-									+ Tambah Foto
-								</label>
-								
-							)}
-
-							{imagePreviews.length === 0 && (
-								<span className="max-w-xs truncate text-xs text-gray-500">
-									Belum ada file yang dipilih
-								</span>
-							)}
-						</div>
-
-						<p id="image-help" className="mt-1 text-xs text-gray-400">
-							PNG, JPG, JPEG (Maks. 2MB)
-						</p>
-					</div>
-
-					<div id="image-error">
-						<FieldError>{form.errors.images}</FieldError>
-					</div>
-				</div>
+				<UploadFile
+					label="Bukti kerusakan (foto)"
+					name="images"
+					accept="image/*"
+					multiple={true}
+					value={form.data.images}
+					onChange={(files) => form.setData('images', files)}
+					error={form.errors.images}
+					helperText="PNG, JPG, JPEG (Maks. 2MB)"
+				/>
 
 				{/* TOMBOL */}
 				<div className="flex flex-wrap justify-end gap-4 pt-5">
