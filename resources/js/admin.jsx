@@ -1,3 +1,7 @@
-import { createInertiaApp } from '@inertiajs/react';
+import { getInitialPageFromDOM } from '@inertiajs/core';
+import { createInertiaApp, http } from '@inertiajs/react';
+import { prepareSessionHistory } from './lib/sessionHistory';
 
-createInertiaApp();
+createInertiaApp({
+    page: prepareSessionHistory(getInitialPageFromDOM('app'), { http }),
+});
