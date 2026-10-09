@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
-Route::middleware(['auth', 'verified'])->prefix('operator')->name('operator.')->group(function () {
+Route::middleware(['auth', 'role:operator', 'verified'])->prefix('operator')->name('operator.')->group(function () {
     Route::get('/dashboard', function (Request $request) {
         $recentReservations = \App\Models\Reservation::with('room')
             ->latest()

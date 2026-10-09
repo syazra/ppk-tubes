@@ -1,11 +1,13 @@
 <?php
 
 use App\Http\Middleware\EnsureAdmin;
+use App\Http\Middleware\EnsureRole;
 use App\Http\Middleware\HandleInertiaRequests;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Support\Facades\Route;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -22,7 +24,9 @@ return Application::configure(basePath: dirname(__DIR__))
         },
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->alias(['admin' => EnsureAdmin::class]);
+        $middleware->alias(['admin' => EnsureAdmin::class, 'role' => EnsureRole::class]);
+        $middleware->prependToPriorityList(SubstituteBindings::class, EnsureRole::class);
+        $middleware->redirectUsersTo(fn (Request $request) => route($request->user()?->dashboardRouteName() ?? 'dashboard'));
         $middleware->authenticateSessions();
         $middleware->web(append: [HandleInertiaRequests::class]);
     })

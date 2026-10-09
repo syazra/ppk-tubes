@@ -3,6 +3,7 @@
 namespace Tests\Feature\Auth;
 
 use App\Models\User;
+use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -327,6 +328,70 @@ class SessionSecurityTest extends TestCase
             'password_confirmation' => 'new-password',
         ])->assertStatus(429);
         $this->assertTrue(Hash::check('password', $user->fresh()->password));
+    }
+
+    public function test_role_changes_take_effect_on_existing_browser_sessions(): void
+    {
+        $user = User::factory()->create(['role' => 'operator']);
+        $this->post('/login', ['email' => $user->email, 'password' => 'password'])
+            ->assertRedirect(route('operator.dashboard', absolute: false));
+        $sessionId = session()->getId();
+
+        $this->useBrowserSession($sessionId);
+        $this->get('/operator/dashboard')->assertOk();
+        $user->update(['role' => 'user']);
+
+        $this->useBrowserSession($sessionId);
+        $this->get('/operator/dashboard')->assertForbidden();
+        $this->useBrowserSession($sessionId);
+        $this->get('/user/dashboard')->assertOk();
+    }
+
+    public function test_logout_accepts_the_current_xsrf_cookie_after_another_tab_rotates_the_token(): void
+    {
+        $user = User::factory()->create();
+        $sessionId = $this->login($user);
+        $oldToken = session()->token();
+        $this->app->bind(PreventRequestForgery::class, fn ($app) => new class($app, $app['encrypter']) extends PreventRequestForgery
+        {
+            protected function runningUnitTests()
+            {
+                return false;
+            }
+        });
+
+        $this->useBrowserSession($sessionId);
+        $response = $this->put('/password', [
+            '_token' => $oldToken,
+            'current_password' => 'password',
+            'password' => 'new-password',
+            'password_confirmation' => 'new-password',
+        ])->assertSessionHasNoErrors();
+        $newSessionId = session()->getId();
+        $xsrfCookie = collect($response->baseResponse->headers->getCookies())
+            ->first(fn ($cookie) => $cookie->getName() === 'XSRF-TOKEN');
+        $this->assertNotNull($xsrfCookie);
+
+        $this->useBrowserSession($newSessionId);
+        $this->post('/logout', ['_token' => $oldToken])->assertStatus(419);
+        $this->assertAuthenticatedAs($user);
+
+        $this->useBrowserSession($newSessionId);
+        $this->withHeader('X-XSRF-TOKEN', $xsrfCookie->getValue())->post('/logout')
+            ->assertRedirect('/');
+        $this->assertGuest();
+    }
+
+    public function test_https_session_cookie_is_secure_http_only_and_same_site(): void
+    {
+        $response = $this->get('https://localhost/login')->assertOk();
+        $cookie = collect($response->baseResponse->headers->getCookies())
+            ->first(fn ($cookie) => $cookie->getName() === session()->getName());
+
+        $this->assertNotNull($cookie);
+        $this->assertTrue($cookie->isSecure());
+        $this->assertTrue($cookie->isHttpOnly());
+        $this->assertSame('lax', $cookie->getSameSite());
     }
 
     private function login(User $user): string

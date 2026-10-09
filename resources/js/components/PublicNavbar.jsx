@@ -1,10 +1,13 @@
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import Icon from './Icons';
 import PublicBrand from './PublicBrand';
 import '../../css/public-navigation.css';
 
 export default function PublicNavbar({ urls, active = 'landing', headerRef, children }) {
+    const { auth } = usePage().props;
+    const accountUrl = auth?.user ? auth.dashboardUrl : urls.login;
+    const accountLabel = auth?.user ? 'Kembali ke dasbor' : 'Masuk';
     const [menuOpen, setMenuOpen] = useState(false);
     const navbarRef = useRef(null);
     const toggleRef = useRef(null);
@@ -52,7 +55,7 @@ export default function PublicNavbar({ urls, active = 'landing', headerRef, chil
                     {links.map(link => <Link key={link.key} href={link.url} className="pn-link" aria-current={active === link.key ? 'page' : undefined}>{link.label}</Link>)}
                 </nav>
                 <div className="pn-actions">
-                    <a href={urls.login} className="pn-login" onClick={() => setMenuOpen(false)}>Masuk<Icon name="landing-arrow" className="pn-icon pn-login-arrow" /></a>
+                    <a href={accountUrl} className="pn-login" onClick={() => setMenuOpen(false)}>{accountLabel}<Icon name="landing-arrow" className="pn-icon pn-login-arrow" /></a>
                     <button ref={toggleRef} className="pn-menu-toggle" type="button" aria-expanded={menuOpen} aria-controls={menuId} aria-label={menuOpen ? 'Tutup menu navigasi' : 'Buka menu navigasi'} onClick={() => setMenuOpen(open => !open)}><Icon name={menuOpen ? 'landing-close' : 'landing-menu'} className="pn-icon" /></button>
                 </div>
             </div>

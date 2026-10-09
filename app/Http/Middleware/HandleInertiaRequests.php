@@ -60,6 +60,7 @@ class HandleInertiaRequests extends Middleware
             ...parent::share($request),
             'auth' => [
                 'user' => $request->user() ? $request->user()->only('id', 'name', 'email', 'role', 'account_type') : null,
+                'dashboardUrl' => $request->user()?->dashboardRouteName() ? route($request->user()->dashboardRouteName()) : null,
             ],
         ];
     }

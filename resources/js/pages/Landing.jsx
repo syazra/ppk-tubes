@@ -211,7 +211,7 @@ const styles = `
 
 // Mirrors the title, separate action card, table, and default empty state in
 // origin/feat/user/reserve (8129427): resources/views/user/my-reservations.blade.php.
-function ReservationPreview({ reservationUrl, createReservationUrl }) {
+function ReservationPreview({ reservationUrl, createReservationUrl, reservationActionLabel, reservationListLabel, canCreateReservation }) {
     return (
         <figure className="cs-reservation-preview">
             <figcaption className="cs-preview-bar"><span className="cs-preview-dots" aria-hidden="true"><i /><i /><i /></span>Pratinjau halaman reservasi</figcaption>
@@ -220,7 +220,7 @@ function ReservationPreview({ reservationUrl, createReservationUrl }) {
                     <div><h2>Reservasi Saya</h2><p>Lihat daftar fasilitas yang pernah kamu pinjam.</p></div>
                 </div>
                 <div className="cs-preview-toolbar">
-                    <a className="cs-preview-create" href={createReservationUrl}>+ Tambah Reservasi</a>
+                    <a className="cs-preview-create" href={createReservationUrl}>{canCreateReservation ? '+ Tambah Reservasi' : reservationActionLabel}</a>
                 </div>
                 <div className="cs-preview-table-wrap">
                 <table className="cs-preview-table" aria-label="Pratinjau daftar reservasi tanpa data akun">
@@ -234,7 +234,7 @@ function ReservationPreview({ reservationUrl, createReservationUrl }) {
                     <tbody><tr><td colSpan={5}>Belum ada reservasi</td></tr></tbody>
                 </table>
                 </div>
-                <a className="cs-preview-link" href={reservationUrl}>Buka Reservasi Saya <Icon name="landing-arrow" className="cs-arrow" variant="landing" /></a>
+                <a className="cs-preview-link" href={reservationUrl}>{reservationListLabel} <Icon name="landing-arrow" className="cs-arrow" variant="landing" /></a>
             </div>
         </figure>
     );
@@ -250,7 +250,7 @@ const steps = [
     ['Lengkapi pengajuan', 'Isi tujuan penggunaan dan pilih rentang waktu yang dibutuhkan, lalu kirim pengajuan.'],
     ['Periksa status reservasi', 'Buka Reservasi Saya untuk melihat hasil peninjauan. Jika disetujui, tiket peminjaman dapat dibuka dari daftar tersebut.'],
 ];
-export default function Landing({ loginUrl, reservationUrl, createReservationUrl, facilityUrl, aboutUrl, facilityTypes = [], facilityLocations = [] }) {
+export default function Landing({ loginUrl, reservationUrl, createReservationUrl, reservationActionLabel, reservationListLabel, canCreateReservation, reportUrl, reportActionLabel, facilityUrl, aboutUrl, facilityTypes = [], facilityLocations = [] }) {
     const intro = useIntro();
     const rootRef = useRef(null);
     const navRef = useRef(null);
@@ -380,13 +380,13 @@ export default function Landing({ loginUrl, reservationUrl, createReservationUrl
                                 <h1 id="hero-title" className="cs-serif" lang="en">Your Campus.<br /><em>Your Space.</em></h1>
                                 <p className="cs-hero-copy">Cek ketersediaan fasilitas kampus, ajukan reservasi, dan laporkan kerusakan melalui CampuSpace.</p>
                                 <div className="cs-hero-actions">
-                                    <a href={createReservationUrl} className="cs-button cs-button-primary">Ajukan reservasi <Icon name="landing-arrow" className="cs-arrow" variant="landing" /></a>
+                                    <a href={createReservationUrl} className="cs-button cs-button-primary">{reservationActionLabel} <Icon name="landing-arrow" className="cs-arrow" variant="landing" /></a>
                                     <a href="#cara-kerja" className="cs-button cs-button-secondary">Cara reservasi <Icon name="down" className="cs-arrow" variant="landing" /></a>
                                 </div>
                                 <p className="cs-hero-note"><Icon name="landing-shield" variant="landing" />Gunakan akun yang diberikan pengelola kampus.</p>
                             </div>
                             <div className="cs-art">
-                                <ReservationPreview reservationUrl={reservationUrl} createReservationUrl={createReservationUrl} />
+                                <ReservationPreview reservationUrl={reservationUrl} createReservationUrl={createReservationUrl} reservationActionLabel={reservationActionLabel} reservationListLabel={reservationListLabel} canCreateReservation={canCreateReservation} />
                             </div>
                         </div>
                     </section>
@@ -407,7 +407,7 @@ export default function Landing({ loginUrl, reservationUrl, createReservationUrl
                                 <button type="submit" className="cs-button">Cari fasilitas <Icon name="landing-arrow" className="cs-arrow" variant="landing" /></button>
                             </form>
                             <div className="cs-feature-grid">
-                                {features.map((feature, index) => <article className="cs-feature cs-reveal" key={feature.title} style={{ '--reveal-delay': `${index * 90}ms` }}><Icon name={feature.icon} variant="landing" /><h3>{feature.title}</h3><p>{feature.text}</p><a className="cs-feature-link" href={feature.action === 'reservation' ? createReservationUrl : loginUrl}>{feature.actionLabel}<Icon name="landing-arrow" className="cs-arrow" variant="landing" /></a></article>)}
+                                {features.map((feature, index) => <article className="cs-feature cs-reveal" key={feature.title} style={{ '--reveal-delay': `${index * 90}ms` }}><Icon name={feature.icon} variant="landing" /><h3>{feature.title}</h3><p>{feature.text}</p><a className="cs-feature-link" href={feature.action === 'reservation' ? createReservationUrl : reportUrl}>{feature.action === 'reservation' ? reservationActionLabel : reportActionLabel}<Icon name="landing-arrow" className="cs-arrow" variant="landing" /></a></article>)}
                             </div>
                         </div>
                     </section>
@@ -422,7 +422,7 @@ export default function Landing({ loginUrl, reservationUrl, createReservationUrl
                     </section>
 
                     <section className="cs-final cs-dark" aria-labelledby="final-title">
-                        <div className="cs-wrap cs-reveal"><div><h2 id="final-title" className="cs-serif">Butuh fasilitas untuk kegiatanmu?</h2><p>Pilih fasilitas dan jadwal, lalu ajukan peminjaman.</p></div><a href={createReservationUrl} className="cs-button cs-button-primary">Ajukan reservasi <Icon name="landing-arrow" className="cs-arrow" variant="landing" /></a></div>
+                        <div className="cs-wrap cs-reveal"><div><h2 id="final-title" className="cs-serif">Butuh fasilitas untuk kegiatanmu?</h2><p>Pilih fasilitas dan jadwal, lalu ajukan peminjaman.</p></div><a href={createReservationUrl} className="cs-button cs-button-primary">{reservationActionLabel} <Icon name="landing-arrow" className="cs-arrow" variant="landing" /></a></div>
                     </section>
                 </main>
 
