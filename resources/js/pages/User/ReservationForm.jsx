@@ -5,8 +5,9 @@ import useRoomSlots from '../../hooks/useRoomSlots';
 import AvailabilityTimeline from '../../components/AvailabilityTimeline';
 import { selectReservationRange } from '../../lib/reservationRange';
 import AppLayout from '../../components/AppLayout';
+import Button from '../../components/Button';
 
-const fieldClassName = 'mt-2 block w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm text-gray-800 focus:border-teal-dark-01 focus:ring-teal-dark-01';
+const fieldClassName = 'mt-2 block w-full rounded-lg border border-gray-300 bg-white-01 px-4 py-3 text-sm text-gray-800 focus:border-teal-dark-01 focus:ring-teal-dark-01';
 
 function FieldError({ children }) {
 	return children ? <p role="alert" className="mt-2 text-sm text-red-700">{children}</p> : null;
@@ -125,7 +126,9 @@ export default function ReservationForm({
 			<Head title="Form Reservasi" />
 
 			<section className="mb-8 space-y-6">
-				<section aria-labelledby="facility-browser-title" className="rounded-lg border border-gray-200 bg-white p-5 sm:p-6">
+				{/* FILTERING */}
+				<section aria-labelledby="facility-browser-title" className="rounded-lg border border-gray-200 bg-white-01 p-5 sm:p-6">
+					{/* HEADER */}
 					<div className="mb-5 flex flex-wrap items-start justify-between gap-3">
 						<div>
 							<h2 id="facility-browser-title" className="text-xl font-bold text-teal-darker">Cari fasilitas</h2>
@@ -134,6 +137,7 @@ export default function ReservationForm({
 						<p className="text-xs text-gray-500">Slot 30 menit · 07.00-20.00 · {timezone}</p>
 					</div>
 
+					{/* FILTER */}
 					<form onSubmit={applyFilters} className="grid gap-3 rounded-md bg-gray-50 p-4 sm:grid-cols-2 xl:grid-cols-4">
 						<div>
 							<label htmlFor="facility-type" className="block text-xs font-semibold text-gray-700">Tipe fasilitas</label>
@@ -158,12 +162,15 @@ export default function ReservationForm({
 							<input id="facility-date" type="date" required min={minimumDate} value={filterForm.data.date} onChange={event => filterForm.setData('date', event.target.value)} className={fieldClassName} />
 							<FieldError>{filterForm.errors.date}</FieldError>
 						</div>
+
+						{/* TOMBOL */}
 						<div className="flex flex-wrap items-center gap-4 sm:col-span-2 xl:col-span-4">
-							<button type="submit" disabled={filterForm.processing} className="inline-flex min-h-10 items-center rounded-md bg-teal-700 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-800 disabled:opacity-60">Cari fasilitas</button>
+							<Button type="submit" disabled={filterForm.processing}>Cari fasilitas</Button>
 							<button type="button" onClick={resetFilters} className="text-sm font-semibold text-teal-700 underline">Reset filter</button>
 						</div>
 					</form>
 
+					{/* HASIL FILTER KATALOG */}
 					{facilities.data.length ? (
 						<>
 							<div className="my-4 flex flex-wrap justify-between gap-2 text-xs text-gray-500" aria-live="polite">
@@ -187,7 +194,7 @@ export default function ReservationForm({
 							{facilities.links.length > 3 && (
 								<nav aria-label="Halaman daftar fasilitas" className="mt-5 flex flex-wrap items-center justify-center gap-2">
 									{facilities.links.map((link, index) => link.url ? (
-										<Link key={`${link.label}-${index}`} href={link.url} preserveState preserveScroll className={`inline-flex min-h-9 min-w-9 items-center justify-center rounded border px-3 text-sm ${link.active ? 'border-teal-700 bg-teal-700 text-white' : 'border-gray-200 bg-white text-teal-800 hover:bg-teal-50'}`}>
+										<Link key={`${link.label}-${index}`} href={link.url} preserveState preserveScroll className={`inline-flex min-h-9 min-w-9 items-center justify-center rounded border px-3 text-sm ${link.active ? 'border-teal-700 bg-teal-700 text-white' : 'border-gray-200 bg-white-01 text-teal-800 hover:bg-teal-50'}`}>
 											{paginationText(link.label)}
 										</Link>
 									) : <span key={`${link.label}-${index}`} aria-disabled="true" className="inline-flex min-h-9 min-w-9 items-center justify-center rounded border border-gray-100 px-3 text-sm text-gray-400">{paginationText(link.label)}</span>)}
@@ -203,7 +210,8 @@ export default function ReservationForm({
 					)}
 				</section>
 
-				<form onSubmit={submitReservation} className="space-y-6 rounded-md border border-gray-200 bg-white p-5 sm:p-6">
+				{/* FORM RESERVASI */}
+				<form onSubmit={submitReservation} className="space-y-6 rounded-md border border-gray-200 bg-white-01 p-5 sm:p-6">
 					<div className="reservation-schedule-layout">
 					<section aria-labelledby="reservation-details-title" className="space-y-5">
 						<div>

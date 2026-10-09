@@ -3,6 +3,7 @@ import { Head, useForm, router } from '@inertiajs/react';
 import AppLayout from '../../components/AppLayout';
 import FilterTable from '../../components/FilterTable';
 import MetricCard from '../../components/MetricCard';
+import PopCard from '../../components/PopCard';
 import StatusBadge, { getStatusColor } from '../../components/StatusBadge';
 
 const metrics = [
@@ -216,13 +217,18 @@ export default function Reports({ user, status, csrfToken, urls, reports, filter
                     recordLabel="laporan"
                     paginationLabel="Navigasi halaman laporan"
                 />
+
+                {/* PROSES LAPORAN */}
                 {selectedReportForProcess && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-                        <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl border border-gray-100">
-                            <h3 className="text-lg font-bold text-teal-darker mb-2">Tentukan Estimasi Selesai</h3>
-                            <p className="text-sm text-gray-500 mb-4">Masukkan tanggal dan waktu perkiraan laporan ini selesai ditindaklanjuti.</p>
-                            
-                            <form onSubmit={submitProcess}>
+                    <PopCard
+                        title="Tentukan Estimasi Selesai"
+                        description="Masukkan tanggal dan waktu perkiraan laporan ini selesai ditindaklanjuti."
+                        onCancel={() => setSelectedReportForProcess(null)}
+                        onDone={submitProcess}
+                        doneLabel="Simpan & Proses"
+                        doneDisabled={processForm.processing}
+                        onClose={() => setSelectedReportForProcess(null)}
+                    >
                                 <div className="mb-4">
                                     <label htmlFor="estimated_completion_at" className="block text-sm font-medium text-gray-700 mb-1">Tanggal & Waktu Estimasi</label>
                                     <input 
@@ -239,34 +245,20 @@ export default function Reports({ user, status, csrfToken, urls, reports, filter
                                     )}
                                 </div>
 
-                                <div className="flex justify-end gap-2">
-                                    <button 
-                                        type="button" 
-                                        onClick={() => setSelectedReportForProcess(null)}
-                                        className="rounded-lg px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100"
-                                    >
-                                        Batal
-                                    </button>
-                                    <button 
-                                        type="submit" 
-                                        disabled={processForm.processing}
-                                        className="rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700 disabled:opacity-50"
-                                    >
-                                        Simpan & Proses
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
+                    </PopCard>
                 )}
 
+                {/* PERPANJANG ESTIMASI LAPORAN */}
                 {selectedReportForExtend && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-                        <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl border border-gray-100">
-                            <h3 className="text-lg font-bold text-teal-darker mb-2">Ubah / Perpanjang Estimasi Selesai</h3>
-                            <p className="text-sm text-gray-500 mb-4">Pilih tanggal dan waktu terbaru untuk penyelesaian perbaikan laporan ini.</p>
-                            
-                            <form onSubmit={submitExtend}>
+                    <PopCard
+                        title="Ubah / Perpanjang Estimasi Selesai"
+                        description="Pilih tanggal dan waktu terbaru untuk penyelesaian perbaikan laporan ini."
+                        onCancel={() => setSelectedReportForExtend(null)}
+                        onDone={submitExtend}
+                        doneLabel="Perbarui Estimasi"
+                        doneDisabled={extendForm.processing}
+                        onClose={() => setSelectedReportForExtend(null)}
+                    >
                                 <div className="mb-4">
                                     <label htmlFor="extend_estimated_at" className="block text-sm font-medium text-gray-700 mb-1">Tanggal & Waktu Estimasi Baru</label>
                                     <input 
@@ -282,36 +274,21 @@ export default function Reports({ user, status, csrfToken, urls, reports, filter
                                         <p className="mt-1 text-xs text-red-600">{extendForm.errors.estimated_completion_at}</p>
                                     )}
                                 </div>
-
-                                <div className="flex justify-end gap-2">
-                                    <button 
-                                        type="button" 
-                                        onClick={() => setSelectedReportForExtend(null)}
-                                        className="rounded-lg px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100"
-                                    >
-                                        Batal
-                                    </button>
-                                    <button 
-                                        type="submit" 
-                                        disabled={extendForm.processing}
-                                        className="rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700 disabled:opacity-50"
-                                    >
-                                        Perbarui Estimasi
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
+                    </PopCard>
                 )}
 
-            {/* MODAL TOLAK LAPORAN (Dengan Template & Ketik Manual) */}
+                {/* MODAL TOLAK LAPORAN (Dengan Template & Ketik Manual) */}
                 {selectedReportForReject && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-                        <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl border border-gray-100" style={{background: 'white'}}>
-                            <h3 className="text-lg font-bold text-red-600 mb-2">Tolak Laporan</h3>
-                            <p className="text-sm text-gray-500 mb-4">Gunakan template cepat di bawah atau ketik alasan penolakan secara manual.</p>
-                            
-                            <form onSubmit={submitReject}>
+                    <PopCard
+                        title="Tolak Laporan"
+                        description="Gunakan template cepat di bawah atau ketik alasan penolakan secara manual."
+                        onCancel={() => setSelectedReportForReject(null)}
+                        onDone={submitReject}
+                        doneLabel="Konfirmasi Tolak"
+                        doneDisabled={rejectForm.processing}
+                        doneVariant="danger"
+                        onClose={() => setSelectedReportForReject(null)}
+                    >
                                 <div className="mb-4">
                                     <label className="block text-sm font-medium text-gray-700 mb-2">Template Alasan Cepat</label>
                                     <button 
@@ -335,36 +312,20 @@ export default function Reports({ user, status, csrfToken, urls, reports, filter
                                         <p className="mt-1 text-xs text-red-600">{rejectForm.errors.rejection_reason}</p>
                                     )}
                                 </div>
-
-                                <div className="flex justify-end gap-2">
-                                    <button 
-                                        type="button" 
-                                        onClick={() => setSelectedReportForReject(null)}
-                                        className="rounded-lg px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100"
-                                    >
-                                        Batal
-                                    </button>
-                                    <button 
-                                        type="submit" 
-                                        disabled={rejectForm.processing}
-                                        className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
-                                    >
-                                        Konfirmasi Tolak
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
+                    </PopCard>
                 )}
 
                 {/* MODAL SELESAI / RESOLUSI */}
                 {selectedReportForComplete && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-                        <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl border border-gray-100" style={{background: 'white'}}>
-                            <h3 className="text-lg font-bold text-green-600 mb-2">Selesaikan Laporan</h3>
-                            <p className="text-sm text-gray-500 mb-4">Gunakan template cepat di bawah atau tulis resolusi secara manual.</p>
-                            
-                            <form onSubmit={submitComplete}>
+                    <PopCard
+                        title="Selesaikan Laporan"
+                        description="Gunakan template cepat di bawah atau tulis resolusi secara manual."
+                        onCancel={() => setSelectedReportForComplete(null)}
+                        onDone={submitComplete}
+                        doneLabel="Tandai Selesai"
+                        doneDisabled={completeForm.processing}
+                        onClose={() => setSelectedReportForComplete(null)}
+                    >
                                 <div className="mb-4">
                                     <label className="block text-sm font-medium text-gray-700 mb-2">Template Resolusi Cepat</label>
                                     <button 
@@ -388,26 +349,7 @@ export default function Reports({ user, status, csrfToken, urls, reports, filter
                                         <p className="mt-1 text-xs text-red-600">{completeForm.errors.resolution}</p>
                                     )}
                                 </div>
-
-                                <div className="flex justify-end gap-2">
-                                    <button 
-                                        type="button" 
-                                        onClick={() => setSelectedReportForComplete(null)}
-                                        className="rounded-lg px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100"
-                                        >
-                                        Batal
-                                    </button>
-                                    <button 
-                                        type="submit" 
-                                        disabled={completeForm.processing}
-                                        className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
-                                        >
-                                        Tandai Selesai
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
+                    </PopCard>
                 )}
             </AppLayout>
         </>

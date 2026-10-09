@@ -47,7 +47,7 @@ export default function FilterTable({
 }) {
     return (
         <section className="mb-8 max-w-7xl px-6 lg:px-8">
-            <div className="rounded- border border-green-light-03 bg-white-01 p-6 shadow-sm">
+            <div className="rounded-lg border border-green-light-03 bg-white-01 p-6 shadow-sm">
                 {/* subjudul */}
                 <div className="mb-5">
                     <h2 className="text-xl font-bold text-teal-darker">{title}</h2>

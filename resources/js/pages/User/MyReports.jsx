@@ -1,6 +1,7 @@
 import { Head, Link, useForm } from '@inertiajs/react';
 import { useState } from 'react';
 import AppLayout from '../../components/AppLayout';
+import Button from '../../components/Button';
 import FilterTable from '../../components/FilterTable';
 import StatusBadge, { getStatusColor } from '../../components/StatusBadge';
 
@@ -99,12 +100,9 @@ export default function MyReports({ reports, user, auth, csrfToken, urls, error,
 			title="Laporan Saya"
 			subtitle="Pantau status laporan kerusakan fasilitas yang telah kamu kirimkan."
 			actions={(
-				<Link
-					href="/report/create"
-					className="inline-flex items-center rounded-md bg-teal-normal-01 px-4 py-2 text-sm font-semibold text-white-01 hover:bg-teal-normal-02"
-				>
+				<Button as={Link} href="/report/create">
 					+ Buat laporan baru
-				</Link>
+				</Button>
 			)}
 		>
 			<Head title="Laporan Saya" />

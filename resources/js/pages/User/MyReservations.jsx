@@ -1,7 +1,9 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import { useState } from 'react';
 import AppLayout from '../../components/AppLayout';
+import Button from '../../components/Button';
 import FilterTable from '../../components/FilterTable';
+import PopCard from '../../components/PopCard';
 import StatusBadge, { getStatusColor } from '../../components/StatusBadge';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -57,7 +59,6 @@ function ReservationActions({ reservation, onShowTicket }) {
 
 	return <span className="text-xs text-gray-400">{reservation.status === 'menunggu' ? 'Tidak dapat dibatalkan' : 'Tidak tersedia'}</span>;
 }
-
 
 export default function MyReservations({ user, csrfToken, urls, reservations, filters, status, error }) {
 	const filterForm = useForm({ ...filters });
@@ -435,9 +436,9 @@ export default function MyReservations({ user, csrfToken, urls, reservations, fi
 			title="Reservasi Saya"
 			subtitle="Lihat daftar fasilitas yang pernah kamu pinjam."
 			actions={(
-				<Link href="/reservations/form" className="inline-flex items-center rounded-md bg-teal-normal-01 px-4 py-2 text-sm font-semibold text-white-01 hover:bg-teal-normal-02">
+				<Button as={Link} href="/reservations/form">
 					+ Tambah reservasi
-				</Link>
+				</Button>
 			)}
 		>
 			<Head title="Reservasi Saya" />
@@ -497,14 +498,16 @@ export default function MyReservations({ user, csrfToken, urls, reservations, fi
 			/>
 
 			{selectedReservation && (
-				<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onMouseDown={event => { if (event.target === event.currentTarget) setSelectedReservation(null); }}>
-					<section role="dialog" aria-modal="true" aria-labelledby="reservation-ticket-title" className="relative w-full max-w-md rounded-lg bg-white p-6 shadow-xl"
-					style={{ background: 'white' }}>
-						<div className="mb-5 flex items-center justify-between px-3">
-							<h2 id="reservation-ticket-title" className="text-lg font-semibold text-teal-darker">Tiket reservasi</h2>
-							<button type="button" onClick={() => setSelectedReservation(null)} aria-label="Tutup tiket" className="rounded p-2 text-gray-500 hover:bg-gray-100">Tutup</button>
-						</div>
+				<PopCard
+					title="Tiket reservasi"
+					description={null}
+					onCancel={null}
+					onDone={null}
+					onClose={() => setSelectedReservation(null)}
+				>
 						<div className="flex items-start justify-between gap-4 px-3">
+							
+							{/* ringkasan tiket dll */}
 							<div className="space-y-3 text-sm">
 								<div>
 									<p className="text-gray-500">Status</p>
@@ -565,8 +568,7 @@ export default function MyReservations({ user, csrfToken, urls, reservations, fi
 								</button>
 							</div>
 						</div>
-					</section>
-				</div>
+				</PopCard>
 			)}
 		</AppLayout>
 	);
