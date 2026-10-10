@@ -19,7 +19,7 @@
         "react-dom": "^19.3.0",
         "use-scramble": "^2.2.15",
         "vite": "npm:@voidzero-dev/vite-plus-core@0.3.3",
-        "vite-plus": "0.3.3"
+        "vite-plus": "1.1.0"
     },
     "overrides": {
         "vite": "$vite"
