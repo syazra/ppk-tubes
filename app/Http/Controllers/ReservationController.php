@@ -6,6 +6,7 @@ use App\Models\Reservation;
 use App\Models\Room;
 use App\Models\RoomImage;
 use App\Services\RoomAvailability;
+use App\Services\ReservationListing;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
@@ -23,56 +24,15 @@ class ReservationController extends Controller
      */
     public function index(Request $request)
     {
-        $filters = $request->validate([
-            'search' => ['nullable', 'string', 'max:255'],
-            'status' => ['nullable', Rule::in(['menunggu', 'disetujui', 'ditolak', 'dibatalkan'])],
-            'sort' => ['nullable', Rule::in(['reservation_near', 'reservation_far', 'created_near', 'created_far'])],
-        ]);
-
-        $sort = $filters['sort'] ?? 'created_near';
-        $reservations = Reservation::with('room')
-            ->where('user_id', $request->user()->id)
-            ->when($filters['search'] ?? null, function ($query, string $search): void {
-                $query->where(function ($query) use ($search): void {
-                    $query->whereHas('room', function ($roomQuery) use ($search): void {
-                        $roomQuery->where('name', 'like', "%{$search}%")
-                            ->orWhere('type', 'like', "%{$search}%");
-                    })->orWhere('date_to_reserv', 'like', "%{$search}%");
-                });
-            })
-            ->when($filters['status'] ?? null, fn ($query, string $status) => $query->where('status', $status))
-            ->when($sort === 'reservation_near', fn ($query) => $query->orderBy('date_to_reserv')->orderBy('start_time'))
-            ->when($sort === 'reservation_far', fn ($query) => $query->orderByDesc('date_to_reserv')->orderByDesc('start_time'))
-            ->when($sort === 'created_near', fn ($query) => $query->orderByDesc('created_at'))
-            ->when($sort === 'created_far', fn ($query) => $query->orderBy('created_at'))
-            ->paginate(10)
-            ->withQueryString()
-            ->through(fn (Reservation $reservation): array => [
-                'id' => $reservation->id,
-
-                'room' => [
-                    'name' => $reservation->room?->name,
-                    'type' => $reservation->room?->type,
-                ],
-
-                'reservation_type' => $reservation->reservation_type,
-                'institution' => $reservation->institution,
-                'activity_name' => $reservation->activity_name,
-                'participant_count' => $reservation->participant_count,
+        $filters = ReservationListing::filters($request);
+        $reservations = ReservationListing::apply(
+            Reservation::with(['room', 'user'])->where('user_id', $request->user()->id),
+            $filters,
+        )->paginate(10)->withQueryString()
+            ->through(fn (Reservation $reservation): array => ReservationListing::data($reservation) + [
                 'proposal_path' => $reservation->proposal_path,
-
-                'date_to_reserv' => $reservation->date_to_reserv,
-                'start_time' => $reservation->start_time,
-                'end_time' => $reservation->end_time,
-                'desc' => $reservation->desc,
-
-                'status' => $reservation->status,
-                'rejection_reason' => $reservation->rejection_reason,
-                'can_cancel' => $reservation->status === 'menunggu'
-                    && $reservation->canStillBeProcessed(),
+                'can_cancel' => $reservation->status === 'menunggu' && $reservation->canStillBeProcessed(),
                 'cancel_url' => route('reservations.cancel', $reservation),
-                'ticket_url' => route('reservations.ticket', $reservation),
-                'qr_url' => route('reservations.qrcode', $reservation),
             ]);
 
         return Inertia::render('User/MyReservations', [
@@ -81,11 +41,7 @@ class ReservationController extends Controller
             'status' => $request->session()->get('success'),
             'error' => $request->session()->get('error'),
             'reservations' => $reservations,
-            'filters' => [
-                'search' => $filters['search'] ?? '',
-                'status' => $filters['status'] ?? '',
-                'sort' => $sort,
-            ],
+            'filters' => $filters,
             'urls' => [
                 'dashboard' => route('user.dashboard'),
                 'catalog' => route('user.catalog'),
@@ -530,9 +486,16 @@ class ReservationController extends Controller
     {
         $this->authorizeTicketAccess($reservation);
 
-        $reservation->load('room');
+        $reservation->load(['room', 'user']);
 
-        return view('user.ticket', compact('reservation'));
+        return Inertia::render('ReservationTicket', [
+            'reservation' => ReservationListing::data($reservation),
+            'backUrl' => route(match (Auth::user()->role) {
+                'operator' => 'operator.reservations',
+                'admin' => 'admin.dashboard',
+                default => 'reservations.index',
+            }),
+        ]);
     }
 
     private function authorizeTicketAccess(Reservation $reservation): void
