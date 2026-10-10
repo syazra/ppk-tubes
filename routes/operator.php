@@ -142,7 +142,7 @@ Route::middleware(['auth', 'role:operator', 'verified'])->prefix('operator')->na
             'completed' => \App\Models\Report::where('status', 'selesai')->count(),
         ];
 
-        $reports = \App\Models\Report::with(['room', 'user'])
+        $reports = \App\Models\Report::with(['room', 'user', 'images'])
             ->when($filters['status'] ?? null, fn ($query, string $status) => $query->where('status', $status))
             ->when($filters['search'] ?? null, function ($query, string $search): void {
                 $query->where(function ($query) use ($search): void {
@@ -165,9 +165,10 @@ Route::middleware(['auth', 'role:operator', 'verified'])->prefix('operator')->na
                     'location' => $report->room?->location,
                 ],
                 'desc' => $report->desc,
-                'image_url' => $report->image
-                    ? \Illuminate\Support\Facades\Storage::disk('public')->url($report->image)
-                    : null,
+                'images' => $report->images->map(fn ($img) => [
+                    'id' => $img->id,
+                    'image' => $img->image,
+                ])->values()->all(),
                 'status' => $report->status,
                 'created_at' => $report->created_at?->toIso8601String(),
                 'estimated_completion_at' => $report->estimated_completion_at,
