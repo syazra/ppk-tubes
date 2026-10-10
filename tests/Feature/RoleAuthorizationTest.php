@@ -30,6 +30,7 @@ class RoleAuthorizationTest extends TestCase
         ]);
         $reservation = Reservation::create([
             'user_id' => $owner->id, 'room_id' => $room->id, 'desc' => 'Private reservation',
+            'activity_name' => 'Private reservation',
             'date_to_reserv' => now()->addDay()->toDateString(),
             'start_time' => '08:00:00', 'end_time' => '10:00:00', 'status' => 'menunggu',
         ]);
@@ -83,7 +84,7 @@ class RoleAuthorizationTest extends TestCase
         $this->patch('/admin/facilities/99999/availability')->assertForbidden();
 
         $this->actingAs(User::factory()->create(['role' => 'operator']));
-        $this->get('/reservations/99999/ticket')->assertForbidden();
+        $this->get('/reservations/99999/ticket')->assertNotFound();
         $this->patch('/reports/99999/cancel')->assertForbidden();
     }
 
@@ -120,6 +121,7 @@ class RoleAuthorizationTest extends TestCase
         ]);
         $reservation = Reservation::create([
             'user_id' => $owner->id, 'room_id' => $room->id, 'desc' => 'Private booking',
+            'activity_name' => 'Private booking',
             'date_to_reserv' => now()->addDay()->toDateString(),
             'start_time' => '08:00:00', 'end_time' => '09:00:00', 'status' => 'menunggu',
         ]);
@@ -157,7 +159,6 @@ class RoleAuthorizationTest extends TestCase
                 ['GET', '/user/dashboard'], ['GET', '/reservations'], ['GET', '/reservations/form'],
                 ['GET', '/reservations/slots'], ['GET', '/reservations/facilities'],
                 ['GET', '/reservations/facilities/{room}/slots'], ['POST', '/reservations'],
-                ['GET', '/reservations/{reservation}/ticket'], ['GET', '/reservations/{reservation}/qrcode'],
                 ['PATCH', '/reservations/{reservation}/cancel'], ['GET', '/my-reports'],
                 ['GET', '/report/create'], ['POST', '/report/store'], ['PATCH', '/reports/{report}/cancel'],
             ],

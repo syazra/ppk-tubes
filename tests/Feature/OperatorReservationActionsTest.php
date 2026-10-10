@@ -59,6 +59,7 @@ class OperatorReservationActionsTest extends TestCase
             'user_id' => $user->id,
             'room_id' => $room->id,
             'desc' => 'Reservasi untuk pengujian',
+            'activity_name' => 'Reservasi untuk pengujian',
             'date_to_reserv' => '2026-10-15',
             'start_time' => '08:00:00',
             'end_time' => '10:00:00',

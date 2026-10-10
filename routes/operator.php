@@ -3,6 +3,7 @@
 use App\Http\Controllers\OperatorController;
 use App\Models\Report;
 use App\Models\Reservation;
+use App\Services\ReservationListing;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
@@ -68,10 +69,7 @@ Route::middleware(['auth', 'role:operator', 'verified'])->prefix('operator')->na
     })->name('dashboard');
 
     Route::get('/reservations', function (Request $request) {
-        $filters = $request->validate([
-            'search' => ['nullable', 'string', 'max:255'],
-            'status' => ['nullable', 'in:menunggu,disetujui,ditolak,dibatalkan'],
-        ]);
+        $filters = ReservationListing::filters($request);
 
         $summary = [
             'total' => \App\Models\Reservation::count(),
@@ -80,42 +78,9 @@ Route::middleware(['auth', 'role:operator', 'verified'])->prefix('operator')->na
             'rejected' => \App\Models\Reservation::where('status', 'ditolak')->count(),
         ];
 
-        $reservations = \App\Models\Reservation::with(['room', 'user'])
-            ->when($filters['status'] ?? null, fn ($query, string $status) => $query->where('status', $status))
-            ->when($filters['search'] ?? null, function ($query, string $search): void {
-                $query->where(function ($query) use ($search): void {
-                    $query->whereHas('user', fn ($userQuery) => $userQuery->where('name', 'like', "%{$search}%"))
-                        ->orWhereHas('room', fn ($roomQuery) => $roomQuery->where('name', 'like', "%{$search}%"))
-                        ->orWhere('activity_name', 'like', "%{$search}%")
-                        ->orWhere('desc', 'like', "%{$search}%");
-                });
-            })
-            ->latest()
-            ->paginate(10)
-            ->withQueryString()
-            ->through(fn (\App\Models\Reservation $reservation): array => [
-                'id' => $reservation->id,
-                'user' => [
-                    'name' => $reservation->user?->name,
-                    'email' => $reservation->user?->email,
-                ],
-                'room' => [
-                    'name' => $reservation->room?->name,
-                    'location' => $reservation->room?->location,
-                ],
-                'date_to_reserv' => $reservation->date_to_reserv,
-                'start_time' => $reservation->start_time,
-                'end_time' => $reservation->end_time,
-                'reservation_type' => $reservation->reservation_type,
-                'institution' => $reservation->institution,
-                'activity_name' => $reservation->activity_name,
-                'participant_count' => $reservation->participant_count,
-                'desc' => $reservation->desc,
-                'status' => $reservation->status,
-                'rejection_reason' => $reservation->rejection_reason,
-                'ticket_url' => route('reservations.ticket', $reservation),
-                'qr_url' => route('reservations.qrcode', $reservation),
-            ]);
+        $reservations = ReservationListing::apply(Reservation::with(['room', 'user']), $filters)
+            ->paginate(10)->withQueryString()
+            ->through(fn (Reservation $reservation): array => ReservationListing::data($reservation));
 
         return Inertia::render('Operator/Reservations', [
             'user' => $request->user()->only('name', 'email', 'role', 'account_type'),
@@ -123,10 +88,7 @@ Route::middleware(['auth', 'role:operator', 'verified'])->prefix('operator')->na
             'csrfToken' => csrf_token(),
             'reservations' => $reservations,
             'summary' => $summary,
-            'filters' => [
-                'search' => $filters['search'] ?? '',
-                'status' => $filters['status'] ?? '',
-            ],
+            'filters' => $filters,
             'urls' => [
                 'dashboard' => route('operator.dashboard'),
                 'reservations' => route('operator.reservations'),
