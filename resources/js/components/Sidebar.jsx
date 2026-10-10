@@ -47,7 +47,7 @@ export default function Sidebar({
 
     return (
         <aside className={`app-sidebar ${collapsed ? 'is-collapsed' : ''}`}>
-            <div className="app-sidebar-atmosphere" aria-hidden="true" style={{ backgroundImage: `url('${botanicalBackground}')` }}>
+            <div className="app-sidebar-atmosphere" aria-hidden="true" style={{ backgroundImage: `linear-gradient(160deg, #336358eb, #336358f5 55%, #336358fa), url('${botanicalBackground}')` }}>
                 <div className="app-sidebar-glow app-sidebar-glow-top" />
                 <div className="app-sidebar-glow app-sidebar-glow-bottom" />
                 <div className="app-sidebar-fog" style={{ backgroundImage: fogImage(7) }} />
@@ -59,7 +59,7 @@ export default function Sidebar({
                     {!collapsed && (
                         <span className="app-sidebar-label">
                             <span className="block text-lg font-bold tracking-tight">CampuSpace</span>
-                            <span className="block text-[10px] font-medium uppercase tracking-[0.2em] text-white">Aplikasi</span>
+                            <span className="block text-[10px] font-medium uppercase tracking-[0.2em] text-white/50">Aplikasi</span>
                         </span>
                     )}
                 </a>
@@ -100,7 +100,7 @@ export default function Sidebar({
                     {!collapsed && (
                         <span className="min-w-0">
                             <span className="block truncate text-sm font-semibold text-white">{userName}</span>
-                            <span className="mt-0.5 block truncate text-xs text-white">{userEmail}</span>
+                            <span className="mt-0.5 block truncate text-xs text-white/50">{userEmail}</span>
                         </span>
                     )}
                 </Link>
