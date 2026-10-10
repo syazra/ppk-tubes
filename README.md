@@ -3,6 +3,7 @@
 ## Daftar Isi
 - [Penjelasan Umum](#penjelasan-umum)
 - [Panduan Menjalankan Proyek](#panduan-menjalankan-proyek)
+- [Foto Fasilitas dari DBPhotos](#foto-fasilitas-dari-dbphotos)
 - [Akun Pengguna Siap Pakai](#akun-pengguna-siap-pakai)
 
 ---
@@ -51,6 +52,24 @@ Jika sudah pernah menjalankan `./setup.bat` satu kali, berikutnya cukup jalankan
 ```bash
 ./run-serve.bat
 ```
+
+## Foto Fasilitas dari DBPhotos
+
+Seeder utama memasang satu foto acak untuk setiap fasilitas yang belum memiliki foto.
+Foto dikelompokkan berdasarkan jenis: `Aula`, `Lapangan`, dan `Ruang Kelas`.
+Untuk sementara, `Laboratorium` memakai kumpulan foto `RuangKelas` sampai tersedia pack tersendiri.
+Setiap kumpulan diacak dan dipakai bergiliran, lalu diulang bila jumlah fasilitas melebihi jumlah foto.
+
+Untuk memperbarui database yang sudah berisi fasilitas tanpa membuat ulang data:
+
+```bash
+php artisan db:seed --class=RoomImageSeeder
+php artisan storage:link
+```
+
+Foto sumber disimpan di `database/seeders/photos` dan disalin ke disk public pada
+`facilities/db-photos`. Seeder tidak mengubah data fasilitas atau foto yang sudah ada;
+menjalankannya ulang tidak menggandakan atau mengacak ulang foto sebelumnya.
 
 ## Akun Pengguna Siap Pakai
 
