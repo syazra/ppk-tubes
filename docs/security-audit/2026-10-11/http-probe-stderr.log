@@ -1,7 +1,0 @@
-[Sun Oct 11 03:56:51 2026] PHP 8.5.0 Development Server (http://127.0.0.1:58217) started
-[Sun Oct 11 03:56:52 2026] 127.0.0.1:58218 Accepted
-[Sun Oct 11 03:56:52 2026] 127.0.0.1:58218 [200]: GET /storage/proposals/security-audit-5fa9ab6d9fd24f829ad48577551c541d.txt
-[Sun Oct 11 03:56:52 2026] 127.0.0.1:58218 Closing
-[Sun Oct 11 03:56:52 2026] 127.0.0.1:58219 Accepted
-[Sun Oct 11 03:56:52 2026] 127.0.0.1:58219 [200]: GET /storage/reports/security-audit-5fa9ab6d9fd24f829ad48577551c541d.txt
-[Sun Oct 11 03:56:52 2026] 127.0.0.1:58219 Closing
