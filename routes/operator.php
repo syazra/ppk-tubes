@@ -12,7 +12,7 @@ Route::middleware(['auth', 'role:operator', 'verified'])->prefix('operator')->na
     Route::get('/dashboard', function (Request $request) {
         $recentReservations = \App\Models\Reservation::with('room')
             ->latest()
-            ->take(3)
+            ->take(5)
             ->get()
             ->map(fn (\App\Models\Reservation $reservation): array => [
                 'id' => $reservation->id,
@@ -30,7 +30,7 @@ Route::middleware(['auth', 'role:operator', 'verified'])->prefix('operator')->na
 
         $recentReports = \App\Models\Report::with('room')
             ->latest()
-            ->take(3)
+            ->take(5)
             ->get()
             ->map(fn (\App\Models\Report $report): array => [
                 'id' => $report->id,

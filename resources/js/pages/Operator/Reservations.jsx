@@ -104,7 +104,7 @@ export default function Reservations({ user, status, csrfToken, urls, reservatio
                         { label: 'Tanggal & Waktu' },
                         { label: 'Deskripsi', type: 'desc' },
                         { label: 'Status' },
-                        { label: 'Aksi' },
+                        { label: 'Aksi', type: 'act' },
                     ]}
                     renderRow={reservation => (
                         <>
