@@ -333,17 +333,25 @@ export default function ReservationForm({
 										name="proposal"
 										type="file"
 										accept=".pdf,application/pdf"
-										onChange={event =>
-											form.setData(
-												'proposal',
-												event.target.files?.[0] ?? null
-											)
-										}
+										onChange={event => {
+											const file = event.target.files?.[0] ?? null;
+
+											if (file && file.size > 5 * 1024 * 1024) {
+												window.alert('Ukuran file PDF maksimal 5 MB.');
+
+												event.target.value = '';
+												form.setData('proposal', null);
+												return;
+											}
+
+											form.setData('proposal', file);
+										}}
+
 										className={fieldClassName}
 									/>
 
 									<p className="mt-2 text-sm text-gray-500">
-										Format PDF. Lampirkan jika diperlukan.
+										Format PDF maksimal 5 MB. Lampirkan jika diperlukan.
 									</p>
 
 									<FieldError>{form.errors.proposal}</FieldError>

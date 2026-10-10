@@ -382,7 +382,9 @@ class ReservationController extends Controller
             'end_time' => [
                 'required',
                 'date_format:H:i'
-            ]
+            ],
+            
+            'proposal' => ['nullable', 'file', 'mimes:pdf', 'max:5120']
         ]);
 
         $reservationStart = Carbon::parse(
