@@ -9,6 +9,7 @@ use App\Models\RoomImage;
 use App\Services\FacilityImages;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -34,7 +35,7 @@ class FacilityController extends Controller
             ->paginate(10)
             ->withQueryString()
             ->through(fn (Room $room): array => [
-                ...$room->only(['id', 'name', 'location', 'type', 'capacity', 'desc', 'is_avail']),
+                ...$room->only(['id', 'name', 'location', 'type', 'capacity', 'desc', 'is_avail', 'is_admin_disabled']),
                 'images' => $room->images->map(fn (RoomImage $image): array => [
                     'id' => $image->id,
                     'url' => $image->publicUrl(),
@@ -83,7 +84,12 @@ class FacilityController extends Controller
     public function availability(Request $request, Room $room): RedirectResponse
     {
         $validated = $request->validate(['is_avail' => ['required', 'boolean']]);
-        $room->update(['is_avail' => $validated['is_avail']]);
+        DB::transaction(function () use ($room, $validated): void {
+            $locked = Room::query()->lockForUpdate()->findOrFail($room->id);
+            $locked->update(['is_admin_disabled' => ! $validated['is_avail']]);
+            $locked->syncAvailability();
+        }, 3);
+        $room->refresh();
 
         return back()->with('status', $room->is_avail ? 'Fasilitas diaktifkan.' : 'Fasilitas dinonaktifkan.');
     }

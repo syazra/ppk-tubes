@@ -1,0 +1,14 @@
+[
+  {
+    "directory": "proposals",
+    "authenticated": false,
+    "status": 200,
+    "markerMatched": true
+  },
+  {
+    "directory": "reports",
+    "authenticated": false,
+    "status": 200,
+    "markerMatched": true
+  }
+]

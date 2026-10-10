@@ -1,5 +1,4 @@
 import { Head, Link, useForm } from '@inertiajs/react';
-import { useState } from 'react';
 import AppLayout from '../../components/AppLayout';
 import Button from '../../components/Button';
 import FilterTable from '../../components/FilterTable';
@@ -73,26 +72,15 @@ function formatDate(value) {
 }
 
 export default function MyReports({ reports, user, auth, csrfToken, urls, error, filters }) {
-	const records = Array.isArray(reports) ? reports : reports.data;
 	const filterForm = useForm({
 		search: filters?.search ?? '',
 		status: filters?.status ?? '',
-	});
-	const [appliedFilters, setAppliedFilters] = useState(filterForm.data);
-
-	const filteredReports = records.filter(report => {
-		const search = appliedFilters.search.trim().toLocaleLowerCase('id-ID');
-		const matchesSearch = !search
-			|| report.desc.toLocaleLowerCase('id-ID').includes(search)
-			|| report.room?.name.toLocaleLowerCase('id-ID').includes(search)
-			|| report.room?.location?.toLocaleLowerCase('id-ID').includes(search);
-
-		return matchesSearch && (!appliedFilters.status || report.status === appliedFilters.status);
+		sort: filters?.sort ?? 'created_near',
 	});
 
 	const submitFilters = event => {
 		event.preventDefault();
-		setAppliedFilters({ ...filterForm.data });
+		filterForm.get(urls.reports, { preserveState: true, preserveScroll: true, replace: true });
 	};
 
 	return (
@@ -145,13 +133,7 @@ export default function MyReports({ reports, user, auth, csrfToken, urls, error,
 						options: sortOptions 
 					},
 				]}
-				rows={{
-					data: filteredReports,
-					from: filteredReports.length ? 1 : 0,
-					to: filteredReports.length,
-					total: filteredReports.length,
-					links: [],
-				}}
+				rows={reports}
 				columns={[
 					{ label: 'Fasilitas' },
 					{ label: 'Deskripsi', type: 'desc' },
@@ -176,7 +158,7 @@ export default function MyReports({ reports, user, auth, csrfToken, urls, error,
 									{report.images.map((image, index) => (
 										<a
 											key={image.id ?? index}
-											href={`/storage/${image.image.replace(/^\/+/, '')}`}
+											href={image.url ?? `/reports/images/${image.id}`}
 											target="_blank"
 											rel="noreferrer"
 											className="text-sm font-semibold text-teal-dark-01 hover:underline"

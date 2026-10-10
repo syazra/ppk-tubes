@@ -5,24 +5,33 @@ namespace App\Http\Controllers;
 use App\Models\Reservation;
 use App\Models\Room;
 use App\Models\RoomImage;
-use App\Services\RoomAvailability;
+use App\Services\AttachmentQuota;
 use App\Services\ReservationListing;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
+use App\Services\RoomAvailability;
 use Carbon\Carbon;
 use Endroid\QrCode\Builder\Builder;
 use Endroid\QrCode\Writer\SvgWriter;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
+use Inertia\Response;
+use Symfony\Component\HttpFoundation\Response as HttpResponse;
+use Throwable;
 
 class ReservationController extends Controller
 {
     /**
      * Menampilkan reservasi user
      */
-    public function index(Request $request)
+    public function index(Request $request): Response
     {
         $filters = ReservationListing::filters($request);
         $reservations = ReservationListing::apply(
@@ -31,7 +40,7 @@ class ReservationController extends Controller
         )->paginate(10)->withQueryString()
             ->through(fn (Reservation $reservation): array => ReservationListing::data($reservation) + [
                 'proposal_path' => $reservation->proposal_path,
-                'can_cancel' => $reservation->status === 'menunggu' && $reservation->canStillBeProcessed(),
+                'can_cancel' => $reservation->canBeCancelled(),
                 'cancel_url' => route('reservations.cancel', $reservation),
             ]);
 
@@ -57,7 +66,7 @@ class ReservationController extends Controller
     /**
      * Form reservasi
      */
-    public function create(Request $request, RoomAvailability $availability): \Inertia\Response
+    public function create(Request $request, RoomAvailability $availability): Response
     {
         $browserData = $this->facilityBrowserData($request, route('reservations.form'));
         $facilities = $browserData['facilities']->through(fn (Room $room): array => $this->facilityCardData($room));
@@ -101,7 +110,7 @@ class ReservationController extends Controller
     }
 
     /** Display the user facility catalog without the reservation form. */
-    public function catalog(Request $request): \Inertia\Response
+    public function catalog(Request $request): Response
     {
         $browserData = $this->facilityBrowserData($request, route('user.catalog'));
         $facilities = $browserData['facilities']->through(fn (Room $room): array => $this->facilityCardData($room));
@@ -133,24 +142,32 @@ class ReservationController extends Controller
     /**
      * Membatalkan reservasi
      */
-    public function cancel(Reservation $reservation)
+    public function cancel(Reservation $reservation): RedirectResponse
     {
         abort_if(
             $reservation->user_id != Auth::id(),
             403
         );
 
-        if($reservation->status != 'menunggu'){
+        $cancelled = DB::transaction(function () use ($reservation): bool {
+            Room::query()->lockForUpdate()->findOrFail($reservation->room_id);
+            $locked = Reservation::query()->lockForUpdate()->findOrFail($reservation->id);
+            abort_unless($locked->user_id === Auth::id(), 403);
+            if (! $locked->canBeCancelled()) {
+                return false;
+            }
+            $locked->update(['status' => 'dibatalkan']);
+
+            return true;
+        }, 3);
+
+        if (! $cancelled) {
             return back()
                 ->with(
                     'error',
-                    'Reservasi tidak dapat dibatalkan'
+                    'Reservasi hanya dapat dibatalkan saat menunggu dan paling lambat 6 jam sebelum dimulai.'
                 );
         }
-
-        $reservation->update([
-            'status' => 'dibatalkan'
-        ]);
 
         return back()
             ->with(
@@ -159,32 +176,30 @@ class ReservationController extends Controller
             );
     }
 
-    
-
     /**
      * Mengambil jadwal booking ruangan (Time Blocking)
      * Hanya status 'disetujui' yang memblok slot waktu.
      * Status 'dibatalkan' dan 'ditolak' membebaskan slot waktu agar tersedia kembali.
      */
-    public function availableSlots(Request $request, RoomAvailability $availability): \Illuminate\Http\JsonResponse
+    public function availableSlots(Request $request, RoomAvailability $availability): JsonResponse
     {
         $request->validate([
             'room_id' => [
                 'required',
                 'integer',
-                Rule::exists('rooms', 'id')->where('is_avail', true)
+                Rule::exists('rooms', 'id')->where('is_avail', true),
             ],
 
             'date' => [
                 'required',
-                'date_format:Y-m-d'
-            ]
+                'date_format:Y-m-d',
+            ],
         ]);
 
         $reservations = Reservation::where(
-                'room_id',
-                $request->room_id
-            )
+            'room_id',
+            $request->room_id
+        )
             ->where(
                 'date_to_reserv',
                 $request->date
@@ -196,10 +211,10 @@ class ReservationController extends Controller
             ->get(['start_time', 'end_time']);
 
         return response()->json(
-            $reservations->map(function($reservation){
+            $reservations->map(function ($reservation) {
                 return [
                     'start_time' => $reservation->start_time,
-                    'end_time' => $reservation->end_time
+                    'end_time' => $reservation->end_time,
                 ];
             })
         )->header('X-Reservation-Earliest-Start', $availability->earliestStart()->format('Y-m-d\TH:i:s.uP'))
@@ -207,12 +222,12 @@ class ReservationController extends Controller
             ->header('Cache-Control', 'private, no-store');
     }
 
-    public function facilities(Request $request): \Illuminate\View\View
+    public function facilities(Request $request): Response
     {
-        return view('user.partials.facility-list', $this->facilityBrowserData($request));
+        return $this->catalog($request);
     }
 
-    public function facilitySlots(Request $request, Room $room, RoomAvailability $availability): \Illuminate\Http\JsonResponse
+    public function facilitySlots(Request $request, Room $room, RoomAvailability $availability): JsonResponse
     {
         $validated = $request->validate(['date' => ['required', 'date_format:Y-m-d']]);
 
@@ -288,24 +303,24 @@ class ReservationController extends Controller
     /**
      * Simpan reservasi
      */
-    public function store(Request $request, RoomAvailability $availability): \Illuminate\Http\RedirectResponse
+    public function store(Request $request, RoomAvailability $availability): RedirectResponse
     {
 
         $validated = $request->validate([
             'room_id' => [
                 'required',
                 'integer',
-                Rule::exists('rooms', 'id')->where('is_avail', true)
+                Rule::exists('rooms', 'id')->where('is_avail', true),
             ],
             'reservation_type' => [
-            'required',
-            Rule::in(['Individu', 'Instansi']),
+                'required',
+                Rule::in(['Individu', 'Instansi']),
             ],
             'institution' => [
-            'nullable',
-            'required_if:reservation_type,Instansi',
-            'string',
-            'max:255',
+                'nullable',
+                'required_if:reservation_type,Instansi',
+                'string',
+                'max:255',
             ],
             // Wajib untuk individu maupun instansi.
             // Pada individu, field ini berisi tujuan penggunaan.
@@ -320,27 +335,30 @@ class ReservationController extends Controller
                 'nullable',
                 'required_if:reservation_type,Instansi',
                 'string',
+                'max:5000',
             ],
 
             'participant_count' => [
                 'required',
                 'integer',
+                'min:1',
+                'max:100000',
             ],
-        
+
             'date_to_reserv' => [
                 'required',
-                'date_format:Y-m-d'
+                'date_format:Y-m-d',
             ],
             'start_time' => [
                 'required',
-                'date_format:H:i'
+                'date_format:H:i',
             ],
             'end_time' => [
                 'required',
-                'date_format:H:i'
+                'date_format:H:i',
             ],
-            
-            'proposal' => ['nullable', 'file', 'mimes:pdf', 'max:5120']
+
+            'proposal' => ['nullable', 'file', 'mimes:pdf', 'max:5120'],
         ]);
 
         $reservationStart = Carbon::parse(
@@ -357,14 +375,14 @@ class ReservationController extends Controller
         /*
          * Cek jam operasional
          */
-        if(
+        if (
             $validated['start_time'] < RoomAvailability::OPEN_TIME
             ||
             $validated['end_time'] > RoomAvailability::CLOSE_TIME
-        ){
+        ) {
             return back()
                 ->withErrors([
-                    'time' => 'Jam reservasi hanya 07.00 - 20.00'
+                    'time' => 'Jam reservasi hanya 07.00 - 20.00',
                 ])
                 ->withInput();
         }
@@ -379,84 +397,64 @@ class ReservationController extends Controller
             $validated['end_time']
         );
 
-        if(
+        if (
             ($end - $start) <= 0
             ||
-            (($end-$start)%(RoomAvailability::STEP_MINUTES * 60) !=0)
+            (($end - $start) % (RoomAvailability::STEP_MINUTES * 60) != 0)
             || (int) substr($validated['start_time'], 3) % RoomAvailability::STEP_MINUTES != 0
             || (int) substr($validated['end_time'], 3) % RoomAvailability::STEP_MINUTES != 0
-        ){
+        ) {
             return back()
                 ->withErrors([
-                    'time' => 'Durasi harus kelipatan 30 menit'
+                    'time' => 'Durasi harus kelipatan 30 menit',
                 ])
                 ->withInput();
         }
 
-        /*
-         * Cek bentrok
-         */
-        $conflict = Reservation::where(
-                'room_id',
-                $validated['room_id']
-            )
-            ->where(
-                'date_to_reserv',
-                $validated['date_to_reserv']
-            )
-            ->whereIn('status', RoomAvailability::BLOCKING_STATUSES)
-
-            ->where(function($query) use ($validated){
-                $query
-                    ->whereTime(
-                        'start_time',
-                        '<',
-                        $validated['end_time'].':00'
-                    )
-                    ->whereTime(
-                        'end_time',
-                        '>',
-                        $validated['start_time'].':00'
-                    );
-            })
-            ->exists();
-
-        if($conflict){
-            return back()
-                ->withErrors([
-                    'time' => 'Waktu tersebut sudah digunakan'
-                ])
-                ->withInput();
+        $proposal = $request->file('proposal');
+        if ($proposal !== null && ! $proposal instanceof UploadedFile) {
+            throw ValidationException::withMessages(['proposal' => 'Proposal harus berupa satu file PDF.']);
         }
-
-        /*
-         * Simpan
-         */
-        Reservation::create([
-            'user_id' => Auth::id(),
-            'room_id' => $validated['room_id'],
-
-            'reservation_type' => $validated['reservation_type'],
-            'institution' => $validated['reservation_type'] === 'Instansi'
-                ? $validated['institution']
-                : null,
-
-            'activity_name' => $validated['activity_name'],
-            'participant_count' => $validated['participant_count'],
-
-            'desc' => $validated['reservation_type'] === 'Instansi'
-                ? ($validated['desc'] ?? null)
-                : ($validated['desc'] ?? null),
-
-            'proposal_path' => isset($validated['proposal'])
-                ? $request->file('proposal')->store('proposals', 'public')
-                : null,
-
-            'date_to_reserv' => $validated['date_to_reserv'],
-            'start_time' => $validated['start_time'],
-            'end_time' => $validated['end_time'],
-            'status' => 'menunggu',
-        ]);
+        $userId = $request->user()->id;
+        $proposalPath = null;
+        try {
+            $proposalPath = $proposal ? $proposal->store('proposals', 'attachments') : null;
+            if ($proposalPath === false) {
+                throw new \RuntimeException('Proposal could not be stored.');
+            }
+            DB::transaction(function () use ($validated, $proposal, $proposalPath, $userId): void {
+                $bytes = $proposal ? $proposal->getSize() : 0;
+                app(AttachmentQuota::class)->check($userId, 'reservations', $bytes);
+                $room = Room::query()->whereKey($validated['room_id'])->lockForUpdate()->firstOrFail();
+                if (! $room->is_avail || $room->is_admin_disabled || $room->reports()->where('status', 'diproses')->exists()) {
+                    throw ValidationException::withMessages(['room_id' => 'Fasilitas tidak tersedia.']);
+                }
+                if ($validated['participant_count'] > $room->capacity) {
+                    throw ValidationException::withMessages(['participant_count' => 'Jumlah peserta melebihi kapasitas fasilitas.']);
+                }
+                $conflict = Reservation::where('room_id', $room->id)->where('date_to_reserv', $validated['date_to_reserv'])
+                    ->whereIn('status', RoomAvailability::BLOCKING_STATUSES)
+                    ->whereTime('start_time', '<', $validated['end_time'].':00')
+                    ->whereTime('end_time', '>', $validated['start_time'].':00')->exists();
+                if ($conflict) {
+                    throw ValidationException::withMessages(['time' => 'Waktu tersebut sudah digunakan']);
+                }
+                Reservation::create([
+                    'user_id' => Auth::id(), 'room_id' => $room->id,
+                    'reservation_type' => $validated['reservation_type'],
+                    'institution' => $validated['reservation_type'] === 'Instansi' ? $validated['institution'] : null,
+                    'activity_name' => $validated['activity_name'], 'participant_count' => $validated['participant_count'],
+                    'desc' => $validated['desc'] ?? null, 'proposal_path' => $proposalPath, 'attachment_bytes' => $bytes,
+                    'date_to_reserv' => $validated['date_to_reserv'],
+                    'start_time' => $validated['start_time'], 'end_time' => $validated['end_time'], 'status' => 'menunggu',
+                ]);
+            }, 3);
+        } catch (Throwable $exception) {
+            if (is_string($proposalPath)) {
+                Storage::disk('attachments')->delete($proposalPath);
+            }
+            throw $exception;
+        }
 
         return redirect()
             ->route('reservations.index')
@@ -466,14 +464,14 @@ class ReservationController extends Controller
             );
     }
 
-    public function qrcode(Reservation $reservation)
+    public function qrcode(Reservation $reservation): HttpResponse
     {
         $this->authorizeTicketAccess($reservation);
 
         $url = route('reservations.ticket', $reservation->id);
 
         $result = Builder::create()
-            ->writer(new SvgWriter())
+            ->writer(new SvgWriter)
             ->data($url)
             ->size(150)
             ->build();
@@ -482,7 +480,7 @@ class ReservationController extends Controller
             ->header('Content-Type', 'image/svg+xml');
     }
 
-    public function ticket(Reservation $reservation)
+    public function ticket(Reservation $reservation): Response
     {
         $this->authorizeTicketAccess($reservation);
 
@@ -507,6 +505,4 @@ class ReservationController extends Controller
 
         abort_unless($allowed, 403);
     }
-
-
 }

@@ -40,6 +40,7 @@ class PublicFacilityTest extends TestCase
             'user_id' => User::factory()->create()->id,
             'room_id' => $room->id,
             'desc' => 'Tujuan privat rapat pemohon',
+            'activity_name' => 'Tujuan privat rapat pemohon',
             'date_to_reserv' => '2026-10-08',
             'start_time' => '08:00:00',
             'end_time' => '09:00:00',

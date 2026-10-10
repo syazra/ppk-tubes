@@ -18,9 +18,13 @@ class ReportImageSeeder extends Seeder
             throw new RuntimeException("File tidak ditemukan: {$source}");
         }
 
-        // Salin foto ke storage/app/public/report-images/
+        // Report evidence is private, including demo images.
         $path = 'report-images/bukti.jpg';
-        Storage::disk('public')->put($path, file_get_contents($source));
+        $contents = file_get_contents($source);
+        if ($contents === false) {
+            throw new RuntimeException('Cannot read the demo report image.');
+        }
+        Storage::disk('attachments')->put($path, $contents);
 
         $now = now(config('app.timezone'));
 

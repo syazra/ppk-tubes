@@ -2,20 +2,20 @@
 
 use App\Http\Controllers\OperatorController;
 use App\Models\Report;
+use App\Models\ReportImage;
 use App\Models\Reservation;
 use App\Services\ReservationListing;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
 Route::middleware(['auth', 'role:operator', 'verified'])->prefix('operator')->name('operator.')->group(function () {
     Route::get('/dashboard', function (Request $request) {
-        $recentReservations = \App\Models\Reservation::with('room')
+        $recentReservations = Reservation::with('room')
             ->latest()
             ->take(5)
             ->get()
-            ->map(fn (\App\Models\Reservation $reservation): array => [
+            ->map(fn (Reservation $reservation): array => [
                 'id' => $reservation->id,
                 'user' => [
                     'name' => $reservation->user?->name,
@@ -37,11 +37,11 @@ Route::middleware(['auth', 'role:operator', 'verified'])->prefix('operator')->na
                 'qr_url' => route('reservations.qrcode', $reservation),
             ]);
 
-        $recentReports = \App\Models\Report::with('room')
+        $recentReports = Report::with('room')
             ->latest()
             ->take(5)
             ->get()
-            ->map(fn (\App\Models\Report $report): array => [
+            ->map(fn (Report $report): array => [
                 'id' => $report->id,
                 'room' => [
                     'name' => $report->room?->name,
@@ -72,10 +72,10 @@ Route::middleware(['auth', 'role:operator', 'verified'])->prefix('operator')->na
         $filters = ReservationListing::filters($request);
 
         $summary = [
-            'total' => \App\Models\Reservation::count(),
-            'approved' => \App\Models\Reservation::where('status', 'disetujui')->count(),
-            'pending' => \App\Models\Reservation::where('status', 'menunggu')->count(),
-            'rejected' => \App\Models\Reservation::where('status', 'ditolak')->count(),
+            'total' => Reservation::count(),
+            'approved' => Reservation::where('status', 'disetujui')->count(),
+            'pending' => Reservation::where('status', 'menunggu')->count(),
+            'rejected' => Reservation::where('status', 'ditolak')->count(),
         ];
 
         $reservations = ReservationListing::apply(Reservation::with(['room', 'user']), $filters)
@@ -109,13 +109,13 @@ Route::middleware(['auth', 'role:operator', 'verified'])->prefix('operator')->na
         ]);
 
         $summary = [
-            'total' => \App\Models\Report::count(),
-            'new' => \App\Models\Report::where('status', 'baru')->count(),
-            'processing' => \App\Models\Report::where('status', 'diproses')->count(),
-            'completed' => \App\Models\Report::where('status', 'selesai')->count(),
+            'total' => Report::count(),
+            'new' => Report::where('status', 'baru')->count(),
+            'processing' => Report::where('status', 'diproses')->count(),
+            'completed' => Report::where('status', 'selesai')->count(),
         ];
 
-        $reports = \App\Models\Report::with(['room', 'user', 'images'])
+        $reports = Report::with(['room', 'user', 'images'])
             ->when($filters['status'] ?? null, fn ($query, string $status) => $query->where('status', $status))
             ->when($filters['search'] ?? null, function ($query, string $search): void {
                 $query->where(function ($query) use ($search): void {
@@ -127,7 +127,7 @@ Route::middleware(['auth', 'role:operator', 'verified'])->prefix('operator')->na
             ->latest()
             ->paginate(10)
             ->withQueryString()
-            ->through(fn (\App\Models\Report $report): array => [
+            ->through(fn (Report $report): array => [
                 'id' => $report->id,
                 'user' => [
                     'name' => $report->user?->name,
@@ -138,9 +138,10 @@ Route::middleware(['auth', 'role:operator', 'verified'])->prefix('operator')->na
                     'location' => $report->room?->location,
                 ],
                 'desc' => $report->desc,
-                'images' => $report->images->map(fn ($img) => [
+                'images' => $report->images->map(fn (ReportImage $img): array => [
                     'id' => $img->id,
                     'image' => $img->image,
+                    'url' => $img->url,
                 ])->values()->all(),
                 'status' => $report->status,
                 'created_at' => $report->created_at?->toIso8601String(),

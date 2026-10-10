@@ -17,7 +17,7 @@ class ReservationSeeder extends Seeder
      */
     private function targetCount(int $userCount, int $roomCount): int
     {
-        $override = env('DEMO_RESERVATIONS');
+        $override = config('demo.reservations');
         if (is_numeric($override)) {
             return max(0, (int) $override);
         }

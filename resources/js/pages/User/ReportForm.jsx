@@ -106,6 +106,7 @@ export default function ReportForm({ rooms = [], user, auth, csrfToken, urls }) 
 			subtitle="Pilih ruangan dan lampirkan foto bukti kerusakan dengan jelas."
 		>
 			<Head title="Pelaporan Fasilitas" />
+			{form.errors.quota && <p role="alert" className="mb-4 text-sm text-red-700">{form.errors.quota}</p>}
 
 			<form onSubmit={submit} className="" encType="multipart/form-data">
 				{/* CARI FASILITAS */}

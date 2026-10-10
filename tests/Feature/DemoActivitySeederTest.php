@@ -94,10 +94,7 @@ class DemoActivitySeederTest extends TestCase
 
     public function test_activity_counts_can_be_overridden_with_environment_variables(): void
     {
-        putenv('DEMO_RESERVATIONS=15');
-        putenv('DEMO_REPORTS=14');
-        $_ENV['DEMO_RESERVATIONS'] = '15';
-        $_ENV['DEMO_REPORTS'] = '14';
+        config(['demo.reservations' => 15, 'demo.reports' => 14]);
 
         try {
             $this->seed([UserSeeder::class, RoomSeeder::class, ReportSeeder::class, ReservationSeeder::class]);
@@ -105,9 +102,7 @@ class DemoActivitySeederTest extends TestCase
             $this->assertDatabaseCount('reservations', 15);
             $this->assertDatabaseCount('reports', 14);
         } finally {
-            putenv('DEMO_RESERVATIONS');
-            putenv('DEMO_REPORTS');
-            unset($_ENV['DEMO_RESERVATIONS'], $_ENV['DEMO_REPORTS']);
+            config(['demo.reservations' => null, 'demo.reports' => null]);
         }
     }
 
@@ -123,6 +118,7 @@ class DemoActivitySeederTest extends TestCase
             'room_id' => $reservation->room_id,
             'user_id' => $reservation->user_id,
             'desc' => 'Reservasi buatan pengguna',
+            'activity_name' => 'Reservasi buatan pengguna',
             'date_to_reserv' => now()->addDays(30)->toDateString(),
             'start_time' => '16:00:00',
             'end_time' => '17:00:00',

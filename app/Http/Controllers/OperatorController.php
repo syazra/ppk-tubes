@@ -2,193 +2,93 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Reservation;
-use App\Models\Report;
-use Carbon\Carbon;
+use App\Models\Room;
+use App\Services\RepairWorkflow;
+use Carbon\CarbonImmutable;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class OperatorController extends Controller
 {
-    /**
-     * Menampilkan daftar reservasi user (kode lama tetap)
-     */
-    public function index()
+    public function approve(int $id): RedirectResponse
     {
-        $reservations = Reservation::with('room')
-            ->latest()
-            ->get();
+        $candidate = Reservation::findOrFail($id);
+        DB::transaction(function () use ($id, $candidate): void {
+            $room = Room::query()->lockForUpdate()->findOrFail($candidate->room_id);
+            $reservation = Reservation::query()->lockForUpdate()->findOrFail($id);
+            $start = CarbonImmutable::parse($reservation->date_to_reserv.' '.$reservation->start_time, config('app.timezone'));
+            if ($reservation->status !== 'menunggu' || ! $room->is_avail || $room->is_admin_disabled
+                || $room->reports()->where('status', 'diproses')->exists() || $start->lte(now())) {
+                throw ValidationException::withMessages(['reservation' => 'Reservasi tidak dapat disetujui. Periksa status, waktu, dan ketersediaan fasilitas.']);
+            }
+            $overlaps = Reservation::where('room_id', $room->id)->where('date_to_reserv', $reservation->date_to_reserv)
+                ->where('id', '!=', $id)->whereTime('start_time', '<', $reservation->end_time)
+                ->whereTime('end_time', '>', $reservation->start_time);
+            if ((clone $overlaps)->where('status', 'disetujui')->exists()) {
+                throw ValidationException::withMessages(['reservation' => 'Waktu tersebut sudah digunakan oleh reservasi yang disetujui.']);
+            }
+            $reservation->status = 'disetujui';
+            $reservation->rejection_reason = null;
+            $reservation->save();
+            $overlaps->where('status', 'menunggu')->update(['status' => 'ditolak', 'rejection_reason' => 'Fasilitas sudah dipinjam']);
+        }, 3);
 
-        return view('operator.reservations', compact('reservations'));
+        return redirect()->route('operator.reservations')->with('success', 'Reservasi disetujui.');
     }
 
-    public function approve($id)
-{
-    $reservation = Reservation::findOrFail($id);
-
-
-    // Setujui reservasi yang dipilih
-    $reservation->update([
-        'status' => 'disetujui'
-    ]);
-
-
-    // Tolak reservasi lain yang bentrok
-    Reservation::where('room_id', $reservation->room_id)
-        ->where('date_to_reserv', $reservation->date_to_reserv)
-        ->where('id', '!=', $reservation->id)
-        ->where('status', 'menunggu')
-        ->where(function($query) use ($reservation){
-
-            $query->where(
-                'start_time',
-                '<',
-                $reservation->end_time
-            )
-            ->where(
-                'end_time',
-                '>',
-                $reservation->start_time
-            );
-
-        })
-        ->update([
-            'status' => 'ditolak',
-            'rejection_reason' => 'Fasilitas sudah dipinjam'
-        ]);
-
-
-    return redirect()
-        ->route('operator.reservations')
-        ->with('success', 'Reservasi disetujui.');
-}
-
-    public function reject($id)
+    public function reject(Request $request, int $id): RedirectResponse
     {
-        $reservation = Reservation::findOrFail($id);
-        $reservation->status = 'ditolak';
-        $reservation->rejection_reason = 'Ditolak oleh operator';
-        $reservation->save();
+        $validated = $request->validate(['rejection_reason' => ['nullable', 'string', 'max:1000']]);
+        $candidate = Reservation::findOrFail($id);
+        DB::transaction(function () use ($id, $candidate, $validated): void {
+            Room::query()->lockForUpdate()->findOrFail($candidate->room_id);
+            $reservation = Reservation::query()->lockForUpdate()->findOrFail($id);
+            if (! in_array($reservation->status, ['menunggu', 'disetujui'], true)) {
+                throw ValidationException::withMessages(['reservation' => 'Reservasi telah diproses. Muat ulang halaman.']);
+            }
+            if ($reservation->status === 'disetujui' && empty($validated['rejection_reason'])) {
+                throw ValidationException::withMessages(['rejection_reason' => 'Alasan pembatalan reservasi yang disetujui wajib diisi.']);
+            }
+            $reservation->status = 'ditolak';
+            $reservation->rejection_reason = $validated['rejection_reason'] ?? 'Ditolak oleh operator';
+            $reservation->save();
+        }, 3);
 
         return redirect()->route('operator.reservations')->with('success', 'Reservasi ditolak.');
     }
 
-    /**
-     * ==========================================
-     * MANAJEMEN LAPORAN OLEH OPERATOR (DISESUAIKAN)
-     * ==========================================
-     */
-
-    // 1. Operator menandai laporan "diproses" dan input estimasi waktu selesai
-    public function setProcess(Request $request, $id)
+    public function setProcess(Request $request, int $id, RepairWorkflow $workflow): RedirectResponse
     {
-        $request->validate([
-            'estimated_completion_at' => 'required|date|after:now',
-        ], [
-            'estimated_completion_at.required' => 'Waktu estimasi selesai wajib diisi.',
-            'estimated_completion_at.after' => 'Waktu estimasi harus berada di masa depan.',
-        ]);
-
-        $report = Report::findOrFail($id);
-        $report->status = 'diproses';
-        $report->estimated_completion_at = $request->estimated_completion_at;
-
-        $report->rejection_reason = null;
-        $report->resolution = null;
-        $report->save();
-
-        $report->room()->update(['is_avail' => false]);
-        $this->rejectReservationsDuringRepair($report->room_id, $request->estimated_completion_at);
+        $validated = $request->validate(['estimated_completion_at' => ['required', 'date', 'after:now']]);
+        $workflow->process($id, $validated['estimated_completion_at']);
 
         return back()->with('success', 'Laporan diproses, estimasi disimpan, dan reservasi terkait otomatis ditolak.');
     }
 
-    // 2. Operator menandai laporan "selesai" (Fasilitas langsung dibuka kembali)
-    public function markAsCompleted(Request $request, $id)
+    public function markAsCompleted(Request $request, int $id, RepairWorkflow $workflow): RedirectResponse
     {
-        $request->validate([
-            'resolution' => 'nullable|string|max:1000',
-        ], [
-            'resolution.max' => 'Resolusi/catatan perbaikan maksimal 1000 karakter.',
-        ]);
+        $validated = $request->validate(['resolution' => ['nullable', 'string', 'max:1000']]);
+        $workflow->complete($id, ($validated['resolution'] ?? null) ?: 'Fasilitas sudah diperbaiki');
 
-        $report = Report::findOrFail($id);
-        $resolutionText = $request->input('resolution') ?: 'Fasilitas sudah diperbaiki';
-        $report->status = 'selesai';
-        $report->resolution = $resolutionText;
-        $report->rejection_reason = null;
-        $report->save();
-
-        $report->room()->update(['is_avail' => true]);
-
-        return back()->with('success', 'Laporan diselesaikan dan fasilitas langsung dibuka kembali.');
+        return back()->with('success', 'Laporan diselesaikan. Fasilitas dibuka jika tidak ada perbaikan atau penonaktifan lain.');
     }
 
-    // 3. Operator memperpanjang waktu estimasi jika perbaikan lebih lama dari perkiraan
-    public function extendEstimate(Request $request, $id)
+    public function extendEstimate(Request $request, int $id, RepairWorkflow $workflow): RedirectResponse
     {
-        $request->validate([
-            'estimated_completion_at' => 'required|date|after:now',
-        ]);
-
-        $report = Report::findOrFail($id);
-        
-        if ($report->status !== 'diproses') {
-            return back()->with('error', 'Hanya laporan yang sedang diproses yang dapat diperpanjang estimasinya.');
-        }
-
-        $report->estimated_completion_at = $request->estimated_completion_at;
-        $report->save();
-        $this->rejectReservationsDuringRepair($report->room_id, $request->estimated_completion_at);
+        $validated = $request->validate(['estimated_completion_at' => ['required', 'date', 'after:now']]);
+        $workflow->extend($id, $validated['estimated_completion_at']);
 
         return back()->with('success', 'Waktu estimasi perbaikan berhasil diperpanjang.');
     }
 
-    public function rejectReport(Request $request, $id)
+    public function rejectReport(Request $request, int $id, RepairWorkflow $workflow): RedirectResponse
     {
-        $request->validate([
-            'rejection_reason' => 'nullable|string|max:1000',
-        ]);
-
-        $report = Report::findOrFail($id);
-        $reason = $request->input('rejection_reason') ?: 'Laporan tidak valid / Deskripsi kerusakan kurang jelas';
-        $report->status = 'ditolak';
-        $report->rejection_reason = $reason;
-        $report->resolution = null;
-        $report->save();
+        $validated = $request->validate(['rejection_reason' => ['nullable', 'string', 'max:1000']]);
+        $workflow->reject($id, ($validated['rejection_reason'] ?? null) ?: 'Laporan tidak valid / Deskripsi kerusakan kurang jelas');
 
         return back()->with('success', 'Report ditolak.');
-    }
-
-    private function rejectReservationsDuringRepair(int $roomId, $estimatedCompletionAt): void
-    {
-        $tz = config('app.timezone');
-        $estimate = Carbon::parse($estimatedCompletionAt, $tz);
-        $now = Carbon::now($tz);
-
-        Reservation::where('room_id', $roomId)
-            ->whereIn('status', ['menunggu', 'disetujui'])
-
-            // 1. Mulai sebelum estimasi selesai
-            ->where(function ($q) use ($estimate) {
-                $q->where('date_to_reserv', '<', $estimate->toDateString())
-                ->orWhere(function ($q) use ($estimate) {
-                    $q->where('date_to_reserv', $estimate->toDateString())
-                        ->where('start_time', '<', $estimate->format('H:i:s'));
-                });
-            })
-
-            // 2. Belum selesai (berakhir setelah sekarang)
-            ->where(function ($q) use ($now) {
-                $q->where('date_to_reserv', '>', $now->toDateString())
-                ->orWhere(function ($q) use ($now) {
-                    $q->where('date_to_reserv', $now->toDateString())
-                        ->where('end_time', '>', $now->format('H:i:s'));
-                });
-            })
-
-            ->update([
-                'status' => 'ditolak',
-                'rejection_reason' => 'Fasilitas sedang dalam perbaikan',
-            ]);
     }
 }

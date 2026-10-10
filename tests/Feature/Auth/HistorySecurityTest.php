@@ -54,7 +54,7 @@ class HistorySecurityTest extends TestCase
         $this->get('/login')->assertOk()->assertViewHas('page', fn (array $page) => $page['clearHistory'] === true && ! isset($page['encryptHistory']));
     }
 
-    public function test_login_and_authenticated_blade_pages_cannot_be_cached(): void
+    public function test_login_and_authenticated_react_pages_cannot_be_cached(): void
     {
         $login = $this->get('/login')->assertOk();
         $this->assertTrue($login->headers->hasCacheControlDirective('no-store'));

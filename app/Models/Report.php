@@ -2,13 +2,12 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Report extends Model
 {
-    use HasFactory;
-
     // Tentukan nama tabel jika tidak plural standar (opsional karena 'reports' sudah sesuai konvensi)
     protected $table = 'reports';
 
@@ -21,25 +20,23 @@ class Report extends Model
         'estimated_completion_at',
         'rejection_reason',
         'resolution',
+        'attachment_bytes',
     ];
 
-    /**
-        * Relasi ke tabel users (Pelapor)
-        */
-    public function user()
+    /** @return BelongsTo<User, $this> */
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    /**
-        * Relasi ke tabel rooms (Fasilitas/Ruangan yang dilaporkan)
-        */
-    public function room()
+    /** @return BelongsTo<Room, $this> */
+    public function room(): BelongsTo
     {
         return $this->belongsTo(Room::class);
     }
 
-    public function images()
+    /** @return HasMany<ReportImage, $this> */
+    public function images(): HasMany
     {
         return $this->hasMany(ReportImage::class);
     }
