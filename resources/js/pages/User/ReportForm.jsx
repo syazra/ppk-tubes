@@ -121,31 +121,33 @@ export default function ReportForm({ rooms = [], user, auth, csrfToken, urls }) 
 					onSubmit={applyFilters}
 					onReset={resetFilters}
 				/> */}
-				<div>
-					<label htmlFor="room_id" className="block text-sm font-semibold text-teal-darker">
-						Pilih fasilitas / ruangan
-					</label>
-					<select
-						id="room_id"
-						name="room_id"
-						value={form.data.room_id}
-						onChange={event => form.setData('room_id', event.target.value)}
-						className={fieldClassName}
-						aria-invalid={Boolean(form.errors.room_id)}
-						aria-describedby={form.errors.room_id ? 'room-error' : undefined}
-						required
-					>
-						<option value="">Pilih ruangan / fasilitas</option>
-						{rooms.map(room => (
-							<option key={room.id} value={room.id}>
-								{room.name} - Lokasi: {room.location} ({room.type ? room.type.charAt(0).toUpperCase() + room.type.slice(1) : '-'})
-							</option>
-						))}
-					</select>
-					<div id="room-error"><FieldError>{form.errors.room_id}</FieldError></div>
-				</div>
 
 				<div className="space-y-6 rounded-md border border-gray-200 bg-white-01 p-6 shadow-sm">
+					{/* SEARCH */}
+					<div>
+						<label htmlFor="room_id" className="block text-sm font-semibold text-teal-darker">
+							Pilih fasilitas / ruangan
+						</label>
+						<select
+							id="room_id"
+							name="room_id"
+							value={form.data.room_id}
+							onChange={event => form.setData('room_id', event.target.value)}
+							className={fieldClassName}
+							aria-invalid={Boolean(form.errors.room_id)}
+							aria-describedby={form.errors.room_id ? 'room-error' : undefined}
+							required
+						>
+							<option value="">Pilih ruangan / fasilitas</option>
+							{rooms.map(room => (
+								<option key={room.id} value={room.id}>
+									{room.name} - Lokasi: {room.location} ({room.type ? room.type.charAt(0).toUpperCase() + room.type.slice(1) : '-'})
+								</option>
+							))}
+						</select>
+						<div id="room-error"><FieldError>{form.errors.room_id}</FieldError></div>
+					</div>
+
 					{/* DESKRIPSI */}
 					<div>
 						<label htmlFor="desc" className="block text-sm font-semibold text-teal-darker">
