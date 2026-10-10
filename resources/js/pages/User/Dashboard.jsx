@@ -31,11 +31,12 @@ function formatTime(value) {
 	return value ? value.slice(0, 5) : '-';
 }
 
-export default function Dashboard({ user, csrfToken, urls, recentReservations = [], recentReports = [] }) {
+export default function Dashboard({ user, csrfToken, urls, recentReservations = [], recentReports = [], preview = false }) {
 	const shouldReduceMotion = useReducedMotion();
 
 	return (
 		<AppLayout
+			preview={preview}
 			user={user}
 			csrfToken={csrfToken}
 			urls={urls}
@@ -43,7 +44,7 @@ export default function Dashboard({ user, csrfToken, urls, recentReservations = 
 			title={`Selamat datang, ${user?.name || 'Petugas'}`}
 			subtitle="Lihat aktivitas reservasi dan pelaporan kamu di Buana."
 		>
-			<Head title="Beranda CampuSpace" />
+			{!preview && <Head title="Beranda Buana" />}
 
 			<section className="app-quick-actions" aria-label="Mulai aktivitas">
 				{[
@@ -62,7 +63,7 @@ export default function Dashboard({ user, csrfToken, urls, recentReservations = 
 				].map((action, index) => (
 					<motion.article
 						key={action.key}
-						initial={shouldReduceMotion ? false : { opacity: 0, y: 12 }}
+						initial={preview || shouldReduceMotion ? false : { opacity: 0, y: 12 }}
 						animate={{ opacity: 1, y: 0 }}
 						transition={{ duration: 0.35, delay: shouldReduceMotion ? 0 : index * 0.08 }}
 						className={`app-quick-card app-quick-card-${action.key}`}
@@ -81,7 +82,7 @@ export default function Dashboard({ user, csrfToken, urls, recentReservations = 
 			{/* RINGKASAN / RIWAYAT TERBARU */}
 			<motion.section
 				className="app-insights-grid"
-				initial={{ opacity: 0, y: 16 }}
+				initial={preview ? false : { opacity: 0, y: 16 }}
 				animate={{ opacity: 1, y: 0 }}
 				transition={{ duration: shouldReduceMotion ? 0 : 0.4, delay: shouldReduceMotion ? 0 : 0.25 }}
 				aria-label="Aktivitas kampus"

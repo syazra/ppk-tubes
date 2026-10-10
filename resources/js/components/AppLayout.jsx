@@ -5,9 +5,10 @@ import Sidebar from './Sidebar';
 
 // Di seluruh komponen, pakai kelas 'app' (bukan user, bukan admin, dll)
 
-export default function AppLayout({ user, auth, csrfToken, urls, active, title, subtitle, actions, children, navigation }) {
+export default function AppLayout({ user, auth, csrfToken, urls, active, title, subtitle, actions, children, navigation, preview = false }) {
     const currentUser = user || auth?.user;
     const [collapsed, setCollapsed] = useState(() => {
+        if (preview) return false;
         try { return window.localStorage.getItem('app-sidebar-collapsed') === 'true'; } catch { return false; }
     });
     const [mobileOpen, setMobileOpen] = useState(false);
@@ -15,8 +16,9 @@ export default function AppLayout({ user, auth, csrfToken, urls, active, title, 
     const drawerId = useId();
 
     useEffect(() => {
+        if (preview) return;
         try { window.localStorage.setItem('app-sidebar-collapsed', String(collapsed)); } catch {}
-    }, [collapsed]);
+    }, [collapsed, preview]);
 
     useEffect(() => {
         const dialog = dialogRef.current;

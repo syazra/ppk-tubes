@@ -77,6 +77,11 @@ export default function FacilitiesCatalog({
 								preserveScroll
 								preserveState
 								aria-label={/^\d+$/.test(label) ? `Halaman ${label}` : label}
+								onClick={event => {
+									if (processing) {
+										event.preventDefault();
+									}
+								}}
 								onStart={() => onProcessingChange?.(true)}
 								onFinish={() => onProcessingChange?.(false)}
 							>

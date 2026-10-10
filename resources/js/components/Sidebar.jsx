@@ -54,11 +54,11 @@ export default function Sidebar({
                 <AmbientParticles compact />
             </div>
             <div className="app-sidebar-brand">
-                <a href={urls?.guest || '#'} onClick={onNavigate} aria-label="CampuSpace — Beranda" className="flex min-w-0 items-center gap-3">
+                <a href={urls?.guest || '#'} onClick={onNavigate} aria-label="Buana — Beranda" className="flex min-w-0 items-center gap-3">
                     <span className="app-brand-mark"><Icon name="campus" className="h-6 w-6" /></span>
                     {!collapsed && (
                         <span className="app-sidebar-label">
-                            <span className="block text-lg font-bold tracking-tight">CampuSpace</span>
+                            <span className="block text-lg font-bold tracking-tight">Buana</span>
                             <span className="block text-[10px] font-medium uppercase tracking-[0.2em] text-white/50">Aplikasi</span>
                         </span>
                     )}

@@ -1,5 +1,5 @@
-@font-face { font-family: 'CampuSpace Ogg'; src: url('../fonts/ogg-regular.otf') format('opentype'); font-weight: 400; font-style: normal; font-display: swap; }
-@font-face { font-family: 'CampuSpace Ogg'; src: url('../fonts/ogg-regular-italic.otf') format('opentype'); font-weight: 400; font-style: italic; font-display: swap; }
+@font-face { font-family: 'Buana Ogg'; src: url('../fonts/ogg-regular.otf') format('opentype'); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Buana Ogg'; src: url('../fonts/ogg-regular-italic.otf') format('opentype'); font-weight: 400; font-style: italic; font-display: swap; }
 
 .gf { --forest: #003b33; --deep: #062e29; --teal: #007f6d; --lime: #d3e9a6; --paper: #f8f9f3; --ink: #163f35; --muted: #5b6e62; min-height: 100vh; background: var(--paper); color: var(--ink); font-family: Figtree, ui-sans-serif, system-ui, sans-serif; line-height: 1.6; }
 .gf * { box-sizing: border-box; }
@@ -25,7 +25,7 @@
 .gf-eyebrow { display: flex; align-items: center; gap: 10px; margin-bottom: 14px !important; color: var(--teal); font-size: 11px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; }
 .gf-eyebrow:before { content: ''; width: 24px; height: 1px; background: currentColor; }
 .gf-intro .gf-eyebrow { color: var(--teal); }
-.gf-intro h1 { max-width: 640px; font-family: 'CampuSpace Ogg', Georgia, serif; font-size: clamp(44px, 4.6vw, 64px); font-weight: 400; letter-spacing: -.04em; line-height: 1.15; }
+.gf-intro h1 { max-width: 640px; font-family: 'Buana Ogg', Georgia, serif; font-size: clamp(44px, 4.6vw, 64px); font-weight: 400; letter-spacing: -.04em; line-height: 1.15; }
 .gf-intro h1 em { color: var(--teal); font-weight: 400; }
 .gf-intro-copy { max-width: 510px; margin-top: 20px !important; color: var(--muted); font-size: 15px; line-height: 1.85; }
 .gf-intro-note { display: flex; align-items: flex-start; gap: 18px; padding: 25px; border: 1px solid #d5e5d6; background: #ffffffb8; border-radius: 14px; box-shadow: 0 8px 28px #16473e04; }
@@ -35,7 +35,7 @@
 .gf-content { padding-bottom: 64px; }
 .gf-results { padding-top: 60px; scroll-margin-top: 104px; }
 .gf-results-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 22px; margin-bottom: 22px; }
-.gf-results-heading h2 { font-family: 'CampuSpace Ogg', Georgia, serif; font-size: clamp(32px, 3.2vw, 43px); font-weight: 400; line-height: 1.2; letter-spacing: -.035em; }
+.gf-results-heading h2 { font-family: 'Buana Ogg', Georgia, serif; font-size: clamp(32px, 3.2vw, 43px); font-weight: 400; line-height: 1.2; letter-spacing: -.035em; }
 .gf-results-date { display: flex; align-items: center; gap: 10px; padding-bottom: 4px; font-size: 12px; color: var(--muted); }
 .gf-results-date svg { color: var(--teal); }
 .gf-results-date strong { display: block; font-size: 13px; font-weight: 600; color: var(--ink); }

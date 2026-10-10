@@ -1,5 +1,5 @@
-import { Head } from '@inertiajs/react';
-import { useEffect, useRef } from 'react';
+import { Head, Link, router } from '@inertiajs/react';
+import { useEffect, useRef, useState } from 'react';
 import heroBackground from '../../images/landing-botanical.webp';
 import oggRegular from '../../fonts/ogg-regular.otf';
 import oggItalic from '../../fonts/ogg-regular-italic.otf';
@@ -7,10 +7,13 @@ import Icon from '../components/Icons';
 import PublicBrand from '../components/PublicBrand';
 import PublicNavbar from '../components/PublicNavbar';
 import IntroOverlay, { INTRO_DELAY, useIntro } from '../components/IntroOverlay';
+import UserPagePreview from '../components/UserPagePreview';
+import MagneticLink from '../components/MagneticLink';
+import { waitForPageReady } from '../lib/pageReady';
 
 const styles = `
-@font-face { font-family: 'CampuSpace Ogg'; src: url('${oggRegular}') format('opentype'); font-weight: 400; font-style: normal; font-display: swap; }
-@font-face { font-family: 'CampuSpace Ogg'; src: url('${oggItalic}') format('opentype'); font-weight: 400; font-style: italic; font-display: swap; }
+@font-face { font-family: 'Buana Ogg'; src: url('${oggRegular}') format('opentype'); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Buana Ogg'; src: url('${oggItalic}') format('opentype'); font-weight: 400; font-style: italic; font-display: swap; }
 .cs {
     --forest: #003b33; --deep: #062e29; --teal: #007f6d;
     --lime: #d3e9a6; --paper: #f8f9f3; --ink: #163f35; --muted: #5b6e62;
@@ -27,7 +30,7 @@ const styles = `
 .cs .cs-dark :focus-visible { outline-color: var(--lime); }
 .cs .cs-reservation-preview :focus-visible { outline-color: var(--teal); }
 .cs-wrap { width: min(1240px, calc(100% - 96px)); margin-inline: auto; }
-.cs-serif { font-family: 'CampuSpace Ogg', Georgia, 'Times New Roman', serif; font-weight: 400; letter-spacing: -.035em; }
+.cs-serif { font-family: 'Buana Ogg', Georgia, 'Times New Roman', serif; font-weight: 400; letter-spacing: -.035em; }
 .cs-section { padding-block: 100px; scroll-margin-top: 104px; }
 .cs-section-title { font-size: clamp(36px, 3.8vw, 52px); line-height: 1.2; }
 .cs-eyebrow { display: flex; align-items: center; gap: 10px; margin-bottom: 20px !important; color: var(--teal); font-size: 11px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; }
@@ -38,13 +41,14 @@ const styles = `
 .cs-copy { color: var(--muted); font-size: 16px; line-height: 1.8; }
 .cs-icon { width: 24px; height: 24px; flex: none; }
 .cs-arrow { width: 18px; height: 18px; }
+.public-magnetic { display: inline-flex; max-width: 100%; }
 .cs-button { display: inline-flex; align-items: center; justify-content: center; gap: 20px; min-height: 50px; padding: 13px 24px; border: 1px solid transparent; border-radius: 8px; font-size: 14px; font-weight: 600; transition: background .2s, box-shadow .2s, transform .2s; }
 .cs-button-primary { background: var(--lime); color: var(--forest) !important; }
 .cs-button-primary:hover { background: #e2f2c1; box-shadow: 0 5px 18px #001e231a; transform: translateY(-2px); }
 .cs-button-secondary { background: #ffffff05; border-color: #ffffff35; color: var(--paper); }
 .cs-button-secondary:hover { background: #ffffff12; border-color: #ffffff60; }
-.cs-button .cs-arrow, .cs-feature-link .cs-arrow, .cs-preview-link .cs-arrow { transition: transform .2s ease; }
-.cs-button:hover .cs-arrow, .cs-feature-link:hover .cs-arrow, .cs-preview-link:hover .cs-arrow { transform: translateX(3px); }
+.cs-button .cs-arrow, .cs-feature-link .cs-arrow { transition: transform .2s ease; }
+.cs-button:hover .cs-arrow, .cs-feature-link:hover .cs-arrow { transform: translateX(3px); }
 .cs-button-secondary:hover .cs-arrow { transform: translateY(3px); }
 .cs-button:active { transform: translateY(0); }
 .cs-skip { position: fixed; top: 8px; left: 12px; z-index: 100; padding: 12px 20px; background: var(--lime); transform: translateY(-160%); }
@@ -74,26 +78,8 @@ const styles = `
 .cs-hero-note { display: flex; align-items: center; gap: 7px; margin-top: 22px !important; color: #e0e9dc; font-size: 12px; }
 .cs-hero-note svg { width: 14px; height: 14px; }
 .cs-art { position: relative; min-width: 0; animation: cs-arrive .9s calc(var(--intro, 0s) + .18s) cubic-bezier(.22, 1, .36, 1) both; }
+.cs[data-intro="skip"] .pn, .cs[data-intro="skip"] .cs-hero-content > *, .cs[data-intro="skip"] .cs-art { animation: none; }
 .cs-reservation-preview { position: relative; width: 100%; background: #f7fbef; color: var(--ink); border: 1px solid #d5e1cc; border-radius: 16px; overflow: hidden; box-shadow: 0 24px 64px #002c3045; }
-.cs-preview-bar { display: flex; align-items: center; gap: 14px; padding: 16px 24px; background: #edf3e6; border-bottom: 1px solid #dce5d5; font-size: 10px; letter-spacing: .04em; color: #52664e; }
-.cs-preview-dots { display: flex; gap: 5px; }
-.cs-preview-dots i { width: 6px; height: 6px; background: #b8cbb0; border-radius: 50%; }
-.cs-preview-dots i:first-child { background: #00a991; }
-.cs-preview-body { padding: 26px; }
-.cs-preview-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 25px; }
-.cs-preview-heading h2 { font-family: Inter, Figtree, ui-sans-serif, system-ui, sans-serif; font-size: 19px; font-weight: 700; letter-spacing: -.02em; }
-.cs-preview-heading p { font-size: 11px; color: var(--teal); margin-top: 4px; }
-.cs-preview-toolbar { display: flex; justify-content: flex-end; padding: 13px; margin-bottom: 16px; background: #fff; border: 1px solid #e7f3ce; border-radius: 8px; box-shadow: 0 1px 2px #003b3305; }
-.cs-preview-create { display: inline-flex; align-items: center; min-height: 44px; flex: none; padding: 9px 14px; background: #00a991; color: #fff !important; border-radius: 7px; font-size: 11px; font-weight: 500; transition: background .2s; }
-.cs-preview-create:hover { background: #009883; }
-.cs-preview-table-wrap { overflow: hidden; background: #fff; border: 1px solid #e7f3ce; border-radius: 8px; box-shadow: 0 1px 2px #003b3305; }
-.cs-preview-table { width: 100%; table-layout: fixed; border-collapse: collapse; text-align: left; }
-.cs-preview-table th { padding: 12px 8px; background: #f0fdfa; color: #0f766e; font-size: 9px; font-weight: 600; letter-spacing: .025em; line-height: 1.5; text-transform: uppercase; }
-.cs-preview-table th:nth-last-child(-n+2) { width: 14%; }
-.cs-preview-table td { padding: 40px 6px; color: #66756c; font-size: 11px; text-align: center; }
-.cs-preview-link { display: inline-flex; align-items: center; min-height: 44px; gap: 8px; margin-top: 10px; font-size: 11px; color: var(--teal) !important; }
-.cs-preview-link:hover { text-decoration: underline; }
-.cs-preview-link svg { width: 13px; height: 13px; }
 @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
     .cs-hero:before { -webkit-backdrop-filter: blur(6px) saturate(115%); backdrop-filter: blur(6px) saturate(115%); }
 }
@@ -149,8 +135,6 @@ const styles = `
     .cs-wrap { width: calc(100% - 64px); }
     .cs-hero-grid { gap: 32px; }
     .cs-hero h1 { font-size: 62px; }
-    .cs-preview-heading { flex-wrap: wrap; }
-    .cs-preview-body { padding: 20px; }
     .cs-heading-row { gap: 35px; }
 }
 @media (max-width: 900px) {
@@ -166,11 +150,6 @@ const styles = `
     .cs-hero-actions { gap: 10px; }
     .cs-hero-actions .cs-button { padding-inline: 18px; gap: 12px; font-size: 13px; }
     .cs-art { width: min(490px, 100%); margin-inline: auto; }
-    .cs-preview-heading { flex-wrap: nowrap; }
-    .cs-preview-heading h2 { font-size: 16px; }
-    .cs-preview-bar { padding-inline: 20px; }
-    .cs-preview-create { font-size: 10px; padding: 9px; }
-    .cs-preview-table th { font-size: 8px; padding-inline: 4px; }
     .cs-heading-row { display: block; margin-bottom: 28px; }
     .cs-heading-row .cs-copy { margin-top: 20px; max-width: 480px; }
     .cs-feature-grid, .cs-steps { grid-template-columns: 1fr; gap: 28px; }
@@ -192,15 +171,11 @@ const styles = `
     .cs-brand-mark { width: 26px; }
     .cs-hero h1 { font-size: clamp(40px, 13vw, 47px); }
     .cs-hero-actions .cs-button { padding-inline: 14px; font-size: 12px; }
-    .cs-preview-heading { flex-wrap: wrap; gap: 10px; }
-    .cs-preview-heading p { max-width: none; }
-    .cs-preview-body { padding: 16px; }
-    .cs-preview-table th { padding-inline: 3px; text-transform: none; overflow-wrap: anywhere; }
 }
 @media (prefers-reduced-motion: reduce) {
     .cs *, .cs *:before, .cs *:after { animation: none !important; transition: none !important; }
     .cs-reveal[data-reveal="pending"] { opacity: 1; translate: none; }
-    .cs-feature:hover, .cs-feature:focus-within, .cs-feature:hover > .cs-icon, .cs-feature:focus-within > .cs-icon, .cs-button:hover, .cs-button:hover .cs-arrow, .cs-feature-link:hover .cs-arrow, .cs-preview-link:hover .cs-arrow, .cs-brand:hover .cs-brand-mark { transform: none; }
+    .cs-feature:hover, .cs-feature:focus-within, .cs-feature:hover > .cs-icon, .cs-feature:focus-within > .cs-icon, .cs-button:hover, .cs-button:hover .cs-arrow, .cs-feature-link:hover .cs-arrow, .cs-brand:hover .cs-brand-mark { transform: none; }
 }
 @media (forced-colors: active) {
     .cs-button, .cs-reservation-preview, .cs-facility, .cs-feature { border: 1px solid ButtonText; }
@@ -208,37 +183,6 @@ const styles = `
     .cs-hero { background: Canvas; color: CanvasText; }
 }
 `;
-
-// Mirrors the title, separate action card, table, and default empty state in
-// origin/feat/user/reserve (8129427): resources/views/user/my-reservations.blade.php.
-function ReservationPreview({ reservationUrl, createReservationUrl, reservationActionLabel, reservationListLabel, canCreateReservation }) {
-    return (
-        <figure className="cs-reservation-preview">
-            <figcaption className="cs-preview-bar"><span className="cs-preview-dots" aria-hidden="true"><i /><i /><i /></span>Pratinjau halaman reservasi</figcaption>
-            <div className="cs-preview-body">
-                <div className="cs-preview-heading">
-                    <div><h2>Reservasi Saya</h2><p>Lihat daftar fasilitas yang pernah kamu pinjam.</p></div>
-                </div>
-                <div className="cs-preview-toolbar">
-                    <a className="cs-preview-create" href={createReservationUrl}>{canCreateReservation ? '+ Tambah Reservasi' : reservationActionLabel}</a>
-                </div>
-                <div className="cs-preview-table-wrap">
-                <table className="cs-preview-table" aria-label="Pratinjau daftar reservasi tanpa data akun">
-                    <thead><tr>
-                        <th scope="col">Nama fasilitas</th>
-                        <th scope="col">Tanggal & waktu</th>
-                        <th scope="col">Tujuan penggunaan</th>
-                        <th scope="col">Status</th>
-                        <th scope="col">Aksi</th>
-                    </tr></thead>
-                    <tbody><tr><td colSpan={5}>Belum ada reservasi</td></tr></tbody>
-                </table>
-                </div>
-                <a className="cs-preview-link" href={reservationUrl}>{reservationListLabel} <Icon name="landing-arrow" className="cs-arrow" variant="landing" /></a>
-            </div>
-        </figure>
-    );
-}
 
 const facilities = [['landing-room', 'Ruang kelas'], ['hall', 'Aula'], ['lab', 'Laboratorium'], ['field', 'Lapangan']];
 const features = [
@@ -250,11 +194,23 @@ const steps = [
     ['Lengkapi pengajuan', 'Isi tujuan penggunaan dan pilih rentang waktu yang dibutuhkan, lalu kirim pengajuan.'],
     ['Periksa status reservasi', 'Buka Reservasi Saya untuk melihat hasil peninjauan. Jika disetujui, tiket peminjaman dapat dibuka dari daftar tersebut.'],
 ];
-export default function Landing({ loginUrl, reservationUrl, createReservationUrl, reservationActionLabel, reservationListLabel, canCreateReservation, reportUrl, reportActionLabel, facilityUrl, aboutUrl, facilityTypes = [], facilityLocations = [] }) {
+export default function Landing({ loginUrl, createReservationUrl, reservationActionLabel, reportUrl, reportActionLabel, facilityUrl, aboutUrl, facilityTypes = [], facilityLocations = [] }) {
     const intro = useIntro();
+    const [previewReady, setPreviewReady] = useState(false);
+    const [landingReady, setLandingReady] = useState(false);
+    const [searching, setSearching] = useState(false);
     const rootRef = useRef(null);
     const navRef = useRef(null);
     const progressRef = useRef(null);
+
+    useEffect(() => {
+        if (!intro) return;
+        const controller = new AbortController();
+        waitForPageReady(rootRef.current, { signal: controller.signal }).then(ready => {
+            if (ready) setLandingReady(true);
+        });
+        return () => controller.abort();
+    }, [intro]);
 
     useEffect(() => {
         const previousLanguage = document.documentElement.lang;
@@ -310,8 +266,8 @@ export default function Landing({ loginUrl, reservationUrl, createReservationUrl
             const distance = document.documentElement.scrollHeight - window.innerHeight;
             const progress = distance > 0 ? Math.min(1, Math.max(0, window.scrollY / distance)) : 0;
             progressRef.current?.style.setProperty('transform', `scaleX(${progress})`);
-            nav.dataset.scrolled = String(window.scrollY > 16);
-            root.dataset.pastHero = String(hero.getBoundingClientRect().bottom < nav.offsetHeight + 40);
+            if (nav?.dataset) nav.dataset.scrolled = String(window.scrollY > 16);
+            if (root?.dataset && hero && nav) root.dataset.pastHero = String(hero.getBoundingClientRect().bottom < nav.offsetHeight + 40);
         };
         const scheduleScrollUpdate = () => {
             if (frame === null) frame = window.requestAnimationFrame(updateScroll);
@@ -319,8 +275,8 @@ export default function Landing({ loginUrl, reservationUrl, createReservationUrl
 
         // Apply the URL fragment after Inertia restores its saved scroll position.
         const initialHash = window.location.hash;
-        const initialAnchor = document.getElementById(initialHash.slice(1));
-        if (initialAnchor && root.contains(initialAnchor)) {
+        const initialAnchor = initialHash ? document.getElementById(initialHash.slice(1)) : null;
+        if (initialAnchor && root?.contains(initialAnchor)) {
             anchorFrame = window.requestAnimationFrame(() => {
                 anchorFrame = window.requestAnimationFrame(() => {
                     anchorFrame = null;
@@ -352,23 +308,42 @@ export default function Landing({ loginUrl, reservationUrl, createReservationUrl
         };
     }, []);
 
+    const handleSearchSubmit = event => {
+        event.preventDefault();
+        if (searching) return;
+        const formData = new FormData(event.currentTarget);
+        const data = {};
+        for (const [key, value] of formData.entries()) {
+            const trimmed = typeof value === 'string' ? value.trim() : value;
+            if (trimmed !== '') {
+                data[key] = trimmed;
+            }
+        }
+        router.get(facilityUrl || '/fasilitas', data, {
+            preserveState: true,
+            preserveScroll: true,
+            onStart: () => setSearching(true),
+            onFinish: () => setSearching(false),
+        });
+    };
+
     return (
         <>
-            <Head title="CampuSpace — Your Campus. Your Space.">
-                <meta name="description" content="Cek ketersediaan fasilitas kampus, ajukan reservasi, dan laporkan kerusakan melalui CampuSpace." />
+            <Head title="Buana — Seluruh Kampus, Satu Buana">
+                <meta name="description" content="Buana (bhuvanā, “dunia”) — satu layanan untuk mengecek ketersediaan fasilitas kampus, mengajukan reservasi, dan melaporkan kerusakan." />
                 <meta name="theme-color" content="#062e29" />
-                <meta property="og:title" content="CampuSpace — Your Campus. Your Space." />
-                <meta property="og:description" content="Reservasi dan laporan fasilitas kampus untuk mahasiswa, dosen, dan pengelola." />
+                <meta property="og:title" content="Buana — Seluruh Kampus, Satu Buana" />
+                <meta property="og:description" content="Buana: dunia kampusmu dalam satu layanan. Reservasi dan laporan fasilitas untuk mahasiswa, dosen, dan pengelola." />
                 <meta property="og:type" content="website" />
                 <meta property="og:locale" content="id_ID" />
                 <link rel="preload" href={oggRegular} as="font" type="font/otf" crossOrigin="anonymous" />
                 <link rel="preload" href={heroBackground} as="image" />
             </Head>
             <style>{styles}</style>
-            <div className="cs" lang="id" id="atas" ref={rootRef} style={intro ? { '--intro': `${INTRO_DELAY}s` } : undefined}>
-                {intro && <IntroOverlay />}
+            <div className="cs" lang="id" id="atas" ref={rootRef} data-intro={intro ? 'play' : 'skip'} style={intro ? { '--intro': `${INTRO_DELAY}s` } : undefined}>
+                {intro && <IntroOverlay ready={previewReady && landingReady} />}
                 <a className="cs-skip" href="#konten">Langsung ke konten</a>
-                <PublicNavbar urls={{ landing: '/', facilities: facilityUrl, about: aboutUrl, login: loginUrl }} active="landing" headerRef={navRef}>
+                <PublicNavbar urls={{ landing: '/', facilities: facilityUrl || '/fasilitas', about: aboutUrl || '/tentang', login: loginUrl || '/login' }} active="landing" headerRef={navRef}>
                     <div className="cs-reading-progress" ref={progressRef} aria-hidden="true" />
                 </PublicNavbar>
 
@@ -376,17 +351,17 @@ export default function Landing({ loginUrl, reservationUrl, createReservationUrl
                     <section className="cs-hero cs-dark" aria-labelledby="hero-title">
                         <div className="cs-wrap cs-hero-grid">
                             <div className="cs-hero-content">
-                                <p className="cs-eyebrow">Ruang untuk setiap kegiatan</p>
-                                <h1 id="hero-title" className="cs-serif" lang="en">Your Campus.<br /><em>Your Space.</em></h1>
-                                <p className="cs-hero-copy">Cek ketersediaan fasilitas kampus, ajukan reservasi, dan laporkan kerusakan melalui CampuSpace.</p>
+                                <p className="cs-eyebrow">Bhuwana · dunia kampusmu</p>
+                                <h1 id="hero-title" className="cs-serif">Seluruh Kampus,<br /><em>Satu Buana.</em></h1>
+                                <p className="cs-hero-copy">Buana mengumpulkan seluruh fasilitas kampus dalam satu layanan: cek ketersediaan, ajukan reservasi, dan laporkan kerusakan.</p>
                                 <div className="cs-hero-actions">
-                                    <a href={createReservationUrl} className="cs-button cs-button-primary">{reservationActionLabel} <Icon name="landing-arrow" className="cs-arrow" variant="landing" /></a>
+                                    <MagneticLink href={createReservationUrl || '/reservasi/form'} className="cs-button cs-button-primary">{reservationActionLabel} <Icon name="landing-arrow" className="cs-arrow" variant="landing" /></MagneticLink>
                                     <a href="#cara-kerja" className="cs-button cs-button-secondary">Cara reservasi <Icon name="down" className="cs-arrow" variant="landing" /></a>
                                 </div>
                                 <p className="cs-hero-note"><Icon name="landing-shield" variant="landing" />Gunakan akun yang diberikan pengelola kampus.</p>
                             </div>
                             <div className="cs-art">
-                                <ReservationPreview reservationUrl={reservationUrl} createReservationUrl={createReservationUrl} reservationActionLabel={reservationActionLabel} reservationListLabel={reservationListLabel} canCreateReservation={canCreateReservation} />
+                                <UserPagePreview createReservationUrl={createReservationUrl || '/reservasi/form'} reservationActionLabel={reservationActionLabel} onReady={setPreviewReady} />
                             </div>
                         </div>
                     </section>
@@ -400,14 +375,14 @@ export default function Landing({ loginUrl, reservationUrl, createReservationUrl
                             <div className="cs-facilities cs-reveal" aria-label="Jenis fasilitas">
                                 {facilities.map(([icon, label]) => <span className="cs-facility" key={label}><Icon name={icon} variant="landing" />{label}</span>)}
                             </div>
-                            <form action={facilityUrl} method="get" className="cs-facility-search cs-reveal" aria-label="Cari fasilitas kampus">
+                            <form onSubmit={handleSearchSubmit} action={facilityUrl || '/fasilitas'} method="get" className="cs-facility-search cs-reveal" aria-label="Cari fasilitas kampus" aria-busy={searching}>
                                 <label>Tipe fasilitas<select name="type" defaultValue=""><option value="">Semua tipe</option>{facilityTypes.map(type => <option key={type} value={type}>{type}</option>)}</select></label>
                                 <label>Lokasi<select name="location" defaultValue=""><option value="">Semua lokasi</option>{facilityLocations.map(location => <option key={location} value={location}>{location}</option>)}</select></label>
                                 <label>Kapasitas minimum<input name="capacity" type="number" min="1" max="100000" placeholder="Jumlah orang" /></label>
-                                <button type="submit" className="cs-button">Cari fasilitas <Icon name="landing-arrow" className="cs-arrow" variant="landing" /></button>
+                                <button type="submit" className="cs-button" disabled={searching}>{searching ? 'Mencari…' : 'Cari fasilitas'} <Icon name="landing-arrow" className="cs-arrow" variant="landing" /></button>
                             </form>
                             <div className="cs-feature-grid">
-                                {features.map((feature, index) => <article className="cs-feature cs-reveal" key={feature.title} style={{ '--reveal-delay': `${index * 90}ms` }}><Icon name={feature.icon} variant="landing" /><h3>{feature.title}</h3><p>{feature.text}</p><a className="cs-feature-link" href={feature.action === 'reservation' ? createReservationUrl : reportUrl}>{feature.action === 'reservation' ? reservationActionLabel : reportActionLabel}<Icon name="landing-arrow" className="cs-arrow" variant="landing" /></a></article>)}
+                                {features.map((feature, index) => <article className="cs-feature cs-reveal" key={feature.title} style={{ '--reveal-delay': `${index * 90}ms` }}><Icon name={feature.icon} variant="landing" /><h3>{feature.title}</h3><p>{feature.text}</p><Link className="cs-feature-link" href={feature.action === 'reservation' ? (createReservationUrl || '/reservasi/form') : (reportUrl || '/lapor')}>{feature.action === 'reservation' ? reservationActionLabel : reportActionLabel}<Icon name="landing-arrow" className="cs-arrow" variant="landing" /></Link></article>)}
                             </div>
                         </div>
                     </section>
@@ -422,15 +397,15 @@ export default function Landing({ loginUrl, reservationUrl, createReservationUrl
                     </section>
 
                     <section className="cs-final cs-dark" aria-labelledby="final-title">
-                        <div className="cs-wrap cs-reveal"><div><h2 id="final-title" className="cs-serif">Butuh fasilitas untuk kegiatanmu?</h2><p>Pilih fasilitas dan jadwal, lalu ajukan peminjaman.</p></div><a href={createReservationUrl} className="cs-button cs-button-primary">{reservationActionLabel} <Icon name="landing-arrow" className="cs-arrow" variant="landing" /></a></div>
+                        <div className="cs-wrap cs-reveal"><div><h2 id="final-title" className="cs-serif">Butuh ruang untuk kegiatanmu?</h2><p>Temukan fasilitas yang tepat di Buana, pilih jadwal, lalu ajukan peminjaman.</p></div><MagneticLink href={createReservationUrl || '/reservasi/form'} className="cs-button cs-button-primary">{reservationActionLabel} <Icon name="landing-arrow" className="cs-arrow" variant="landing" /></MagneticLink></div>
                     </section>
                 </main>
 
                 <footer className="cs-footer cs-dark">
                     <div className="cs-wrap cs-footer-inner">
-                        <a href="#atas" className="cs-brand" aria-label="CampuSpace, kembali ke atas"><PublicBrand /></a>
-                        <p>© {new Date().getFullYear()} CampuSpace</p>
-                        <nav className="cs-footer-links" aria-label="Navigasi footer"><a href={facilityUrl}>Fasilitas</a><a href="#cara-kerja">Cara reservasi</a><a href={aboutUrl}>Tentang</a></nav>
+                        <Link href="/" className="cs-brand" aria-label="Buana — Beranda"><PublicBrand /></Link>
+                        <p>© {new Date().getFullYear()} Buana</p>
+                        <nav className="cs-footer-links" aria-label="Navigasi footer"><Link href={facilityUrl || '/fasilitas'}>Fasilitas</Link><a href="#cara-kerja">Cara reservasi</a><Link href={aboutUrl || '/tentang'}>Tentang</Link></nav>
                     </div>
                 </footer>
                 <a href="#atas" className="cs-back-top" aria-label="Kembali ke atas"><Icon name="down" className="cs-arrow" variant="landing" /></a>
