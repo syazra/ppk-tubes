@@ -168,6 +168,8 @@ export default function ReportForm({ rooms = [], user, auth, csrfToken, urls }) 
 						<div id="description-error"><FieldError>{form.errors.desc}</FieldError></div>
 					</div>
 
+					
+
 					<UploadFile
 						label="Bukti kerusakan (foto)"
 						name="images"
@@ -176,8 +178,10 @@ export default function ReportForm({ rooms = [], user, auth, csrfToken, urls }) 
 						value={form.data.images}
 						onChange={(files) => form.setData('images', files)}
 						error={form.errors.images}
-						helperText="PNG, JPG, JPEG (Maks. 2MB)"
+						helperText="PNG, JPG, JPEG (Total semua foto maks. 2 MB)"
 					/>
+
+
 
 					{/* TOMBOL */}
 					<div className="flex flex-wrap justify-end gap-4 pt-5">
