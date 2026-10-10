@@ -186,10 +186,26 @@ export default function Reports({ user, status, csrfToken, urls, reports, filter
                                 {report.room?.location && <p className="text-xs text-gray-500">{report.room.location}</p>}
                             </td>
                             <td className="whitespace-normal text-xs px-4 py-3 text-gray-600">{report.desc}</td>
-                            <td className="whitespace-nowrap px-4 py-3">
-                                {report.image_url
-                                    ? <a href={report.image_url} target="_blank" rel="noreferrer" className="font-medium text-teal-normal-01 underline">Lihat foto</a>
-                                    : <span className="text-gray-400">Tidak ada foto</span>}
+                            <td className="whitespace-nowrap px-4 py-4">
+                                {report.images?.length > 0 ? (
+                                    <div className="flex flex-col gap-2">
+                                        {report.images.map((image, index) => (
+                                            <a
+                                                key={image.id ?? index}
+                                                href={`/storage/${image.image.replace(/^\/+/, '')}`}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className="text-sm font-semibold text-teal-dark-01 hover:underline"
+                                            >
+                                                Lihat foto {index + 1}
+                                            </a>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <span className="text-xs text-gray-400">
+                                        Tidak ada
+                                    </span>
+                                )}
                             </td>
                             <td className="whitespace-nowrap px-4 py-3 text-gray-600">{formatReportDate(report.created_at)}</td>
                             <td className="whitespace-nowrap px-4 py-3 text-gray-600">

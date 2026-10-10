@@ -14,7 +14,7 @@ class RoomAvailability
 
     public const STEP_MINUTES = 30;
 
-    public const LEAD_HOURS = 3;
+    public const LEAD_HOURS = 12;
 
     public const BLOCKING_STATUSES = ['disetujui'];
 

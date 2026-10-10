@@ -77,43 +77,80 @@ export default function MyReservations({ user, csrfToken, urls, reservations, fi
 		filterForm.get(urls.reservations, { preserveState: true, preserveScroll: true, replace: true });
 	}
 
+	
 	const handleDownloadTicket = async () => {
 		if (!selectedReservation) return;
 
-		// Buka tab kosong SEBELUM proses async
-		// supaya tidak diblokir browser sebagai popup
+		// Buka tab kosong sebelum proses async agar tidak diblokir browser
 		const previewWindow = window.open('', '_blank');
 
+		let ticket;
+
 		try {
-			const ticket = document.createElement('div');
+			ticket = document.createElement('div');
 
-			ticket.style.position = 'fixed';
-			ticket.style.left = '-10000px';
-			ticket.style.top = '0';
-			ticket.style.width = '794px';
-			ticket.style.padding = '40px';
-			ticket.style.background = '#ffffff';
-			ticket.style.fontFamily = 'Arial, sans-serif';
-			ticket.style.color = '#111827';
-			ticket.style.boxSizing = 'border-box';
+			Object.assign(ticket.style, {
+				position: 'fixed',
+				left: '-10000px',
+				top: '0',
+				width: '794px',
+				padding: '32px',
+				background: '#ffffff',
+				fontFamily: 'Arial, sans-serif',
+				color: '#111827',
+				boxSizing: 'border-box',
+				height : 'auto',
+				minHeight : '0',
+				overflowWrap : 'anywhere'
+			});
 
-			// PDF yang di donlot
+			const isInstitution =
+				selectedReservation.reservation_type === 'Instansi';
+
+			const field = (label, value, fullWidth = false) => `
+				<div style="
+					min-width: 0;
+					${fullWidth ? 'grid-column: 1 / -1;' : ''}
+				">
+					<p style="
+						margin: 0 0 6px;
+						font-size: 13px;
+						color: #6b7280;
+						line-height: 1.4;
+					">${label}</p>
+
+					<p style="
+						margin: 0;
+						font-size: 16px;
+						font-weight: 600;
+						color: #111827;
+						line-height: 1.5;
+						overflow-wrap: anywhere;
+						white-space: pre-wrap;
+					">${value ?? '-'}</p>
+				</div>
+			`;
+
 			ticket.innerHTML = `
 				<div style="
+					width: 100%;
+					box-sizing: border-box;
 					border: 1px solid #e5e7eb;
-					border-radius: 20px;
+					border-radius: 16px;
 					overflow: hidden;
-					background: white;
+					background: #ffffff;
 				">
 
+					<!-- HEADER -->
 					<div style="
-						padding: 32px 36px 24px;
+						padding: 26px 30px;
 						text-align: center;
+						background: #ffffff;
 					">
 						<div style="
-							width: 64px;
-							height: 64px;
-							margin: 0 auto 12px;
+							width: 52px;
+							height: 52px;
+							margin: 0 auto 10px;
 							border-radius: 50%;
 							background: #dcfce7;
 							display: flex;
@@ -121,8 +158,8 @@ export default function MyReservations({ user, csrfToken, urls, reservations, fi
 							justify-content: center;
 						">
 							<svg
-								width="32"
-								height="32"
+								width="28"
+								height="28"
 								viewBox="0 0 24 24"
 								fill="none"
 								stroke="#16a34a"
@@ -136,88 +173,60 @@ export default function MyReservations({ user, csrfToken, urls, reservations, fi
 
 						<h2 style="
 							margin: 0;
-							font-size: 28px;
-							font-weight: 600;
+							font-size: 25px;
+							font-weight: 700;
 							color: #15803d;
-						">
-							Reservasi Valid
-						</h2>
+						">Reservasi Valid</h2>
 
 						<p style="
 							margin: 6px 0 0;
-							font-size: 22px;
+							font-size: 15px;
 							color: #6b7280;
-						">
-							Verifikasi Tiket Reservasi
-						</p>
+						">Verifikasi Tiket Reservasi</p>
 					</div>
 
-					<div style="
-						border-top: 1px dashed #d1d5db;
-					"></div>
+					<div style="border-top: 1px dashed #d1d5db;"></div>
 
+					<!-- ID RESERVASI -->
+					<div style="padding: 24px 30px 8px;">
+						<p style="
+							margin: 0 0 5px;
+							font-size: 13px;
+							color: #6b7280;
+						">ID RESERVASI</p>
+
+						<p style="
+							margin: 0;
+							font-size: 22px;
+							font-weight: 700;
+							color: #134e4a;
+						">RSV-${selectedReservation.id}</p>
+					</div>
+
+					<!-- PEMINJAM, STATUS, DAN QR -->
 					<div style="
-						display: flex;
-						padding: 28px 36px;
-						gap: 35px;
+						display: grid;
+						grid-template-columns: minmax(0, 1fr) 170px;
+						gap: 24px;
+						align-items: center;
+						padding: 16px 30px 26px;
 					">
+						<div style="
+							display: grid;
+							grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+							gap: 20px 24px;
+							align-items: start;
+						">
+							${field('Peminjam', user?.name ?? '-')}
 
-						<div style="flex: 1;">
-
-							<div style="margin-bottom: 18px;">
+							<div>
 								<p style="
-									margin: 0 0 5px;
-									font-size: 16 px;
+									margin: 0 0 8px;
+									font-size: 13px;
 									color: #6b7280;
-								">
-									ID Reservasi
-								</p>
+								">Status</p>
 
-								<p style="
-									margin: 0;
-									font-size: 18px;
-									font-weight: 700;
-									color: #134e4a;
-								">
-									RSV-${selectedReservation.id}
-								</p>
-							</div>
-
-							<div style="
-								display: grid;
-								grid-template-columns: 1fr 1fr;
-								gap: 18px 25px;
-							">
-
-								<div>
-									<p style="
-										margin:0 0 5px;
-										font-size:16px;
-										color:#6b7280;
-									">
-										Peminjam
-									</p>
-
-									<p style="
-										margin:0;
-										font-size:18px;
-										font-weight:600;
-									">
-										${user?.name ?? '-'}
-									</p>
-								</div>
-
-								<div>
-									<p style="
-										margin:0 0 15px;
-										font-size:16px;
-										color:#6b7280;
-
-									">
-										Status
-									</p>
-
-									<span style="
+								<span style="
 										display:inline-flex;
 
 										justify-content:center;
@@ -230,212 +239,208 @@ export default function MyReservations({ user, csrfToken, urls, reservations, fi
 										font-size:17px;
 										font-weight:600;
 										line-height:1;
-									">
-										Disetujui
-									</span>
-								</div>
-
-								<div>
-									<p style="
-										margin:0 0 5px;
-										font-size:16px;
-										color:#6b7280;
-									">
-										Fasilitas
-									</p>
-
-									<p style="
-										margin:0;
-										font-size:18px;
-										font-weight:600;
-									">
-										${selectedReservation.room?.name ?? '-'}
-									</p>
-								</div>
-
-								<div>
-									<p style="
-										margin:0 0 5px;
-										font-size:16px;
-										color:#6b7280;
-									">
-										Tipe Fasilitas
-									</p>
-
-									<p style="
-										margin:0;
-										font-size:18px;
-										font-weight:600;
-									">
-										${selectedReservation.room?.type ?? '-'}
-									</p>
-								</div>
-
-								<div>
-									<p style="
-										margin:0 0 5px;
-										font-size:12px;
-										color:#6b7280;
-									">
-										Tanggal Reservasi
-									</p>
-
-									<p style="
-										margin:0;
-										font-size:18px;
-										font-weight:600;
-									">
-										${selectedReservation.date_to_reserv}
-									</p>
-								</div>
-
-								<div>
-									<p style="
-										margin:0 0 5px;
-										font-size:12px;
-										color:#6b7280;
-									">
-										Waktu
-									</p>
-
-									<p style="
-										margin:0;
-										font-size:18px;
-										font-weight:600;
-									">
-										${selectedReservation.start_time} -
-										${selectedReservation.end_time}
-									</p>
-								</div>
-
-								<div style="grid-column:1 / -1;">
-									<p style="
-										margin:0 0 5px;
-										font-size:16px;
-										color:#6b7280;
-									">
-										Tujuan Penggunaan
-									</p>
-
-									<p style="
-										margin:0;
-										font-size:18px;
-										font-weight:600;
-									">
-										${selectedReservation.desc ?? '-'}
-									</p>
-								</div>
-
+									">Disetujui</span>
 							</div>
+
+							${field(
+								'Jenis Peminjaman',
+								isInstitution ? 'Instansi' : 'Individu',
+								true
+							)}
 						</div>
 
 						<div style="
-							width: 190px;
+							border-left: 1px dashed #d1d5db;
+							padding-left: 20px;
 							display: flex;
 							flex-direction: column;
 							align-items: center;
 							justify-content: center;
-							border-left: 1px dashed #d1d5db;
-							padding-left: 30px;
 						">
-
 							<img
 								src="${selectedReservation.qr_url}"
 								style="
-									width:160px;
-									height:160px;
-									object-fit:contain;
+									display: block;
+									width: 135px;
+									height: 135px;
+									object-fit: contain;
 								"
 							/>
 
 							<p style="
-								margin:12px 0 0;
-								font-size:14px;
-								color:#6b7280;
-								text-align:center;
-							">
-								Scan QR untuk verifikasi
-							</p>
-
+								margin: 10px 0 0;
+								font-size: 12px;
+								color: #6b7280;
+								text-align: center;
+								line-height: 1.5;
+							">Scan QR untuk verifikasi</p>
 						</div>
 					</div>
 
+					<div style="border-top: 1px dashed #d1d5db;"></div>
+
+					<!-- DETAIL RESERVASI -->
+					<div style="padding: 24px 30px 28px;">
+						<h3 style="
+							margin: 0 0 20px;
+							font-size: 17px;
+							font-weight: 700;
+							color: #134e4a;
+						">Detail Reservasi</h3>
+
+						<div style="
+							display: grid;
+							grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+							gap: 20px 28px;
+							align-items: start;
+						">
+							${field(
+								'Fasilitas',
+								selectedReservation.room?.name ?? '-'
+							)}
+
+							${field(
+								'Tipe Fasilitas',
+								selectedReservation.room?.type ?? '-'
+							)}
+
+							${field(
+								'Tanggal Reservasi',
+								selectedReservation.date_to_reserv
+							)}
+
+							${field(
+								'Waktu',
+								`${selectedReservation.start_time} - ${selectedReservation.end_time}`
+							)}
+
+							${
+								isInstitution
+									? `
+										${field(
+											'Instansi',
+											selectedReservation.institution ?? '-'
+										)}
+
+										${field(
+											'Nama Kegiatan',
+											selectedReservation.activity_name ?? '-'
+										)}
+
+										${field(
+											'Deskripsi Kegiatan',
+											selectedReservation.desc ?? '-',
+											true
+										)}
+									`
+									: `
+										${field(
+											'Tujuan Penggunaan',
+											selectedReservation.activity_name ?? '-',
+											true
+										)}
+									`
+							}
+						</div>
+					</div>
+
+					<!-- FOOTER -->
 					<div style="
-						border-top:1px solid #e5e7eb;
-						padding:18px 36px;
-						text-align:center;
+						border-top: 1px solid #e5e7eb;
+						padding: 16px 30px;
+						text-align: center;
+						background: #f9fafb;
 					">
 						<p style="
-							margin:0;
-							font-size:14px;
-							color:#9ca3af;
+							margin: 0;
+							font-size: 12px;
+							color: #6b7280;
+							line-height: 1.5;
 						">
 							Tunjukkan tiket ini sebagai bukti validasi reservasi.
 						</p>
 					</div>
-
 				</div>
 			`;
 
 			document.body.appendChild(ticket);
 
+			// Tunggu browser menyelesaikan layout dan pemuatan gambar
+			await new Promise((resolve) => requestAnimationFrame(resolve));
+
 			const canvas = await html2canvas(ticket, {
 				scale: 2,
 				useCORS: true,
 				backgroundColor: '#ffffff',
+				windowWidth: 794,
+				width: ticket.scrollWidth,
+				height: ticket.scrollHeight,
+				scrollX: 0,
+				scrollY: 0,
 			});
-
 			document.body.removeChild(ticket);
+			ticket = null;
 
 			const imgData = canvas.toDataURL('image/png');
 
-			// ================================
-			// UKURAN PDF MENGIKUTI TIKET
-			// ================================
-
-			const pdfWidth = 280;
-
-			const pdfHeight =
-				(canvas.height / canvas.width) * pdfWidth;
-
+			// Ukuran A4 landscape: 297 × 210 mm
 			const pdf = new jsPDF({
 				orientation: 'landscape',
 				unit: 'mm',
-				format: [pdfWidth, pdfHeight],
+				format: 'a4',
 			});
 
-			
+			const pageWidth = pdf.internal.pageSize.getWidth();
+			const pageHeight = pdf.internal.pageSize.getHeight();
+
+			const margin = 10;
+			const availableWidth = pageWidth - margin * 2;
+			const availableHeight = pageHeight - margin * 2;
+
+			// Skala agar seluruh tiket muat di satu halaman
+			const scale = Math.min(
+				availableWidth / canvas.width,
+				availableHeight / canvas.height
+			);
+
+			const imgWidth = canvas.width * scale;
+			const imgHeight = canvas.height * scale;
+
+			// Posisikan tiket di tengah halaman
+			const x = (pageWidth - imgWidth) / 2;
+			const y = (pageHeight - imgHeight) / 2;
+
 			pdf.addImage(
 				imgData,
 				'PNG',
-				0,
-				0,
-				pdfWidth,
-				pdfHeight
+				x,
+				y,
+				imgWidth,
+				imgHeight
 			);
-
-			// ================================
-			// PREVIEW PDF
-			// ================================
-
+			// Preview PDF di tab baru
 			const pdfBlob = pdf.output('blob');
 			const pdfUrl = URL.createObjectURL(pdfBlob);
 
 			if (previewWindow) {
 				previewWindow.location.href = pdfUrl;
 			} else {
-				// Kalau popup diblokir browser
 				window.open(pdfUrl, '_blank');
 			}
 
 		} catch (error) {
 			console.error('Gagal membuat preview tiket:', error);
 
+			if (ticket?.parentNode) {
+				ticket.parentNode.removeChild(ticket);
+			}
+
 			if (previewWindow) {
 				previewWindow.close();
 			}
 		}
 	};
+
 
 	return (
 		<AppLayout
@@ -490,6 +495,7 @@ export default function MyReservations({ user, csrfToken, urls, reservations, fi
 				columns={[
 					{ label: 'Nama fasilitas' },
 					{ label: 'Tanggal & waktu' },
+					{ label : 'Jenis' },
 					{ label: 'Tujuan penggunaan', type: 'desc' },
 					{ label: 'Status' },
 					{ label: 'Aksi', type: 'act' },
@@ -504,7 +510,8 @@ export default function MyReservations({ user, csrfToken, urls, reservations, fi
 							<p>{formatReservationDate(reservation.date_to_reserv)}</p>
 							<p className="text-xs text-gray-500">{formatTime(reservation.start_time)} - {formatTime(reservation.end_time)}</p>
 						</td>
-						<td className="px-4 py-3 text-gray-600">{reservation.desc}</td>
+						<td className="px-4 py-3 text-gray-600">{reservation.reservation_type}</td>
+						<td className="px-4 py-3 text-gray-600">{reservation.activity_name}</td>
 						<td className="whitespace-nowrap px-4 py-3">
 							<StatusBadge color={getStatusColor(reservation.status)}>{reservationStatusLabels[reservation.status] ?? reservation.status}</StatusBadge>
 						</td>
@@ -544,6 +551,38 @@ export default function MyReservations({ user, csrfToken, urls, reservations, fi
 									</p>
 								</div>
 
+								{selectedReservation.reservation_type === 'Instansi' ? (
+									<>
+										<div>
+											<p className="text-gray-500">Instansi</p>
+											<p className="font-semibold">
+												{selectedReservation.institution ?? '-'}
+											</p>
+										</div>
+
+										<div>
+											<p className="text-gray-500">Nama Kegiatan</p>
+											<p className="font-semibold">
+												{selectedReservation.activity_name ?? '-'}
+											</p>
+										</div>
+
+										<div>
+											<p className="text-gray-500">Deskripsi Kegiatan</p>
+											<p className="font-semibold">
+												{selectedReservation.desc ?? '-'}
+											</p>
+										</div>
+									</>
+								) : (
+									<div>
+										<p className="text-gray-500">Tujuan Penggunaan</p>
+										<p className="font-semibold">
+											{selectedReservation.activity_name ?? '-'}
+										</p>
+									</div>
+								)}
+
 								<div>
 									<p className="text-gray-500">Fasilitas</p>
 									<p className="font-semibold">
@@ -566,12 +605,7 @@ export default function MyReservations({ user, csrfToken, urls, reservations, fi
 									</p>
 								</div>
 
-								<div>
-									<p className="text-gray-500">Tujuan</p>
-									<p className="font-semibold">
-										{selectedReservation.desc}
-									</p>
-								</div>
+							
 							</div>
 
 							{/* QR + Download */}

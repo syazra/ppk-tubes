@@ -155,6 +155,8 @@ export default function UploadFile({
         };
     }, [value]);
 
+
+
     const handleChange = (event) => {
         const selectedFiles = Array.from(
             event.target.files ?? []
@@ -162,17 +164,44 @@ export default function UploadFile({
 
         if (selectedFiles.length === 0) return;
 
+        const maxTotalSize = 5 * 1024 * 1024; // 5 MB
+
+        // Hitung total ukuran file yang sudah dipilih + file baru
+        const totalSize = [
+            ...files,
+            ...selectedFiles,
+        ].reduce((total, file) => total + file.size, 0);
+
+        if (totalSize > maxTotalSize) {
+            window.alert(
+                `Total ukuran semua foto tidak boleh lebih dari 5 MB.\n\n` +
+                `Total ukuran saat ini: ${(totalSize / (1024 * 1024)).toFixed(5)} MB`
+            );
+
+            event.target.value = '';
+            return;
+        }
+
         const nextFiles = multiple
             ? [...files, ...selectedFiles]
             : [selectedFiles[0]];
 
-        const validationError = validateFiles(nextFiles, { maxFiles, maxSizeBytes, allowedTypes });
-        setSelectionError(validationError);
-        if (!validationError) onChange?.(nextFiles);
+        const validationError = validateFiles(nextFiles, {
+            maxFiles,
+            maxSizeBytes: undefined,
+            allowedTypes,
+        });
 
-        // Memungkinkan file yang sama dipilih kembali.
+        setSelectionError(validationError);
+
+        if (!validationError) {
+            onChange?.(nextFiles);
+        }
+
         event.target.value = '';
     };
+
+
 
     const handleRemove = (index) => {
         setSelectionError(null);

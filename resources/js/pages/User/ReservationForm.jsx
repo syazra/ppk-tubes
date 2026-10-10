@@ -43,6 +43,11 @@ export default function ReservationForm({
 	const initialRoomId = oldInput.room_id ?? initialFacility?.id ?? '';
 	const form = useForm({
 		room_id: initialRoomId ? String(initialRoomId) : '',
+		reservation_type: oldInput.reservation_type ?? 'Individu',
+		institution: oldInput.institution ?? '',
+		activity_name: oldInput.activity_name ?? '',
+		participant_count: oldInput.participant_count ?? '',
+		proposal: null,
 		date_to_reserv: oldInput.date_to_reserv ?? '',
 		desc: oldInput.desc ?? '',
 		start_time: oldInput.start_time ?? '',
@@ -114,7 +119,10 @@ export default function ReservationForm({
 			setSlotMessage('Tunggu sampai jadwal selesai dimuat sebelum mengirim reservasi.');
 			return;
 		}
-		form.post(urls.store, { preserveScroll: true });
+		form.post(urls.store, {
+			forceFormData: true,
+			preserveScroll: true,
+		});
 	}
 
 	return (
@@ -177,6 +185,179 @@ export default function ReservationForm({
 							{selectedFacility ? `Fasilitas dipilih: ${selectedFacility.name} · ${selectedFacility.location}` : 'Belum ada fasilitas dipilih. Pilih fasilitas dari katalog di atas.'}
 						</div>
 						<FieldError>{form.errors.room_id}</FieldError>
+
+						<div>
+							<label
+								htmlFor="reservation_type"
+								className="block text-sm font-semibold text-teal-darker"
+							>
+								Jenis Peminjaman
+							</label>
+
+							<select
+								id="reservation_type"
+								name="reservation_type"
+								value={form.data.reservation_type}
+								onChange={event => {
+									const type = event.target.value;
+
+									form.setData(data => ({
+										...data,
+										reservation_type: type,
+										institution: type === 'Individu' ? '' : data.institution,
+										activity_name: type === 'Individu' ? '' : data.activity_name,
+										proposal: type === 'Individu' ? null : data.proposal,
+									}));
+								}}
+								className={fieldClassName}
+								required
+							>
+								<option value="Individu">Individu</option>
+								<option value="Instansi">Instansi / Organisasi</option>
+							</select>
+
+							<FieldError>{form.errors.reservation_type}</FieldError>
+						</div>
+						{form.data.reservation_type === 'Individu' && (
+							<div>
+									<label
+										htmlFor="activity_name"
+										className="block text-sm font-semibold text-teal-darker"
+									>
+										Tujuan Penggunaan
+									</label>
+
+									<input
+										id="activity_name"
+										name="activity_name"
+										type="text"
+										value={form.data.activity_name}
+										onChange={event =>
+											form.setData('activity_name', event.target.value)
+										}
+										className={fieldClassName}
+										placeholder="Contoh: Kerja Kelompok"
+										required
+									/>
+
+
+									<FieldError>{form.errors.activity_name}</FieldError>
+								</div>
+						)}
+						{form.data.reservation_type === 'Instansi' && (
+							<>
+								<div>
+									<label
+										htmlFor="institution"
+										className="block text-sm font-semibold text-teal-darker"
+									>
+										Asal Instansi / Organisasi
+									</label>
+
+									<input
+										id="institution"
+										name="institution"
+										type="text"
+										value={form.data.institution}
+										onChange={event =>
+											form.setData('institution', event.target.value)
+										}
+										className={fieldClassName}
+										placeholder="Contoh: Program Studi Informatika"
+										required
+									/>
+
+									<FieldError>{form.errors.institution}</FieldError>
+								</div>
+
+								<div>
+									<label
+										htmlFor="activity_name"
+										className="block text-sm font-semibold text-teal-darker"
+									>
+										Nama Kegiatan
+									</label>
+
+									<input
+										id="activity_name"
+										name="activity_name"
+										type="text"
+										value={form.data.activity_name}
+										onChange={event =>
+											form.setData('activity_name', event.target.value)
+										}
+										className={fieldClassName}
+										placeholder="Contoh: Nama Proker Organisasi"
+										required
+									/>
+
+
+									<FieldError>{form.errors.activity_name}</FieldError>
+								</div>
+
+								<div>
+									<label
+										htmlFor="activity_name"
+										className="block text-sm font-semibold text-teal-darker"
+									>
+										Deskripsi Kegiatan
+									</label>
+
+									<textarea
+										id="desc"
+										name="desc"
+										value={form.data.desc}
+										onChange={event =>
+											form.setData('desc', event.target.value)
+										}
+										className={`${fieldClassName} min-h-[90px] whitespace-normal`}
+										placeholder="Jelaskan secara singkat bentuk kegiatan, aktivitas yang dilakukan, 
+										atau siapa peserta kegiatan."
+										required
+									/>
+									
+
+									<FieldError>{form.errors.activity_name}</FieldError>
+								</div>
+
+								<div>
+									<label
+										htmlFor="proposal"
+										className="block text-sm font-semibold text-teal-darker"
+									>
+										Proposal / Dokumen Pendukung
+									</label>
+
+									<input
+										id="proposal"
+										name="proposal"
+										type="file"
+										accept=".pdf,application/pdf"
+										onChange={event => {
+											const file = event.target.files?.[0] ?? null;
+
+											if (file && file.size > 5 * 1024 * 1024) {
+												window.alert('Ukuran file PDF maksimal 5 MB.');
+
+												event.target.value = '';
+												form.setData('proposal', null);
+												return;
+											}
+
+											form.setData('proposal', file);
+										}}
+
+										className={fieldClassName}
+									/>
+
+									<p className="mt-2 text-sm text-gray-500">
+										Format PDF maksimal 5 MB. Lampirkan jika diperlukan.
+									</p>
+
+									<FieldError>{form.errors.proposal}</FieldError>
+								</div>
+							</>
+						)}
 						<div>
 							<label htmlFor="date_to_reserv" className="block text-sm font-semibold text-teal-darker">Hari / tanggal</label>
 							<input ref={dateInputRef}
@@ -189,10 +370,30 @@ export default function ReservationForm({
 							className={fieldClassName} required />
 							<FieldError>{form.errors.date_to_reserv}</FieldError>
 						</div>
+						
 						<div>
-							<label htmlFor="desc" className="block text-sm font-semibold text-teal-darker">Tujuan penggunaan</label>
-							<textarea id="desc" name="desc" rows={4} value={form.data.desc} onChange={event => form.setData('desc', event.target.value)} className={fieldClassName} placeholder="Masukkan tujuan penggunaan ruangan" required />
-							<FieldError>{form.errors.desc}</FieldError>
+							<label
+								htmlFor="participant_count"
+								className="block text-sm font-semibold text-teal-darker"
+							>
+								Jumlah Pengguna / Peserta
+							</label>
+
+							<input
+								id="participant_count"
+								name="participant_count"
+								type="number"
+								min="1"
+								value={form.data.participant_count}
+								onChange={event =>
+									form.setData('participant_count', event.target.value)
+								}
+								className={fieldClassName}
+								placeholder="Contoh: 15"
+								required
+							/>
+
+							<FieldError>{form.errors.participant_count}</FieldError>
 						</div>
 					</section>
 
