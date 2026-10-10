@@ -3,7 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\FacilityRequest;
 use App\Models\Room;
+use App\Models\RoomImage;
+use App\Services\FacilityImages;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -12,8 +15,6 @@ use Inertia\Response;
 
 class FacilityController extends Controller
 {
-    private const TYPES = ['Ruang Kelas', 'Aula', 'Laboratorium', 'Lapangan'];
-
     public function index(Request $request): Response
     {
         $filters = $request->validate([
@@ -22,6 +23,7 @@ class FacilityController extends Controller
         ]);
 
         $rooms = Room::query()
+            ->with('images')
             ->when($filters['search'] ?? null, fn ($query, $search) => $query->where(function ($query) use ($search) {
                 $query->where('name', 'like', "%{$search}%")
                     ->orWhere('location', 'like', "%{$search}%");
@@ -30,7 +32,15 @@ class FacilityController extends Controller
             ->orderBy('location')
             ->orderBy('name')
             ->paginate(10)
-            ->withQueryString();
+            ->withQueryString()
+            ->through(fn (Room $room): array => [
+                ...$room->only(['id', 'name', 'location', 'type', 'capacity', 'desc', 'is_avail']),
+                'images' => $room->images->map(fn (RoomImage $image): array => [
+                    'id' => $image->id,
+                    'url' => $image->publicUrl(),
+                    'alt_text' => $image->alt_text ?? 'Foto '.$room->name,
+                ])->all(),
+            ]);
 
         return Inertia::render('Admin/Facilities', [
             'user' => $request->user()->only('name', 'email', 'role', 'account_type'),
@@ -41,7 +51,9 @@ class FacilityController extends Controller
                 'search' => $filters['search'] ?? '',
                 'availability' => $filters['availability'] ?? '',
             ],
-            'types' => self::TYPES,
+            'types' => FacilityRequest::TYPES,
+            'photoLimits' => ['count' => FacilityRequest::MAX_PHOTOS, 'sizeBytes' => FacilityRequest::MAX_PHOTO_KB * 1024],
+            'capacityMax' => FacilityRequest::MAX_CAPACITY,
             'urls' => [
                 'dashboard' => route('admin.dashboard'),
                 'registrations' => route('admin.registrations.index'),
@@ -54,16 +66,16 @@ class FacilityController extends Controller
         ]);
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(FacilityRequest $request, FacilityImages $images): RedirectResponse
     {
-        Room::create($request->validate($this->rules()) + ['is_avail' => true]);
+        $images->save(new Room, $request->safe()->except(['images', 'removed_image_ids']) + ['is_avail' => true], $request->file('images', []), []);
 
         return redirect()->route('admin.facilities.index')->with('status', 'Fasilitas berhasil ditambahkan.');
     }
 
-    public function update(Request $request, Room $room): RedirectResponse
+    public function update(FacilityRequest $request, Room $room, FacilityImages $images): RedirectResponse
     {
-        $room->update($request->validate($this->rules()));
+        $images->save($room, $request->safe()->except(['images', 'removed_image_ids']), $request->file('images', []), $request->validated('removed_image_ids', []));
 
         return back()->with('status', 'Fasilitas berhasil diperbarui.');
     }
@@ -74,17 +86,5 @@ class FacilityController extends Controller
         $room->update(['is_avail' => $validated['is_avail']]);
 
         return back()->with('status', $room->is_avail ? 'Fasilitas diaktifkan.' : 'Fasilitas dinonaktifkan.');
-    }
-
-    /** @return array<string, array<int, mixed>> */
-    private function rules(): array
-    {
-        return [
-            'name' => ['required', 'string', 'max:100'],
-            'location' => ['required', 'string', 'max:100'],
-            'type' => ['required', Rule::in(self::TYPES)],
-            'capacity' => ['required', 'integer', 'min:1', 'max:100000'],
-            'desc' => ['nullable', 'string', 'max:2000'],
-        ];
     }
 }

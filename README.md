@@ -5,6 +5,7 @@
 - [Panduan Menjalankan Proyek](#panduan-menjalankan-proyek)
 - [Foto Fasilitas dari DBPhotos](#foto-fasilitas-dari-dbphotos)
 - [Data Contoh Laporan dan Reservasi](#data-contoh-laporan-dan-reservasi)
+- [Validasi dan Foto pada Form Admin](#validasi-dan-foto-pada-form-admin)
 - [Akun Pengguna Siap Pakai](#akun-pengguna-siap-pakai)
 
 ---
@@ -109,6 +110,34 @@ Kedua seeder ini dapat dijalankan ulang tanpa menggandakan contoh atau menimpa
 keputusan operator. Data lama tetap tersimpan. Untuk database baru, cukup jalankan
 `php artisan db:seed` setelah migrasi; jangan menjalankan ulang seeder utama pada
 database yang sudah berisi fasilitas karena `RoomSeeder` membuat fasilitas baru.
+
+## Validasi dan Foto pada Form Admin
+
+Aturan berikut berlaku saat admin membuat maupun mengubah data. Browser memberi
+petunjuk format, sedangkan server memeriksa ulang sebelum menulis ke database.
+
+| Data | Aturan |
+|---|---|
+| Nama akun | 2–255 karakter, mengandung huruf, tanpa tag atau karakter kontrol |
+| NIM mahasiswa | Tepat 14 digit angka, unik, tidak seluruhnya nol |
+| Identitas dosen, staf, petugas | Tepat 18 digit angka, unik, tidak seluruhnya nol |
+| Email | Format email dengan domain bertitik, maksimal 255 karakter, unik tanpa membedakan kapital |
+| Nama dan lokasi fasilitas | Masing-masing 2–100 karakter, tanpa tag atau karakter kontrol; pasangan nama/lokasi tidak boleh duplikat |
+| Kapasitas | Angka bulat 1–100.000 orang |
+| Deskripsi fasilitas | Opsional, maksimal 2.000 karakter |
+| Foto fasilitas | Opsional, total maksimal 3 foto; JPG/JPEG, PNG, WebP; masing-masing maksimal 2 MB dan 6.000 × 6.000 piksel |
+
+NIM dan identitas pegawai disimpan sebagai teks agar angka nol di depan tetap utuh.
+Nama, lokasi, dan email dibersihkan dari spasi di awal/akhir; email disimpan dalam
+huruf kecil. Admin dapat menambah foto saat membuat fasilitas, serta menambah atau
+menghapus foto melalui **Ubah**. Penghapusan baru diterapkan saat perubahan disimpan.
+
+Unggahan memakai tabel `room_images` yang sudah ada dan disk public pada
+`facilities/uploads`. Pastikan `php artisan storage:link` sudah dijalankan supaya
+foto tampil di website. Penyimpanan fasilitas dan metadata foto menggunakan
+transaksi; unggahan baru dibersihkan jika penyimpanan gagal. Foto seeder yang
+dipakai bersama fasilitas lain tetap tersedia. Tidak diperlukan migrasi tambahan
+untuk fitur ini.
 
 ## Akun Pengguna Siap Pakai
 
