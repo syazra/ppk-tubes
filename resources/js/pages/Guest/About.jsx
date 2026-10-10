@@ -3,6 +3,8 @@ import { useEffect } from 'react';
 import Icon from '../../components/Icons';
 import PublicBrand from '../../components/PublicBrand';
 import PublicNavbar from '../../components/PublicNavbar';
+import MeaningLens from '../../components/MeaningLens';
+import NameDiscovery from '../../components/NameDiscovery';
 import '../../../css/guest-about.css';
 
 const roles = [
@@ -45,13 +47,11 @@ export default function About({ urls = {} }) {
                             <p className="ga-eyebrow">Makna nama</p>
                             <h2 id="meaning-title">Buana<span className="ga-meaning-origin"> / Bhuwana</span></h2>
                             <p className="ga-meaning-etymology">bhuvanā (Sanskerta)</p>
+                            <NameDiscovery />
                         </div>
                         <div className="ga-story-content">
                             <p className="ga-copy">Buana berasal dari bahasa Sanskerta <em>bhuvanā</em>, yang berarti dunia, bumi, alam semesta, atau jagat raya. Dalam konteks lokal Nusantara, terutama Jawa dan Bali, kata ini dipakai untuk merujuk pada lingkup yang luas, terbentang, dan mencakup segalanya.</p>
-                            <div className="ga-meaning-cards">
-                                <div className="ga-meaning-card"><h3>Bhuana Alit</h3><span>Dunia kecil</span><p className="ga-copy">Manusia dengan kegiatannya sehari-hari: mahasiswa, dosen, petugas, dan admin.</p></div>
-                                <div className="ga-meaning-card"><h3>Bhuana Agung</h3><span>Dunia besar</span><p className="ga-copy">Alam semesta, yaitu seluruh fasilitas kampus yang terhubung dalam satu layanan.</p></div>
-                            </div>
+                            <MeaningLens />
                             <p className="ga-copy">Nama ini mencerminkan tujuan kami: menghubungkan dunia kecil setiap pengguna dengan dunia besar fasilitas kampus, sehingga setiap ruang mudah ditemukan dan dikelola.</p>
                         </div>
                     </div>

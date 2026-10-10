@@ -68,7 +68,7 @@ function ReservationActions({ reservation, onShowTicket }) {
 	return <span className="text-xs text-gray-400">{reservation.status === 'menunggu' ? 'Tidak dapat dibatalkan' : 'Tidak tersedia'}</span>;
 }
 
-export default function MyReservations({ user, csrfToken, urls, reservations, filters, status, error }) {
+export default function MyReservations({ user, csrfToken, urls, reservations, filters, status, error, preview = false }) {
 	const filterForm = useForm({ ...filters });
 	const [selectedReservation, setSelectedReservation] = useState(null);
 
@@ -439,6 +439,7 @@ export default function MyReservations({ user, csrfToken, urls, reservations, fi
 
 	return (
 		<AppLayout
+			preview={preview}
 			user={user}
 			csrfToken={csrfToken}
 			urls={urls}
@@ -451,7 +452,7 @@ export default function MyReservations({ user, csrfToken, urls, reservations, fi
 				</Button>
 			)}
 		>
-			<Head title="Reservasi Saya" />
+			{!preview && <Head title="Reservasi Saya" />}
 			{status && <p role="status" className="mb-4 rounded-md border border-teal-200 bg-teal-50 px-4 py-3 text-sm text-teal-800">{status}</p>}
 			{error && <p role="alert" className="mb-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>}
 

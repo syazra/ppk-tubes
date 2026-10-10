@@ -31,11 +31,12 @@ function formatTime(value) {
 	return value ? value.slice(0, 5) : '-';
 }
 
-export default function Dashboard({ user, csrfToken, urls, recentReservations = [], recentReports = [] }) {
+export default function Dashboard({ user, csrfToken, urls, recentReservations = [], recentReports = [], preview = false }) {
 	const shouldReduceMotion = useReducedMotion();
 
 	return (
 		<AppLayout
+			preview={preview}
 			user={user}
 			csrfToken={csrfToken}
 			urls={urls}
@@ -43,7 +44,7 @@ export default function Dashboard({ user, csrfToken, urls, recentReservations = 
 			title={`Selamat datang, ${user?.name || 'Petugas'}`}
 			subtitle="Lihat aktivitas reservasi dan pelaporan kamu di Buana."
 		>
-			<Head title="Beranda Buana" />
+			{!preview && <Head title="Beranda Buana" />}
 
 			<section className="app-quick-actions" aria-label="Mulai aktivitas">
 				{[
