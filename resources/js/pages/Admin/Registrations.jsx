@@ -4,18 +4,14 @@ import AppLayout from '../../components/AppLayout';
 import Button from '../../components/Button';
 import ButtonGray from '../../components/ButtonGray';
 import FilterTable from '../../components/FilterTable';
+import AccountFields from '../../components/AccountFields';
 
-const inputClass = 'mt-1 block w-full rounded-xl border-gray-300 bg-white-01 px-4 py-3 text-sm text-teal-darker focus:border-teal-dark-01 focus:ring-teal-dark-01';
 const accountTypes = [
     { value: 'mahasiswa', label: 'Mahasiswa' },
     { value: 'dosen', label: 'Dosen' },
     { value: 'staf', label: 'Staf' },
     { value: 'petugas', label: 'Petugas' },
 ];
-
-function FieldError({ id, message }) {
-    return message ? <p id={`${id}-error`} className="mt-2 text-sm text-red-600">{message}</p> : null;
-}
 
 function accountTypeLabel(value) {
     return accountTypes.find(type => type.value === value)?.label ?? 'Belum diklasifikasi';
@@ -27,7 +23,7 @@ function formatCreatedAt(value) {
         : '—';
 }
 
-export default function Registrations({ user, csrfToken, urls, createdAccount, status, accounts, filters }) {
+export default function Registrations({ user, csrfToken, urls, createdAccount, status, accounts, filters, identityLengths }) {
     const currentUser = user;
     const [copied, setCopied] = useState(false);
     const [editing, setEditing] = useState(null);
@@ -76,7 +72,6 @@ export default function Registrations({ user, csrfToken, urls, createdAccount, s
         setCopied(true);
     }
 
-    const identityLabel = createForm.data.account_type === 'mahasiswa' ? 'Nomor Induk Mahasiswa (NIM)' : 'Nomor Induk Pegawai (NIP)';
 
     return (
         <>
@@ -128,32 +123,7 @@ export default function Registrations({ user, csrfToken, urls, createdAccount, s
 
                         <form onSubmit={submit} className="mt-6 space-y-5">
                             <div className="grid gap-5 sm:grid-cols-2">
-                                {/* Tipe akun */}
-                                <div>
-                                    <label htmlFor="account_type" className="mb-2 block text-sm font-semibold text-teal-darker">Jenis akun</label>
-                                    <select id="account_type" name="account_type" value={createForm.data.account_type} onChange={event => createForm.setData('account_type', event.target.value)} required className={inputClass} aria-invalid={Boolean(createForm.errors.account_type)} aria-describedby={createForm.errors.account_type ? 'account_type-error' : undefined}>
-                                        {accountTypes.map(type => <option key={type.value} value={type.value}>{type.label}</option>)}
-                                    </select>
-                                    <FieldError id="account_type" message={createForm.errors.account_type} />
-                                </div>
-                                {/* Nama */}
-                                <div>
-                                    <label htmlFor="name" className="mb-2 block text-sm font-semibold text-teal-darker">Nama lengkap</label>
-                                    <input id="name" name="name" type="text" value={createForm.data.name} onChange={event => createForm.setData('name', event.target.value)} required autoComplete="name" className={inputClass} aria-invalid={Boolean(createForm.errors.name)} aria-describedby={createForm.errors.name ? 'name-error' : undefined} />
-                                    <FieldError id="name" message={createForm.errors.name} />
-                                </div>
-                                {/* NIP/NIK */}
-                                <div>
-                                    <label htmlFor="identity_number" className="mb-2 block text-sm font-semibold text-teal-darker">{identityLabel}</label>
-                                    <input id="identity_number" name="identity_number" type="text" value={createForm.data.identity_number} onChange={event => createForm.setData('identity_number', event.target.value)} required autoComplete="off" className={inputClass} aria-invalid={Boolean(createForm.errors.identity_number)} aria-describedby={createForm.errors.identity_number ? 'identity_number-error' : undefined} />
-                                    <FieldError id="identity_number" message={createForm.errors.identity_number} />
-                                </div>
-                                {/* Email */}
-                                <div>
-                                    <label htmlFor="email" className="mb-2 block text-sm font-semibold text-teal-darker">Email</label>
-                                    <input id="email" name="email" type="email" value={createForm.data.email} onChange={event => createForm.setData('email', event.target.value)} required autoComplete="email" className={inputClass} aria-invalid={Boolean(createForm.errors.email)} aria-describedby={createForm.errors.email ? 'email-error' : undefined} />
-                                    <FieldError id="email" message={createForm.errors.email} />
-                                </div>
+                                <AccountFields form={createForm} identityLengths={identityLengths} />
                             </div>
                             
                             <Button type="submit" disabled={createForm.processing}>
@@ -215,33 +185,7 @@ export default function Registrations({ user, csrfToken, urls, createdAccount, s
                     <div role="dialog" aria-modal="true" aria-labelledby="edit-account-title" className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-lg bg-white-01 p-6 shadow-xl">
                         <h2 id="edit-account-title" className="text-xl font-bold text-teal-darker">Ubah akun</h2>
                         <form onSubmit={saveEdit} className="mt-5 space-y-4">
-                            {/* jenis */}
-                            <div>
-                                <label htmlFor="edit-account-type" className="block text-sm font-semibold text-teal-darker">Jenis akun</label>
-                                <select id="edit-account-type" value={editForm.data.account_type} onChange={event => editForm.setData('account_type', event.target.value)} className={inputClass} required>
-                                    <option value="" disabled>Pilih jenis akun</option>
-                                    {accountTypes.map(type => <option key={type.value} value={type.value}>{type.label}</option>)}
-                                </select>
-                                <FieldError id="edit-account-type" message={editForm.errors.account_type} />
-                            </div>
-                            {/* nama */}
-                            <div>
-                                <label htmlFor="edit-name" className="block text-sm font-semibold text-teal-darker">Nama lengkap</label>
-                                <input id="edit-name" value={editForm.data.name} onChange={event => editForm.setData('name', event.target.value)} className={inputClass} required />
-                                <FieldError id="edit-name" message={editForm.errors.name} />
-                            </div>
-                            {/* nim/nip */}
-                            <div>
-                                <label htmlFor="edit-identity-number" className="block text-sm font-semibold text-teal-darker">NIM/NIP</label>
-                                <input id="edit-identity-number" value={editForm.data.identity_number} onChange={event => editForm.setData('identity_number', event.target.value)} className={inputClass} required />
-                                <FieldError id="edit-identity-number" message={editForm.errors.identity_number} />
-                            </div>
-                            {/* email */}
-                            <div>
-                                <label htmlFor="edit-email" className="block text-sm font-semibold text-teal-darker">Email</label>
-                                <input id="edit-email" type="email" value={editForm.data.email} onChange={event => editForm.setData('email', event.target.value)} className={inputClass} required />
-                                <FieldError id="edit-email" message={editForm.errors.email} />
-                            </div>
+                            <AccountFields form={editForm} prefix="edit-" identityLengths={identityLengths} />
                             <div className="flex justify-end gap-3 pt-2">
                                 <ButtonGray type="button" onClick={() => setEditing(null)}>
                                     Batal

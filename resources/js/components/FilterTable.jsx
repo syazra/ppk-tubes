@@ -17,16 +17,29 @@ function renderCells(row, columns, renderRow) {
         if (!isValidElement(cell) || cell.type !== 'td') return cell;
 
         const isDescription = columns[index]?.type === 'desc';
+        const isAction = columns[index]?.type === 'act';
 
-        return cloneElement(cell, {
-            className: `${cell.props.className || ''} align-top px-4 py-3`.trim(),
-            children: isDescription ? (
-                <div className="w-full min-w-0 break-all whitespace-normal">
+        let cellContent = cell.props.children;
+
+        if (isDescription) {
+            cellContent = (
+                <div className="w-full min-w-[200px] break-words whitespace-normal">
                     <ExpandableDescription>
                         {cell.props.children}
                     </ExpandableDescription>
                 </div>
-            ) : cell.props.children,
+            );
+        } else if (isAction) {
+            cellContent = (
+                <div className="w-full max-w-[120px] break-words whitespace-normal">
+                    {cell.props.children}
+                </div>
+            );
+        }
+
+        return cloneElement(cell, {
+            className: `${cell.props.className || ''} align-top px-4 py-3`.trim(),
+            children: cellContent,
         });
     });
 }

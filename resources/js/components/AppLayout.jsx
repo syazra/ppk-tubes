@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
-import { motion, MotionConfig, useReducedMotion } from 'motion/react';
+import { useEffect, useId, useRef, useState } from 'react';
+import { motion, MotionConfig } from 'motion/react';
 import Navbar from './Navbar';
 import Sidebar from './Sidebar';
 
@@ -12,21 +12,31 @@ export default function AppLayout({ user, auth, csrfToken, urls, active, title, 
     });
     const [mobileOpen, setMobileOpen] = useState(false);
     const dialogRef = useRef(null);
-    const reducedMotion = useReducedMotion();
+    const drawerId = useId();
 
     useEffect(() => {
         try { window.localStorage.setItem('app-sidebar-collapsed', String(collapsed)); } catch {}
     }, [collapsed]);
 
     useEffect(() => {
-        if (!mobileOpen) return;
         const dialog = dialogRef.current;
-        dialog.showModal();
+        if (!mobileOpen) {
+            if (dialog.open) dialog.close();
+            return;
+        }
+        if (!dialog.open) dialog.showModal();
         dialog.querySelector('[data-drawer-close]')?.focus();
         const prevOverflow = document.body.style.overflow;
         document.body.style.overflow = 'hidden';
         return () => { document.body.style.overflow = prevOverflow; };
     }, [mobileOpen]);
+
+    useEffect(() => {
+        const desktop = window.matchMedia('(min-width: 1024px)');
+        const closeOnDesktop = () => { if (desktop.matches) setMobileOpen(false); };
+        desktop.addEventListener('change', closeOnDesktop);
+        return () => desktop.removeEventListener('change', closeOnDesktop);
+    }, []);
 
     return (
         <MotionConfig reducedMotion="user" transition={{ duration: 0.22, ease: 'easeOut' }}>
@@ -36,14 +46,14 @@ export default function AppLayout({ user, auth, csrfToken, urls, active, title, 
                     <Sidebar user={currentUser} csrfToken={csrfToken} urls={urls} active={active} collapsed={collapsed} navigation={navigation} />
                 </motion.aside>
 
-                <motion.dialog ref={dialogRef} className="app-mobile-dialog" onClose={() => setMobileOpen(false)}>
+                <dialog ref={dialogRef} id={drawerId} className="app-mobile-dialog" aria-label="Menu navigasi" onClose={() => setMobileOpen(false)} onCancel={() => setMobileOpen(false)} onClick={event => { if (event.target === event.currentTarget) setMobileOpen(false); }}>
                     <div className="app-mobile-panel">
-                        <Sidebar user={currentUser} csrfToken={csrfToken} urls={urls} active={active} mobile onClose={() => setMobileOpen(false)} navigation={navigation} />
+                        <Sidebar user={currentUser} csrfToken={csrfToken} urls={urls} active={active} mobile onClose={() => setMobileOpen(false)} onNavigate={() => setMobileOpen(false)} navigation={navigation} />
                     </div>
-                </motion.dialog>
+                </dialog>
 
                 <div className="app-workspace">
-                    <Navbar user={currentUser} urls={urls} title={title} collapsed={collapsed} mobileOpen={mobileOpen} onToggleSidebar={() => setCollapsed(v => !v)} onOpenMenu={() => setMobileOpen(true)} />
+                    <Navbar user={currentUser} urls={urls} title={title} collapsed={collapsed} mobileOpen={mobileOpen} drawerId={drawerId} onToggleSidebar={() => setCollapsed(v => !v)} onOpenMenu={() => setMobileOpen(true)} />
                     <main id="app-main" tabIndex={-1} className="app-main">
                         <div className="app-page-heading">
                             <div>
