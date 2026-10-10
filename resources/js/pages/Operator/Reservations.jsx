@@ -52,7 +52,10 @@ export default function Reservations({ user, status, csrfToken, urls, reservatio
         <>
             {/* JUDUL */}
             <Head title="Kelola Reservasi" />
-            <AppLayout user={user} csrfToken={csrfToken} urls={urls} active="reservations" title="Kelola Reservasi" subtitle="Lihat dan kelola reservasi kampus.">
+            <AppLayout user={user} csrfToken={csrfToken} urls={urls} active="reservations" 
+                title="Kelola Reservasi" 
+                subtitle="Lihat dan kelola reservasi kampus."
+            >
                 {status && <div role="status" className="mb-5 rounded-xl border border-teal-light-03 bg-teal-light-01 px-4 py-3 text-sm text-teal-darker">{status}</div>}
 
                 {/* RINGKASAN */}
@@ -65,7 +68,7 @@ export default function Reservations({ user, status, csrfToken, urls, reservatio
                 {/* AKTIVITAS */}
                 <FilterTable
                     title="Semua Reservasi"
-                    description=""
+                    description="Lihat dan telusuri reservasi fasilitas kampus."
                     filterForm={filterForm}
                     onSubmit={applyFilters}
                     filterFields={[

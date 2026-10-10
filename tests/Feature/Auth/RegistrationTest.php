@@ -52,6 +52,8 @@ class RegistrationTest extends TestCase
                 ->component('Admin/Dashboard')
                 ->where('admin.name', $admin->name)
                 ->where('admin.email', $admin->email)
+                ->has('recentReservations', 0)
+                ->has('recentReports', 0)
                 ->where('urls.students', route('admin.students.store'))
                 ->etc());
 

@@ -19,6 +19,7 @@ Route::middleware(['auth', 'role:operator', 'verified'])->prefix('operator')->na
                 'room' => [
                     'name' => $reservation->room?->name,
                     'type' => $reservation->room?->type,
+                    'location' => $reservation->room?->location,
                 ],
                 'date_to_reserv' => $reservation->date_to_reserv,
                 'start_time' => $reservation->start_time,

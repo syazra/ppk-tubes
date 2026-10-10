@@ -39,7 +39,7 @@ export default function Navbar({ user, auth, urls, title, collapsed, onToggleSid
                     )}
                 </div>
             </div>
-            <Link href={urls?.profile || '#'} className="app-navbar-profile" aria-label={`Buka profil ${userName}`}>
+            <Link href={urls?.profile || '/profile'} className="app-navbar-profile" aria-label={`Buka profil ${userName}`}>
                 <span className="hidden min-w-0 text-right sm:block">
                     <span className="block max-w-[12rem] truncate text-sm font-semibold text-teal-darker">{userName}</span>
                     <span className="block text-xs text-gray-500">{roleLabel}</span>

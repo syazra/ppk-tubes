@@ -75,7 +75,7 @@ export default function Dashboard({ user, status, csrfToken, urls, recentReserva
                                     <div key={reservation.id} className={`flex flex-wrap items-center justify-between gap-3 py-4 ${index === 0 ? 'pt-0' : ''}`}>
                                         <div className="min-w-0">
                                             <h3 className="font-semibold text-teal-darker">{reservation.room?.name ?? 'Ruangan'}</h3>
-                                            <p className="mt-1 text-xs text-gray-500">{reservation.room?.type ?? 'Fasilitas'}</p>
+                                            <p className="mt-1 text-xs text-gray-500">{reservation.room?.location ?? 'Fasilitas'}</p>
                                             <p className="mt-1 text-sm text-teal-700">
                                                 {formatDate(reservation.date_to_reserv)}, {formatTime(reservation.start_time)} - {formatTime(reservation.end_time)}
                                             </p>
