@@ -14,7 +14,7 @@ const metrics = [
     { summaryKey: 'rejected', label: 'Reservasi Ditolak', icon: 'close' },
 ];
 
-export default function Reservations({ user, status, csrfToken, urls, reservations, filters, summary }) {
+export default function Reservations({ user, status, csrfToken, urls, reservations, filters, summary, errors = {} }) {
     const filterForm = useForm({ ...filters });
     const [selectedReservation, setSelectedReservation] = useState(null);
 
@@ -40,6 +40,8 @@ export default function Reservations({ user, status, csrfToken, urls, reservatio
                 subtitle="Lihat dan kelola reservasi kampus."
             >
                 {status && <div role="status" className="mb-5 rounded-xl border border-teal-light-03 bg-teal-light-01 px-4 py-3 text-sm text-teal-darker">{status}</div>}
+                {errors.reservation && <p role="alert" className="mb-4 text-sm text-red-700">{errors.reservation}</p>}
+                {errors.rejection_reason && <p role="alert" className="mb-4 text-sm text-red-700">{errors.rejection_reason}</p>}
 
                 {/* RINGKASAN */}
                 <section aria-labelledby="summary-title">

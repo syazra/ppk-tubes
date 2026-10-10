@@ -6,17 +6,22 @@ use App\Http\Controllers\Controller;
 use App\Support\LoginRedirect;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\View\View;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class EmailVerificationPromptController extends Controller
 {
     /**
      * Display the email verification prompt.
      */
-    public function __invoke(Request $request): RedirectResponse|View
+    public function __invoke(Request $request): RedirectResponse|Response
     {
         return $request->user()->hasVerifiedEmail()
                     ? redirect(app(LoginRedirect::class)->destination($request))
-                    : view('auth.verify-email');
+                    : Inertia::render('Auth/VerifyEmail', [
+                        'status' => $request->session()->get('status'),
+                        'sendUrl' => route('verification.send'),
+                        'logoutUrl' => route('logout'),
+                    ]);
     }
 }

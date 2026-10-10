@@ -12,76 +12,54 @@ class RegistrationTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->withoutVite();
+    }
+
     public function test_public_registration_is_disabled(): void
     {
         $this->get('/register')->assertNotFound();
-        $this->post('/register', [
-            'name' => 'Student',
-            'email' => 'student@students.kampus.ac.id',
-            'password' => 'password',
-            'password_confirmation' => 'password',
-        ])->assertNotFound();
+        $this->post('/register', ['name' => 'Student', 'email' => 'student@example.test', 'password' => 'password'])->assertNotFound();
         $this->assertDatabaseCount('users', 0);
     }
 
-    public function test_only_admin_can_access_student_registration(): void
+    public function test_only_admin_can_access_account_registration(): void
     {
-        $student = User::factory()->create(['role' => 'user', 'email' => 'student@students.kampus.ac.id']);
-
-        $this->get('/admin/dashboard')->assertRedirect('/login');
-        $this->post('/admin/students')->assertRedirect('/login');
-
-        $this->actingAs($student)->get('/admin/dashboard')->assertForbidden();
-        $this->actingAs($student)->post('/admin/students', [
-            'name' => 'Another Student',
-            'email' => 'another@students.kampus.ac.id',
-            'password' => 'password',
-            'password_confirmation' => 'password',
-        ])->assertForbidden();
-
-        $this->assertDatabaseMissing('users', ['email' => 'another@students.kampus.ac.id']);
+        $student = User::factory()->create();
+        $this->get('/admin/registrations')->assertRedirect('/login');
+        $this->post('/admin/registrations')->assertRedirect('/login');
+        $this->actingAs($student)->get('/admin/registrations')->assertForbidden();
+        $this->post('/admin/registrations', $this->payload())->assertForbidden();
+        $this->assertDatabaseCount('users', 1);
     }
 
-    public function test_admin_can_create_student_without_becoming_that_student(): void
+    public function test_admin_can_provision_a_student_without_changing_their_own_session(): void
     {
-        $admin = User::factory()->create(['role' => 'admin', 'email' => 'admin@admin.kampus.ac.id']);
-
-        $this->actingAs($admin)->get('/admin/dashboard')
-            ->assertOk()
-            ->assertInertia(fn (Assert $page) => $page
-                ->component('Admin/Dashboard')
-                ->where('admin.name', $admin->name)
-                ->where('admin.email', $admin->email)
-                ->has('recentReservations', 0)
-                ->has('recentReports', 0)
-                ->where('urls.students', route('admin.students.store'))
-                ->etc());
-
-        $response = $this->actingAs($admin)->post('/admin/students', [
-            'name' => 'New Student',
-            'email' => 'new@students.kampus.ac.id',
-            'password' => 'password',
-            'password_confirmation' => 'password',
-        ]);
-
-        $response->assertSessionHasNoErrors()->assertRedirect(route('admin.dashboard'));
+        $admin = User::factory()->create(['role' => 'admin']);
+        $this->actingAs($admin)->get('/admin/registrations')->assertOk()->assertInertia(fn (Assert $page) => $page
+            ->component('Admin/Registrations')->where('urls.registrationStore', route('admin.registrations.store'))->etc());
+        $this->post('/admin/registrations', $this->payload() + ['password' => 'attacker-chosen-password', 'role' => 'admin'])
+            ->assertSessionHasNoErrors()->assertRedirect(route('admin.registrations.index'))->assertSessionHas('createdAccount');
         $this->assertAuthenticatedAs($admin);
-        $student = User::where('email', 'new@students.kampus.ac.id')->firstOrFail();
+        $student = User::where('email', 'new@example.test')->sole();
         $this->assertSame('user', $student->role);
-        $this->assertTrue(Hash::check('password', $student->password));
+        $this->assertTrue($student->hasVerifiedEmail());
+        $this->assertTrue(Hash::check(session('createdAccount.password'), $student->password));
+        $this->assertFalse(Hash::check('attacker-chosen-password', $student->password));
     }
 
-    public function test_admin_cannot_create_non_student_email(): void
+    public function test_admin_cannot_provision_an_account_with_an_invalid_email(): void
     {
-        $admin = User::factory()->create(['role' => 'admin', 'email' => 'admin@admin.kampus.ac.id']);
+        $this->actingAs(User::factory()->create(['role' => 'admin']))
+            ->post('/admin/registrations', array_replace($this->payload(), ['email' => 'invalid-email']))
+            ->assertSessionHasErrors('email');
+        $this->assertDatabaseCount('users', 1);
+    }
 
-        $this->actingAs($admin)->post('/admin/students', [
-            'name' => 'Wrong Domain',
-            'email' => 'wrong@example.com',
-            'password' => 'password',
-            'password_confirmation' => 'password',
-        ])->assertSessionHasErrors('email');
-
-        $this->assertDatabaseMissing('users', ['email' => 'wrong@example.com']);
+    private function payload(): array
+    {
+        return ['name' => 'New Student', 'email' => 'new@example.test', 'identity_number' => '24060124140199', 'account_type' => 'mahasiswa'];
     }
 }

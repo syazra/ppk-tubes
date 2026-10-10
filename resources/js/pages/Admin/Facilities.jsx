@@ -82,10 +82,10 @@ export default function Facilities({ user, csrfToken, urls, status, rooms, filte
     }
 
     function changeAvailability(room) {
-        const action = room.is_avail ? 'Nonaktifkan' : 'Aktifkan';
+        const action = room.is_admin_disabled ? 'Aktifkan' : 'Nonaktifkan';
         if (!window.confirm(`${action} ${room.name}?`)) return;
         setChangingId(room.id);
-        router.patch(`${urls.facilities}/${room.id}/availability`, { is_avail: !room.is_avail }, {
+        router.patch(`${urls.facilities}/${room.id}/availability`, { is_avail: room.is_admin_disabled }, {
             preserveScroll: true,
             onFinish: () => setChangingId(null),
         });
@@ -157,10 +157,10 @@ export default function Facilities({ user, csrfToken, urls, status, rooms, filte
                         <td className="whitespace-nowrap px-4 py-3">{room.location}</td>
                         <td className="whitespace-nowrap px-4 py-3">{room.type}</td>
                         <td className="whitespace-nowrap px-4 py-3">{room.capacity}</td>
-                        <td className="whitespace-nowrap px-4 py-3">{room.is_avail ? 'Aktif' : 'Nonaktif'}</td>
+                        <td className="whitespace-nowrap px-4 py-3">{room.is_admin_disabled ? 'Nonaktif' : room.is_avail ? 'Aktif' : 'Dalam perbaikan'}</td>
                         <td className="whitespace-nowrap px-4 py-3">
                             <button type="button" onClick={() => edit(room)} className="mr-4 font-semibold text-teal-dark-01 underline">Ubah</button>
-                            <button type="button" disabled={changingId === room.id} onClick={() => changeAvailability(room)} className="font-semibold text-red-600 underline disabled:opacity-50">{room.is_avail ? 'Nonaktifkan' : 'Aktifkan'}</button>
+                            <button type="button" disabled={changingId === room.id} onClick={() => changeAvailability(room)} className="font-semibold text-red-600 underline disabled:opacity-50">{room.is_admin_disabled ? 'Aktifkan' : 'Nonaktifkan'}</button>
                         </td>
                     </>
                 )}

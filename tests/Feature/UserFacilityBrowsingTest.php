@@ -49,6 +49,7 @@ class UserFacilityBrowsingTest extends TestCase
             'room_id' => $room->id,
             'user_id' => $user->id,
             'desc' => 'Tujuan reservasi rahasia',
+            'activity_name' => 'Tujuan reservasi rahasia',
             'date_to_reserv' => '2026-10-06',
             'start_time' => '10:00',
             'end_time' => '11:00',
@@ -88,6 +89,9 @@ class UserFacilityBrowsingTest extends TestCase
         return $attributes + [
             'room_id' => $room->id,
             'desc' => 'Kegiatan pengguna',
+            'activity_name' => 'Kegiatan pengguna',
+            'reservation_type' => 'Individu',
+            'participant_count' => 1,
             'date_to_reserv' => '2026-10-06',
             'start_time' => '09:00',
             'end_time' => '10:00',
@@ -125,14 +129,16 @@ class UserFacilityBrowsingTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page
                 ->component('User/ReservationForm')
                 ->where('facilities.data.0.id', $inactive->id)
-            ->where('facilities.data.0.images.0.url', Storage::disk('public')->url('facilities/aula.jpg'))
+                ->where('facilities.data.0.images.0.url', Storage::disk('public')->url('facilities/aula.jpg'))
                 ->where('rooms.0.id', $active->id)
                 ->where('selectedFacility', null)
                 ->where('urls.store', route('reservations.store'))
             );
         $this->get(route('reservations.facilities', ['type' => 'Laboratorium']))->assertOk()
-            ->assertSee('data-select-facility="'.$active->id.'"', false)
-            ->assertSee('data-facility-label="'.$active->name.' · '.$active->location.'"', false);
+            ->assertInertia(fn (Assert $page) => $page->component('User/Catalog')
+                ->where('facilities.data.0.id', $active->id)
+                ->where('facilities.data.0.name', $active->name)
+                ->where('facilities.data.0.location', $active->location));
     }
 
     public function test_type_location_and_minimum_capacity_filters_work_separately_and_together(): void
@@ -149,7 +155,7 @@ class UserFacilityBrowsingTest extends TestCase
             [['type' => 'Laboratorium', 'location' => 'gedung a', 'capacity' => 40], [$labA->id]],
         ] as [$filters, $ids]) {
             $this->get(route('reservations.facilities', $filters))->assertOk()
-                ->assertViewHas('facilities', fn ($facilities) => $facilities->pluck('id')->all() === $ids);
+                ->assertInertia(fn (Assert $page) => $page->where('facilities.data', fn ($rows) => collect($rows)->pluck('id')->all() === $ids));
         }
     }
 
@@ -160,7 +166,7 @@ class UserFacilityBrowsingTest extends TestCase
         $this->facility(['name' => 'Lab Kedua', 'location' => 'Gedung 100AXTimur']);
 
         $this->get(route('reservations.facilities', ['location' => '%_']))->assertOk()
-            ->assertViewHas('facilities', fn ($facilities) => $facilities->pluck('id')->all() === [$literal->id]);
+            ->assertInertia(fn (Assert $page) => $page->where('facilities.data', fn ($rows) => collect($rows)->pluck('id')->all() === [$literal->id]));
     }
 
     public function test_invalid_filters_and_dates_are_rejected(): void
@@ -202,26 +208,18 @@ class UserFacilityBrowsingTest extends TestCase
         $filters = ['type' => 'Laboratorium', 'location' => 'Gedung A', 'capacity' => 40, 'date' => '2026-10-06'];
 
         $response = $this->get(route('reservations.facilities', $filters))->assertOk()
-            ->assertViewHas('facilities', fn ($facilities) => $facilities->count() === 6 && $facilities->total() === 7);
-        preg_match_all('/href="([^"]+)"/', $response->getContent(), $matches);
-        $nextPage = null;
-        foreach ($matches[1] as $href) {
-            parse_str(parse_url(html_entity_decode($href), PHP_URL_QUERY) ?? '', $query);
-            if (($query['page'] ?? null) === '2') {
-                $nextPage = $query;
-                break;
-            }
-        }
-        $this->assertNotNull($nextPage, 'The rendered catalog must link to its second page.');
+            ->assertInertia(fn (Assert $page) => $page->has('facilities.data', 6)->where('facilities.total', 7));
+        $nextUrl = $response->viewData('page')['props']['facilities']['next_page_url'];
+        $this->assertNotNull($nextUrl, 'The React catalog must link to its second page.');
+        parse_str(parse_url($nextUrl, PHP_URL_QUERY) ?? '', $nextPage);
         foreach ($filters as $key => $value) {
             $this->assertSame((string) $value, $nextPage[$key] ?? null);
         }
         $this->get(route('reservations.facilities', [...$filters, 'page' => 2]))->assertOk()
-            ->assertViewHas('facilities', fn ($facilities) => $facilities->pluck('name')->all() === ['Lab 07']);
+            ->assertInertia(fn (Assert $page) => $page->has('facilities.data', 1)->where('facilities.data.0.name', 'Lab 07'));
 
         $this->get(route('reservations.facilities', ['location' => 'Tidak Ditemukan']))->assertOk()
-            ->assertViewHas('facilities', fn ($facilities) => $facilities->isEmpty())
-            ->assertSee('Reset');
+            ->assertInertia(fn (Assert $page) => $page->has('facilities.data', 0)->where('facilities.total', 0));
     }
 
     public function test_facility_photo_order_and_public_urls_and_no_photo_fallback_are_rendered(): void
@@ -238,19 +236,16 @@ class UserFacilityBrowsingTest extends TestCase
         $room->images()->create(['path' => 'facilities/second.jpg', 'alt_text' => 'Foto kedua', 'display_order' => 0]);
 
         $response = $this->get(route('reservations.facilities'))->assertOk();
-        $response->assertViewHas('facilities', function ($facilities) use ($room) {
-            $facility = $facilities->firstWhere('id', $room->id);
-
-            return $facility->relationLoaded('images') && $facility->images->pluck('path')->all() === [
-                'facilities/first.jpg', 'facilities/second.jpg', 'facilities/third.jpg',
-            ];
-        });
-        foreach (['facilities/first.jpg', 'facilities/second.jpg', 'facilities/third.jpg'] as $path) {
-            $response->assertSee(Storage::disk('public')->url($path), false);
-        }
-        $response->assertSee('Foto utama')->assertSee('Foto kedua')->assertSee('Foto ketiga');
-        $response->assertSee('Tanpa Foto');
-        $this->assertMatchesRegularExpression('/<img[^>]+(?:placeholder|no-image)[^>]*>/i', $response->getContent());
+        $response->assertInertia(fn (Assert $page) => $page
+            ->where('facilities.data.0.id', $room->id)
+            ->where('facilities.data.0.images', fn ($images) => collect($images)->pluck('url')->all() === array_map(
+                fn ($path) => Storage::disk('public')->url($path),
+                ['facilities/first.jpg', 'facilities/second.jpg', 'facilities/third.jpg']))
+            ->where('facilities.data.0.images.0.alt_text', 'Foto utama')
+            ->where('facilities.data.0.images.1.alt_text', 'Foto kedua')
+            ->where('facilities.data.0.images.2.alt_text', 'Foto ketiga')
+            ->where('facilities.data.1.name', 'Tanpa Foto')->has('facilities.data.1.images', 0)
+            ->where('photoPlaceholderUrl', asset('images/facility-placeholder-photo.jpg')));
     }
 
     public function test_out_of_range_page_does_not_generate_an_unbounded_list_of_pagination_links(): void
@@ -261,10 +256,10 @@ class UserFacilityBrowsingTest extends TestCase
         }
 
         $response = $this->get(route('reservations.facilities', ['page' => 100000]))->assertOk()
-            ->assertViewHas('facilities', fn ($facilities) => $facilities->isEmpty() && $facilities->total() === 7);
+            ->assertInertia(fn (Assert $page) => $page->has('facilities.data', 0)->where('facilities.total', 7));
         $content = $response->getContent();
-        preg_match_all('/data-facility-page\b/', $content, $links);
-        $this->assertLessThanOrEqual(7, count($links[0]), 'Pagination must keep a bounded number of links even outside the last page.');
+        $links = $response->viewData('page')['props']['facilities']['links'];
+        $this->assertLessThanOrEqual(7, count($links), 'Pagination must keep a bounded number of links even outside the last page.');
         $this->assertLessThan(20000, strlen($content), 'An empty partial must not render thousands of pagination links.');
     }
 
@@ -293,7 +288,7 @@ class UserFacilityBrowsingTest extends TestCase
         $this->slots($room)->assertExactJson([
             'room_id' => $room->id,
             'date' => '2026-10-06',
-            'slots' => $this->expectedSlots(['10:00', '10:30']),
+            'slots' => $this->expectedSlots(),
         ]);
     }
 
@@ -312,7 +307,7 @@ class UserFacilityBrowsingTest extends TestCase
         $this->slots($room)->assertOk()->assertExactJson([
             'room_id' => $room->id,
             'date' => '2026-10-06',
-            'slots' => $this->expectedSlots(['10:00', '10:30', '11:00', '11:30']),
+            'slots' => $this->expectedSlots(['11:00', '11:30']),
         ]);
     }
 
@@ -320,7 +315,7 @@ class UserFacilityBrowsingTest extends TestCase
     {
         $user = $this->signIn();
         $room = $this->facility();
-        $this->booking($room, $user, ['start_time' => '08:30:01', 'end_time' => '09:00:01']);
+        $this->booking($room, $user, ['status' => 'disetujui', 'start_time' => '08:30:01', 'end_time' => '09:00:01']);
 
         $this->slots($room)->assertOk()->assertExactJson([
             'room_id' => $room->id,
@@ -332,7 +327,7 @@ class UserFacilityBrowsingTest extends TestCase
         $this->assertDatabaseCount('reservations', 1);
     }
 
-    public function test_three_hour_cutoff_uses_application_time_and_accepts_the_exact_boundary(): void
+    public function test_twelve_hour_cutoff_uses_application_time_and_accepts_the_exact_boundary(): void
     {
         $this->signIn();
         $room = $this->facility();
@@ -340,15 +335,15 @@ class UserFacilityBrowsingTest extends TestCase
         $this->slots($room, '2026-10-05')->assertOk()->assertExactJson([
             'room_id' => $room->id,
             'date' => '2026-10-05',
-            'slots' => $this->expectedSlots(['07:00', '07:30', '08:00', '08:30']),
+            'slots' => $this->expectedSlots(array_map(fn ($hour) => sprintf('%02d:%02d', intdiv($hour, 60), $hour % 60), range(7 * 60, 17 * 60 + 30, 30))),
         ]);
         $this->travelTo(Carbon::parse('2026-10-05 06:00:01', 'Asia/Jakarta'));
         $this->slots($room, '2026-10-05')->assertOk()->assertExactJson([
             'room_id' => $room->id,
             'date' => '2026-10-05',
-            'slots' => $this->expectedSlots(['07:00', '07:30', '08:00', '08:30', '09:00']),
+            'slots' => $this->expectedSlots(array_map(fn ($hour) => sprintf('%02d:%02d', intdiv($hour, 60), $hour % 60), range(7 * 60, 18 * 60, 30))),
         ]);
-        $this->post(route('reservations.store'), $this->reservationPayload($room, ['date_to_reserv' => '2026-10-05']))
+        $this->post(route('reservations.store'), $this->reservationPayload($room, ['date_to_reserv' => '2026-10-05', 'start_time' => '18:00', 'end_time' => '18:30']))
             ->assertSessionHasErrors('time');
         $this->assertDatabaseCount('reservations', 0);
     }
@@ -375,11 +370,11 @@ class UserFacilityBrowsingTest extends TestCase
         $this->slots($active, '2026-10-06')->assertOk()->assertExactJson([
             'room_id' => $active->id,
             'date' => '2026-10-06',
-            'slots' => $this->expectedSlots(),
+            'slots' => $this->expectedSlots(['07:00', '07:30', '08:00', '08:30', '09:00', '09:30', '10:00']),
         ]);
         $response = $this->getJson(route('reservations.slots', ['room_id' => $active->id, 'date' => '2026-10-06']))
             ->assertOk()->assertHeader('X-Reservation-Earliest-Start');
-        $this->assertSame('2026-10-06T01:30:00+07:00', Carbon::parse($response->headers->get('X-Reservation-Earliest-Start'))->toIso8601String());
+        $this->assertSame('2026-10-06T10:30:00+07:00', Carbon::parse($response->headers->get('X-Reservation-Earliest-Start'))->toIso8601String());
         $this->get(route('reservations.form'))->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('User/ReservationForm')
@@ -391,14 +386,14 @@ class UserFacilityBrowsingTest extends TestCase
     {
         $user = $this->signIn();
         $room = $this->facility();
-        $this->booking($room, $user, ['start_time' => '10:00:00', 'end_time' => '11:00:00']);
+        $this->booking($room, $user, ['status' => 'disetujui', 'start_time' => '10:00:00', 'end_time' => '11:00:00']);
         $this->booking($room, $user, ['status' => 'dibatalkan', 'start_time' => '11:00:00', 'end_time' => '12:00:00']);
 
         $response = $this->getJson(route('reservations.slots', ['room_id' => $room->id, 'date' => '2026-10-06']))
             ->assertOk()->assertExactJson([['start_time' => '10:00:00', 'end_time' => '11:00:00']])
             ->assertHeader('X-Reservation-Earliest-Start')
             ->assertHeader('X-Reservation-Timezone', 'Asia/Jakarta');
-        $this->assertSame('2026-10-05T09:00:00+07:00', Carbon::parse($response->headers->get('X-Reservation-Earliest-Start'))->toIso8601String());
+        $this->assertSame('2026-10-05T18:00:00+07:00', Carbon::parse($response->headers->get('X-Reservation-Earliest-Start'))->toIso8601String());
         $this->getJson(route('reservations.slots', ['room_id' => $room->id, 'date' => '2026-10-05']))
             ->assertOk()->assertExactJson([]);
 
@@ -412,12 +407,12 @@ class UserFacilityBrowsingTest extends TestCase
         $user = $this->signIn();
         $room = $this->facility();
 
-        $this->post(route('reservations.store'), $this->reservationPayload($room, ['date_to_reserv' => '2026-10-05']))
+        $this->post(route('reservations.store'), $this->reservationPayload($room, ['date_to_reserv' => '2026-10-06']))
             ->assertSessionHasNoErrors()->assertRedirect(route('reservations.index'));
         $this->assertDatabaseHas('reservations', [
             'user_id' => $user->id,
             'room_id' => $room->id,
-            'date_to_reserv' => '2026-10-05',
+            'date_to_reserv' => '2026-10-06',
             'start_time' => '09:00',
             'end_time' => '10:00',
             'desc' => 'Kegiatan pengguna',
@@ -461,13 +456,13 @@ class UserFacilityBrowsingTest extends TestCase
             'end_time' => '09:30',
             'desc' => 'Kegiatan yang belum terkirim',
         ]))->assertRedirect(route('reservations.form'))
-            ->assertSessionHasErrors(['time' => 'Reservasi harus dimulai minimal tiga jam dari sekarang.']);
+            ->assertSessionHasErrors(['time' => 'Reservasi harus dimulai minimal 12 jam dari sekarang.']);
 
         $this->withCookie(config('session.cookie'), $this->app['session']->getId());
         $this->get(route('reservations.form'))->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('User/ReservationForm')
-                ->where('errors.time', 'Reservasi harus dimulai minimal tiga jam dari sekarang.')
+                ->where('errors.time', 'Reservasi harus dimulai minimal 12 jam dari sekarang.')
                 ->where('selectedFacility.id', $room->id)
                 ->where('oldInput.room_id', $room->id)
                 ->where('oldInput.date_to_reserv', '2026-10-05')
@@ -511,7 +506,7 @@ class UserFacilityBrowsingTest extends TestCase
         $this->booking($room, $user, ['status' => 'disetujui', 'start_time' => '11:00', 'end_time' => '12:00']);
         $this->booking($room, $user, ['status' => 'ditolak', 'start_time' => '13:00', 'end_time' => '14:00']);
 
-        foreach ([['10:00', '10:30'], ['11:30', '12:00'], ['09:30', '10:30']] as [$start, $end]) {
+        foreach ([['11:00', '11:30'], ['11:30', '12:00'], ['10:30', '11:30']] as [$start, $end]) {
             $this->post(route('reservations.store'), $this->reservationPayload($room, ['start_time' => $start, 'end_time' => $end]))
                 ->assertSessionHasErrors('time');
         }
@@ -531,7 +526,7 @@ class UserFacilityBrowsingTest extends TestCase
     {
         $user = $this->signIn();
         $room = $this->facility();
-        $this->booking($room, $user, ['start_time' => '10:00:00', 'end_time' => '11:00:00']);
+        $this->booking($room, $user, ['status' => 'disetujui', 'start_time' => '10:00:00', 'end_time' => '11:00:00']);
 
         foreach ([['09:30', '10:00'], ['11:00', '11:30']] as [$start, $end]) {
             $this->post(route('reservations.store'), $this->reservationPayload($room, ['start_time' => $start, 'end_time' => $end]))

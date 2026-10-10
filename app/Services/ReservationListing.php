@@ -9,6 +9,7 @@ use Illuminate\Validation\Rule;
 
 class ReservationListing
 {
+    /** @return array{search: string, status: string, sort: string} */
     public static function filters(Request $request): array
     {
         $validated = $request->validate([
@@ -24,6 +25,11 @@ class ReservationListing
         ];
     }
 
+    /**
+     * @param  Builder<Reservation>  $query
+     * @param  array{search: string, status: string, sort: string}  $filters
+     * @return Builder<Reservation>
+     */
     public static function apply(Builder $query, array $filters): Builder
     {
         $query->when($filters['status'] !== '', fn ($query) => $query->where('status', $filters['status']))
@@ -47,6 +53,7 @@ class ReservationListing
         };
     }
 
+    /** @return array<string, mixed> */
     public static function data(Reservation $reservation): array
     {
         return [
@@ -65,6 +72,7 @@ class ReservationListing
             'rejection_reason' => $reservation->rejection_reason,
             'ticket_url' => route('reservations.ticket', $reservation),
             'qr_url' => route('reservations.qrcode', $reservation),
+            'proposal_url' => $reservation->proposal_path ? route('reservations.proposal', $reservation) : null,
         ];
     }
 }

@@ -1,8 +1,10 @@
 <?php
 
 namespace App\Models;
-use carbon\carbon;
+
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Reservation extends Model
 {
@@ -19,31 +21,37 @@ class Reservation extends Model
         'start_time',
         'end_time',
         'status',
+        'attachment_bytes',
     ];
 
-
-    public function room()
+    /** @return BelongsTo<Room, $this> */
+    public function room(): BelongsTo
     {
         return $this->belongsTo(Room::class);
     }
 
-
-    public function user()
+    /** @return BelongsTo<User, $this> */
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-
-    public function getDeadlineTime()
+    public function getDeadlineTime(): CarbonImmutable
     {
-        return Carbon::parse(
-            $this->date_to_reserv . ' ' . $this->start_time
+        return CarbonImmutable::parse(
+            $this->date_to_reserv.' '.$this->start_time
         )->subHours(12);
     }
 
-
-    public function canStillBeProcessed()
+    public function canStillBeProcessed(): bool
     {
         return now()->lt($this->getDeadlineTime());
+    }
+
+    public function canBeCancelled(): bool
+    {
+        $cutoff = CarbonImmutable::parse($this->date_to_reserv.' '.$this->start_time, config('app.timezone'))->subHours(6);
+
+        return $this->status === 'menunggu' && CarbonImmutable::now(config('app.timezone'))->lte($cutoff);
     }
 }

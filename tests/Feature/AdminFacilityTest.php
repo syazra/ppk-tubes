@@ -108,6 +108,7 @@ class AdminFacilityTest extends TestCase
         ] as [$room, $status, $date, $start, $end]) {
             Reservation::create([
                 'user_id' => $user->id, 'room_id' => $room->id, 'desc' => 'Kegiatan',
+                'activity_name' => 'Kegiatan',
                 'date_to_reserv' => $date, 'start_time' => $start,
                 'end_time' => $end, 'status' => $status,
             ]);

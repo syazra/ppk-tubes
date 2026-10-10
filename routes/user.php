@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AttachmentController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ReservationController;
@@ -54,6 +55,8 @@ Route::middleware(['auth', 'role:admin,operator,user'])->group(function () {
     Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/reservations/{reservation}/ticket', [ReservationController::class, 'ticket'])->name('reservations.ticket');
         Route::get('/reservations/{reservation}/qrcode', [ReservationController::class, 'qrcode'])->name('reservations.qrcode');
+        Route::get('/reservations/{reservation}/proposal', [AttachmentController::class, 'proposal'])->name('reservations.proposal');
+        Route::get('/reports/images/{image}', [AttachmentController::class, 'reportImage'])->name('reports.images.show');
     });
 
     Route::middleware(['role:user', 'verified'])->group(function () {
@@ -63,7 +66,7 @@ Route::middleware(['auth', 'role:admin,operator,user'])->group(function () {
             Route::get('/slots', 'availableSlots')->name('slots');
             Route::get('/facilities', 'facilities')->name('facilities');
             Route::get('/facilities/{room}/slots', 'facilitySlots')->name('facility-slots');
-            Route::post('/', 'store')->name('store');
+            Route::post('/', 'store')->middleware('throttle:resource-creation')->name('store');
             // Route::get('/{reservation}/ticket', 'ticket')->name('ticket');
             // Route::get('/{reservation}/qrcode', 'qrcode')->name('qrcode');
             Route::patch('/{reservation}/cancel', 'cancel')->name('cancel');
@@ -71,7 +74,7 @@ Route::middleware(['auth', 'role:admin,operator,user'])->group(function () {
 
         Route::get('/my-reports', [ReportController::class, 'index'])->name('reports.index');
         Route::get('/report/create', [ReportController::class, 'create'])->name('reports.create');
-        Route::post('/report/store', [ReportController::class, 'store'])->name('reports.store');
+        Route::post('/report/store', [ReportController::class, 'store'])->middleware('throttle:resource-creation')->name('reports.store');
         Route::patch('/reports/{report}/cancel', [ReportController::class, 'cancel'])->name('reports.cancel');
     });
 });

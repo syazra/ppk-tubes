@@ -7,6 +7,7 @@ use Illuminate\Auth\Events\Verified;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\URL;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class EmailVerificationTest extends TestCase
@@ -19,7 +20,8 @@ class EmailVerificationTest extends TestCase
 
         $response = $this->actingAs($user)->get('/verify-email');
 
-        $response->assertStatus(200);
+        $response->assertStatus(200)->assertInertia(fn (Assert $page) => $page
+            ->component('Auth/VerifyEmail')->where('sendUrl', route('verification.send')));
     }
 
     public function test_email_can_be_verified(): void

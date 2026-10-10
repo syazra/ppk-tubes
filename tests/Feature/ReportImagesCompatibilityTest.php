@@ -59,7 +59,7 @@ class ReportImagesCompatibilityTest extends TestCase
 
     private function uploadPhotos(User $user, Room $room): void
     {
-        Storage::fake('public');
+        Storage::fake('attachments');
         $png = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aWQAAAABJRU5ErkJggg==');
         $this->actingAs($user)->post(route('reports.store'), [
             'room_id' => $room->id,
@@ -73,7 +73,7 @@ class ReportImagesCompatibilityTest extends TestCase
         $report = Report::where('desc', 'Laporan baru')->firstOrFail();
         $this->assertCount(2, $report->images);
         foreach ($report->images as $image) {
-            Storage::disk('public')->assertExists($image->image);
+            Storage::disk('attachments')->assertExists($image->image);
         }
     }
 

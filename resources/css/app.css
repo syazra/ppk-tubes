@@ -1,9 +1,12 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 @import './ambient-particles.css';
+@import 'tailwindcss';
+@config '../../tailwind.config.js';
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* Preserve the v3 default border color while using patched v4 tooling. */
+@layer base {
+    *, ::before, ::after { border-color: var(--color-gray-200, currentColor); }
+}
 
 /* Di seluruh komponen, pakai kelas 'app' (bukan user, bukan admin, dll) */
 

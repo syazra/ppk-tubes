@@ -107,7 +107,7 @@ class ReportSeeder extends Seeder
     private function targetCount(int $userCount, int $roomCount): int
     {
         $minimum = 12;
-        $override = env('DEMO_REPORTS');
+        $override = config('demo.reports');
         if (is_numeric($override)) {
             return max($minimum, (int) $override);
         }

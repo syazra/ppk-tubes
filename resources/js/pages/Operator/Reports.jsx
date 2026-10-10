@@ -48,7 +48,7 @@ function openPicker(event) {
     }
 }
 
-export default function Reports({ user, status, csrfToken, urls, reports, filters, summary }) {
+export default function Reports({ user, status, csrfToken, urls, reports, filters, summary, errors = {} }) {
     const filterForm = useForm({ search: filters.search, status: filters.status });
 
     const [selectedReportForProcess, setSelectedReportForProcess] = useState(null);
@@ -129,6 +129,7 @@ export default function Reports({ user, status, csrfToken, urls, reports, filter
             <Head title="Laporan Kerusakan" />
             <AppLayout user={user} csrfToken={csrfToken} urls={urls} active="reports" title="Laporan Kerusakan" subtitle="Lihat laporan kerusakan fasilitas kampus.">
                 {status && <div role="status" className="mb-5 rounded-xl border border-teal-light-03 bg-teal-light-01 px-4 py-3 text-sm text-teal-darker">{status}</div>}
+                {errors.report && <p role="alert" className="mb-4 text-sm text-red-700">{errors.report}</p>}
 
                 {/* RINGKASAN */}
                 <section aria-labelledby="summary-title">
@@ -192,7 +193,7 @@ export default function Reports({ user, status, csrfToken, urls, reports, filter
                                         {report.images.map((image, index) => (
                                             <a
                                                 key={image.id ?? index}
-                                                href={`/storage/${image.image.replace(/^\/+/, '')}`}
+                                                href={image.url ?? `/reports/images/${image.id}`}
                                                 target="_blank"
                                                 rel="noreferrer"
                                                 className="text-sm font-semibold text-teal-dark-01 hover:underline"

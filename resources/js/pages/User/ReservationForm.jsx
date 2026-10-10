@@ -128,6 +128,7 @@ export default function ReservationForm({
 	return (
 		<AppLayout user={user} auth={auth} csrfToken={csrfToken} urls={urls} active="reservations" title="Form Reservasi" subtitle="Pilih fasilitas, periksa jadwal, lalu ajukan peminjaman.">
 			<Head title="Form Reservasi" />
+			{form.errors.quota && <p role="alert" className="mb-4 text-sm text-red-700">{form.errors.quota}</p>}
 
 			{/* FILTER KATALOG */}
 			<GuestFacilityFilters

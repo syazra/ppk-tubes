@@ -36,6 +36,7 @@ class FacilityThemeSeederTest extends TestCase
             'room_id' => $room->id,
             'user_id' => $user->id,
             'desc' => 'Kegiatan belajar bersama di Lab Komputer 1',
+            'activity_name' => 'Kegiatan belajar bersama di Lab Komputer 1',
             'date_to_reserv' => now()->addDays(5)->toDateString(),
             'start_time' => '08:00:00',
             'end_time' => '10:00:00',
