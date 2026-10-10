@@ -13,6 +13,11 @@ const statusLabels = {
 	dibatalkan: 'Dibatalkan',
 };
 
+const sortOptions = [
+	{ value: 'created_near', label: 'Pengaduan terbaru' },
+	{ value: 'created_far', label: 'Pengaduan terlama' },
+];
+
 function ReportActions({ report }) {
 	const cancelForm = useForm({});
 
@@ -131,6 +136,13 @@ export default function MyReports({ reports, user, auth, csrfToken, urls, error,
 							{ value: 'ditolak', label: 'Ditolak' },
 							{ value: 'dibatalkan', label: 'Dibatalkan' },
 						],
+					},
+					{ 
+						name: 'sort', 
+						id: 'report-sort', 
+						label: 'Urutkan laporan', 
+						type: 'select', 
+						options: sortOptions 
 					},
 				]}
 				rows={{

@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { Children, cloneElement, Fragment, isValidElement } from 'react';
+import { Children, cloneElement, Fragment, isValidElement, useEffect, useRef } from 'react';
 import ExpandableDescription from './ExpandableDescription';
 
 const inputClass = 'mt-1 block w-full rounded-xl border-gray-300 bg-white-01 px-4 py-3 text-sm text-teal-darker focus:border-teal-dark-01 focus:ring-teal-dark-01';
@@ -31,12 +31,25 @@ function renderCells(row, columns, renderRow) {
     });
 }
 
+export const DEFAULT_SORT_OPTIONS = [
+    { value: 'created_near', label: 'Terbaru' },
+    { value: 'created_far', label: 'Terlama' },
+];
+
 export default function FilterTable({
     title,
     description,
     filterForm,
     onSubmit,
     filterFields,
+    categoryOptions,
+    categoryName = 'status',
+    categoryLabel = 'Filter kategori',
+    categoryPlaceholder = 'Semua kategori',
+    sortOptions = DEFAULT_SORT_OPTIONS,
+    searchName = 'search',
+    searchLabel = 'Cari',
+    searchPlaceholder = 'Cari...',
     rows,
     columns,
     renderRow,
@@ -45,6 +58,70 @@ export default function FilterTable({
     recordLabel,
     paginationLabel: navigationLabel,
 }) {
+    const submitTimeout = useRef(null);
+    const onSubmitRef = useRef(onSubmit);
+    onSubmitRef.current = onSubmit;
+
+    useEffect(() => () => window.clearTimeout(submitTimeout.current), []);
+
+    function updateFilter(fieldName, value) {
+        filterForm.setData(fieldName, value);
+        window.clearTimeout(submitTimeout.current);
+        submitTimeout.current = window.setTimeout(() => {
+            onSubmitRef.current({ preventDefault() {} });
+        }, 350);
+    }
+
+    function submitImmediately(event) {
+        event.preventDefault();
+        window.clearTimeout(submitTimeout.current);
+        onSubmit(event);
+    }
+
+    let fieldsToRender = [];
+
+    if (filterFields && filterFields.length > 0) {
+        fieldsToRender = filterFields;
+    } else {
+        fieldsToRender = [
+            {
+                name: searchName,
+                id: `${searchName}-input`,
+                label: searchLabel,
+                placeholder: searchPlaceholder,
+            },
+        ];
+
+        if (categoryOptions && categoryOptions.length > 0) {
+            const formattedCategoryOptions = categoryOptions.map(opt =>
+                typeof opt === 'object' && opt !== null && 'value' in opt ? opt : { value: opt, label: opt }
+            );
+
+            const hasEmpty = formattedCategoryOptions.some(opt => opt.value === '');
+            const options = hasEmpty
+                ? formattedCategoryOptions
+                : [{ value: '', label: categoryPlaceholder }, ...formattedCategoryOptions];
+
+            fieldsToRender.push({
+                name: categoryName,
+                id: `${categoryName}-select`,
+                label: categoryLabel,
+                type: 'select',
+                options,
+            });
+        }
+
+        if (sortOptions && sortOptions.length > 0) {
+            fieldsToRender.push({
+                name: 'sort',
+                id: 'sort-select',
+                label: 'Urutkan',
+                type: 'select',
+                options: sortOptions,
+            });
+        }
+    }
+
     return (
         <section className="mb-8 max-w-7xl px-6 lg:px-8">
             <div className="rounded-lg border border-green-light-03 bg-white-01 p-6 shadow-sm">
@@ -55,15 +132,15 @@ export default function FilterTable({
                 </div>
 
                 {/* filter */}
-                <form onSubmit={onSubmit} className="mb-5 grid gap-3 md:grid-cols-[1fr_15rem_auto]">
-                    {filterFields.map(field => (
+                <form onSubmit={submitImmediately} className="mb-5 grid gap-3 md:grid-cols-[repeat(auto-fit,minmax(14rem,1fr))]">
+                    {fieldsToRender.map(field => (
                         <div key={field.name}>
                             <label htmlFor={field.id} className="sr-only">{field.label}</label>
                             {field.type === 'select' ? (
                                 <select
                                     id={field.id}
-                                    value={filterForm.data[field.name]}
-                                    onChange={event => filterForm.setData(field.name, event.target.value)}
+                                    value={filterForm.data[field.name] ?? ''}
+                                    onChange={event => updateFilter(field.name, event.target.value)}
                                     className={inputClass}
                                 >
                                     {field.options.map(option => (
@@ -74,17 +151,14 @@ export default function FilterTable({
                                 <input
                                     id={field.id}
                                     type={field.type ?? 'search'}
-                                    value={filterForm.data[field.name]}
-                                    onChange={event => filterForm.setData(field.name, event.target.value)}
+                                    value={filterForm.data[field.name] ?? ''}
+                                    onChange={event => updateFilter(field.name, event.target.value)}
                                     placeholder={field.placeholder}
                                     className={inputClass}
                                 />
                             )}
                         </div>
                     ))}
-                    <button type="submit" disabled={filterForm.processing} className="rounded-xl border border-teal-dark-01 px-5 py-3 text-sm font-semibold text-teal-dark-01 hover:bg-teal-light-01 disabled:opacity-60">
-                        Terapkan filter
-                    </button>
                 </form>
 
                 {errorMessage && <p role="alert" className="mb-4 rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">{errorMessage}</p>}
