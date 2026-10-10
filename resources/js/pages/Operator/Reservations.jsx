@@ -18,6 +18,11 @@ const statusOptions = [
     { value: 'dibatalkan', label: 'Dibatalkan' },
 ];
 
+const sortOptions = [
+    { value: 'created_near', label: 'Pengajuan terbaru' },
+    { value: 'created_far', label: 'Pengajuan terlama' },
+];
+
 function formatReservationDate(value) {
     return value
         ? new Intl.DateTimeFormat('id-ID', { dateStyle: 'long' }).format(new Date(`${value}T00:00:00`))
@@ -72,13 +77,24 @@ export default function Reservations({ user, status, csrfToken, urls, reservatio
                     filterForm={filterForm}
                     onSubmit={applyFilters}
                     filterFields={[
-                        { name: 'search', id: 'reservation-search', label: 'Cari nama peminjam, fasilitas, atau tujuan', placeholder: 'Cari peminjam, fasilitas, atau tujuan' },
+                        { name: 'search', 
+                            id: 'reservation-search', 
+                            label: 'Cari nama peminjam, fasilitas, atau tujuan', 
+                            placeholder: 'Cari peminjam, fasilitas, atau tujuan' 
+                        },
                         {
                             name: 'status',
                             id: 'reservation-status',
                             label: 'Filter status reservasi',
                             type: 'select',
                             options: [{ value: '', label: 'Semua status' }, ...statusOptions],
+                        },
+                        { 
+                            name: 'sort', 
+                            id: 'reservation-sort', 
+                            label: 'Urutkan reservasi', 
+                            type: 'select', 
+                            options: sortOptions 
                         },
                     ]}
                     rows={reservations}

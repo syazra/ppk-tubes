@@ -78,6 +78,7 @@ class ReservationController extends Controller
             ],
             'urls' => [
                 'dashboard' => route('user.dashboard'),
+                'catalog' => route('user.catalog'),
                 'reports' => route('reports.index'),
                 'reservations' => route('reservations.index'),
                 'profile' => route('profile.edit'),
@@ -92,12 +93,12 @@ class ReservationController extends Controller
      */
     public function create(Request $request, RoomAvailability $availability): \Inertia\Response
     {
-        $browserData = $this->facilityBrowserData($request);
+        $browserData = $this->facilityBrowserData($request, route('reservations.form'));
         $facilities = $browserData['facilities']->through(fn (Room $room): array => $this->facilityCardData($room));
         $oldInput = $request->session()->get('_old_input', []);
-        $oldRoomId = $oldInput['room_id'] ?? null;
+        $oldRoomId = $oldInput['room_id'] ?? $request->query('room_id');
         $selectedRoom = is_numeric($oldRoomId)
-            ? Room::with('images')->find((int) $oldRoomId)
+            ? Room::with('images')->where('is_avail', true)->find((int) $oldRoomId)
             : null;
         $formFields = array_intersect_key($oldInput, array_flip([
             'room_id', 'date_to_reserv', 'desc', 'start_time', 'end_time',
@@ -110,6 +111,7 @@ class ReservationController extends Controller
             'facilities' => $facilities,
             'filters' => $browserData['filters'],
             'types' => $browserData['types'],
+            'locations' => $browserData['locations'],
             'catalogDate' => $browserData['catalogDate'],
             'timezone' => $browserData['timezone'],
             'minimumDate' => $availability->earliestStart()->format('Y-m-d'),
@@ -119,11 +121,42 @@ class ReservationController extends Controller
             'photoFallbackUrl' => asset('images/facility-placeholder.svg'),
             'urls' => [
                 'dashboard' => route('user.dashboard'),
+                'catalog' => route('user.catalog'),
                 'reports' => route('reports.index'),
                 'reservations' => route('reservations.index'),
                 'reservationForm' => route('reservations.form'),
                 'facilities' => route('reservations.facilities'),
                 'store' => route('reservations.store'),
+                'profile' => route('profile.edit'),
+                'guest' => route('landing'),
+                'logout' => route('logout'),
+            ],
+        ]);
+    }
+
+    /** Display the user facility catalog without the reservation form. */
+    public function catalog(Request $request): \Inertia\Response
+    {
+        $browserData = $this->facilityBrowserData($request, route('user.catalog'));
+        $facilities = $browserData['facilities']->through(fn (Room $room): array => $this->facilityCardData($room));
+
+        return Inertia::render('User/Catalog', [
+            'user' => $request->user()->only('name', 'email', 'role', 'account_type'),
+            'csrfToken' => csrf_token(),
+            'facilities' => $facilities,
+            'filters' => $browserData['filters'],
+            'types' => $browserData['types'],
+            'locations' => $browserData['locations'],
+            'catalogDate' => $browserData['catalogDate'],
+            'timezone' => $browserData['timezone'],
+            'photoPlaceholderUrl' => asset('images/facility-placeholder-photo.jpg'),
+            'photoFallbackUrl' => asset('images/facility-placeholder.svg'),
+            'urls' => [
+                'dashboard' => route('user.dashboard'),
+                'catalog' => route('user.catalog'),
+                'reservations' => route('reservations.index'),
+                'reservationForm' => route('reservations.form'),
+                'reports' => route('reports.index'),
                 'profile' => route('profile.edit'),
                 'guest' => route('landing'),
                 'logout' => route('logout'),
@@ -225,7 +258,7 @@ class ReservationController extends Controller
     }
 
     /** @return array<string, mixed> */
-    private function facilityBrowserData(Request $request): array
+    private function facilityBrowserData(Request $request, string $path): array
     {
         $types = ['Ruang Kelas', 'Aula', 'Laboratorium', 'Lapangan'];
         $validator = Validator::make($request->query(), [
@@ -236,7 +269,7 @@ class ReservationController extends Controller
             'page' => ['nullable', 'integer', 'min:1', 'max:100000'],
         ]);
         if ($validator->fails()) {
-            throw (new ValidationException($validator))->errorBag('facilityFilters')->redirectTo(route('reservations.form'));
+            throw (new ValidationException($validator))->errorBag('facilityFilters')->redirectTo($path);
         }
         $validated = $validator->validated();
         $filters = [
@@ -245,6 +278,7 @@ class ReservationController extends Controller
             'capacity' => $validated['capacity'] ?? '',
         ];
         $catalogDate = $validated['date'] ?? Carbon::now(config('app.timezone'))->format('Y-m-d');
+        $locations = Room::query()->whereNotNull('location')->distinct()->orderBy('location')->pluck('location');
         $query = Room::query()->with('images');
         if ($filters['type'] !== '') {
             $query->where('type', $filters['type']);
@@ -257,9 +291,9 @@ class ReservationController extends Controller
             $query->where('capacity', '>=', $filters['capacity']);
         }
         $facilities = $query->orderBy('name')->orderBy('id')->paginate(6)
-            ->withPath(route('reservations.form'))->appends($filters + ['date' => $catalogDate]);
+            ->withPath($path)->appends($filters + ['date' => $catalogDate]);
 
-        return compact('facilities', 'filters', 'types', 'catalogDate') + ['timezone' => config('app.timezone')];
+        return compact('facilities', 'filters', 'types', 'locations', 'catalogDate') + ['timezone' => config('app.timezone')];
     }
 
     /** @return array<string, mixed> */

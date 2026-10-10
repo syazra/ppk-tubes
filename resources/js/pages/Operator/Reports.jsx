@@ -21,6 +21,11 @@ const statusOptions = [
     { value: 'dibatalkan', label: 'Dibatalkan' },
 ];
 
+const sortOptions = [
+	{ value: 'created_near', label: 'Pengajuan terbaru' },
+	{ value: 'created_far', label: 'Pengajuan terlama' },
+];
+
 function statusLabel(value) {
     return statusOptions.find(option => option.value === value)?.label ?? value;
 }
@@ -132,13 +137,25 @@ export default function Reports({ user, status, csrfToken, urls, reports, filter
                     filterForm={filterForm}
                     onSubmit={applyFilters}
                     filterFields={[
-                        { name: 'search', id: 'report-search', label: 'Cari pelapor, fasilitas, atau deskripsi', placeholder: 'Cari pelapor, fasilitas, atau deskripsi' },
+                        { 
+                            name: 'search', 
+                            id: 'report-search', 
+                            label: 'Cari pelapor, fasilitas, atau deskripsi', 
+                            placeholder: 'Cari pelapor, fasilitas, atau deskripsi' 
+                        },
                         {
                             name: 'status',
                             id: 'report-status',
                             label: 'Filter status laporan',
                             type: 'select',
                             options: [{ value: '', label: 'Semua status' }, ...statusOptions],
+                        },
+                        { 
+                            name: 'sort', 
+                            id: 'reservation-sort', 
+                            label: 'Urutkan reservasi', 
+                            type: 'select', 
+                            options: sortOptions 
                         },
                     ]}
                     rows={reports}

@@ -1,9 +1,9 @@
-import { Head, Link, router, usePage } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import Icon from '../../components/Icons';
 import PublicBrand from '../../components/PublicBrand';
 import PublicNavbar from '../../components/PublicNavbar';
-import FacilityCard from '../../components/FacilityCard';
+import FacilitiesCatalog from '../../components/FacilitiesCatalog';
 import GuestFacilityFilters from '../../components/GuestFacilityFilters';
 import '../../../css/guest-facilities.css';
 
@@ -12,12 +12,6 @@ const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Jul
 function dateLabel(date) {
     const [year, month, day] = date.split('-');
     return monthNames[Number(month) - 1] ? `${Number(day)} ${monthNames[Number(month) - 1]} ${year}` : date;
-}
-
-function paginationLabel(link, index, total) {
-    if (index === 0) return 'Sebelumnya';
-    if (index === total - 1) return 'Berikutnya';
-    return /^\d+$/.test(link.label) ? link.label : '…';
 }
 
 export default function Facilities({ rooms, filters = {}, types = [], locations = [], today, urls, photoPlaceholderUrl, photoFallbackUrl }) {
@@ -46,15 +40,13 @@ export default function Facilities({ rooms, filters = {}, types = [], locations 
         setQuery(values);
         visit(values);
     };
-    const roomList = rooms.data ?? [];
-    const pagination = rooms.links ?? [];
-
     return (
         <div className="gf">
             <Head title="Fasilitas"><meta name="description" content="Cari fasilitas kampus berdasarkan tipe, lokasi, dan kapasitas. Lihat ketersediaan setiap slot waktu tanpa perlu masuk." /></Head>
             <a href="#daftar-fasilitas" className="gf-skip">Lewati ke daftar fasilitas</a>
             <PublicNavbar urls={urls} active="facilities" />
             <main>
+                {/* HEADER */}
                 <section className="gf-intro" aria-labelledby="gf-heading">
                     <div className="gf-wrap gf-intro-grid">
                         <div>
@@ -65,17 +57,34 @@ export default function Facilities({ rooms, filters = {}, types = [], locations 
                         <div className="gf-intro-note"><Icon name="calendar" className="gf-note-icon" /><div><p>Lihat jadwal, rencanakan kegiatan.</p><span>Ketersediaan per slot waktu dapat dilihat tanpa perlu masuk. Masuk untuk mengajukan reservasi.</span></div></div>
                     </div>
                 </section>
+
+                {/* FILTER KATALOG */}
                 <div className="gf-wrap gf-content">
                     <GuestFacilityFilters values={query} types={types} locations={locations} errors={errors} processing={processing} onChange={updateField} onSubmit={submit} onReset={reset} />
-                    <section id="daftar-fasilitas" className="gf-results" aria-labelledby="gf-results-heading" aria-busy={processing}>
-                        <div className="gf-results-heading"><div><p className="gf-eyebrow">Temukan fasilitasmu</p><h2 id="gf-results-heading">Daftar fasilitas</h2></div><div className="gf-results-date"><Icon name="calendar" className="gf-icon" /><span>Ketersediaan <strong>{dateLabel(selectedDate)}</strong></span></div></div>
-                        <div className="gf-results-meta"><p role="status">{rooms.total > 0 ? `Menampilkan ${rooms.from}–${rooms.to} dari ${rooms.total} fasilitas` : '0 fasilitas ditemukan'}</p><p>Buka slot waktu untuk melihat jadwal.</p></div>
-                        {roomList.length > 0 ? <div className="gf-card-grid">{roomList.map(room => <FacilityCard key={room.id} facility={{ ...room, description: room.desc, is_available: room.is_avail }} slots={room.slots} date={selectedDate} photoPlaceholderUrl={photoPlaceholderUrl} photoFallbackUrl={photoFallbackUrl} />)}</div> : <div className="gf-empty"><span className="gf-empty-icon"><Icon name="room" className="gf-note-icon" /></span><h3>Belum ada fasilitas yang sesuai</h3><p>Coba ubah tipe, lokasi, atau kapasitas untuk menemukan fasilitas lainnya.</p><button className="gf-button gf-button-forest" type="button" onClick={reset} disabled={processing}>Reset filter<Icon name="landing-arrow" className="gf-icon" /></button></div>}
-                        {rooms.last_page > 1 && <nav className="gf-pagination" aria-label="Halaman daftar fasilitas">{pagination.map((link, index) => {
-                            const label = paginationLabel(link, index, pagination.length);
-                            return link.active ? <span className="gf-page gf-page-active" key={index} aria-current="page" aria-label={`Halaman ${label}`}>{label}</span> : link.url ? <Link className="gf-page" href={link.url} key={index} preserveScroll preserveState aria-label={/^\d+$/.test(label) ? `Halaman ${label}` : label} onStart={() => setProcessing(true)} onFinish={() => setProcessing(false)}>{label}</Link> : <span className="gf-page gf-page-disabled" key={index} aria-disabled="true">{label}</span>;
-                        })}</nav>}
+                    
+                    <section className="gf-results" aria-labelledby="gf-results-heading">
+                        <div className="gf-results-heading">
+                            <div>
+                                <p className="gf-eyebrow">Temukan fasilitasmu</p>
+                                <h2 id="gf-results-heading">Daftar fasilitas</h2>
+                            </div>
+                            <div className="gf-results-date">
+                                <Icon name="calendar" className="gf-icon" />
+                                <span>Ketersediaan <strong>{dateLabel(selectedDate)}</strong></span>
+                            </div>
+                        </div>
+                        <FacilitiesCatalog
+                            rooms={rooms}
+                            selectedDate={selectedDate}
+                            processing={processing}
+                            photoPlaceholderUrl={photoPlaceholderUrl}
+                            photoFallbackUrl={photoFallbackUrl}
+                            onReset={reset}
+                            onProcessingChange={setProcessing}
+                            showSchedule={true}
+                        />
                     </section>
+                    
                     <aside className="gf-reserve-note"><div><h2>Sudah menemukan fasilitas yang sesuai?</h2><p>{auth?.user ? 'Kembali ke dasbor untuk melanjutkan aktivitas akun.' : 'Masuk dengan akun kampus untuk mengajukan reservasi.'}</p></div><a href={accountUrl} className="gf-button gf-button-forest">{accountLabel} <Icon name="landing-arrow" className="gf-icon" /></a></aside>
                 </div>
             </main>

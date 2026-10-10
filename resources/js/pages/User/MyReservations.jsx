@@ -18,8 +18,6 @@ const reservationStatusLabels = {
 const sortOptions = [
 	{ value: 'created_near', label: 'Pengajuan terbaru' },
 	{ value: 'created_far', label: 'Pengajuan terlama' },
-	{ value: 'reservation_near', label: 'Waktu reservasi terdekat' },
-	{ value: 'reservation_far', label: 'Waktu reservasi terjauh' },
 ];
 
 function formatReservationDate(value) {
@@ -99,6 +97,7 @@ export default function MyReservations({ user, csrfToken, urls, reservations, fi
 			ticket.style.color = '#111827';
 			ticket.style.boxSizing = 'border-box';
 
+			// PDF yang di donlot
 			ticket.innerHTML = `
 				<div style="
 					border: 1px solid #e5e7eb;
@@ -437,6 +436,7 @@ export default function MyReservations({ user, csrfToken, urls, reservations, fi
 			}
 		}
 	};
+
 	return (
 		<AppLayout
 			user={user}
@@ -461,7 +461,12 @@ export default function MyReservations({ user, csrfToken, urls, reservations, fi
 				filterForm={filterForm}
 				onSubmit={applyFilters}
 				filterFields={[
-					{ name: 'search', id: 'reservation-search', label: 'Cari fasilitas atau tanggal', placeholder: 'Cari fasilitas atau tanggal' },
+					{ 
+						name: 'search', 
+						id: 'reservation-search', 
+						label: 'Cari fasilitas atau tanggal', 
+						placeholder: 'Cari fasilitas atau tanggal' 
+					},
 					{
 						name: 'status',
 						id: 'reservation-status',
@@ -472,7 +477,13 @@ export default function MyReservations({ user, csrfToken, urls, reservations, fi
 							...Object.entries(reservationStatusLabels).map(([value, label]) => ({ value, label })),
 						],
 					},
-					{ name: 'sort', id: 'reservation-sort', label: 'Urutkan reservasi', type: 'select', options: sortOptions },
+					{ 
+						name: 'sort', 
+						id: 'reservation-sort', 
+						label: 'Urutkan reservasi', 
+						type: 'select', 
+						options: sortOptions 
+					},
 				]}
 				rows={reservations}
 				columns={[
@@ -507,6 +518,7 @@ export default function MyReservations({ user, csrfToken, urls, reservations, fi
 				paginationLabel="Navigasi halaman reservasi"
 			/>
 
+			{/* PREVIEW TIKET */}
 			{selectedReservation && (
 				<PopCard
 					title="Tiket reservasi"

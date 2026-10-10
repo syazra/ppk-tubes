@@ -45,6 +45,30 @@ class UserReservationsPageTest extends TestCase
             );
     }
 
+    public function test_user_catalog_route_renders_filtered_facilities_and_reservation_url(): void
+    {
+        $user = User::factory()->create();
+        $room = Room::create([
+            'name' => 'Ruang Katalog',
+            'location' => 'Gedung Uji',
+            'type' => 'Ruang Kelas',
+            'capacity' => 30,
+            'is_avail' => true,
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('user.catalog', ['type' => 'Ruang Kelas', 'date' => '2026-10-20']))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('User/Catalog')
+                ->has('facilities.data', 1)
+                ->where('facilities.data.0.id', $room->id)
+                ->where('catalogDate', '2026-10-20')
+                ->where('urls.catalog', route('user.catalog'))
+                ->where('urls.reservationForm', route('reservations.form'))
+            );
+    }
+
     public function test_reservations_index_renders_the_react_page_with_filtered_data(): void
     {
         $user = User::factory()->create();

@@ -20,6 +20,7 @@ class ReportController extends Controller
             'csrfToken' => csrf_token(),
             'urls' => [
                 'dashboard' => route('user.dashboard'),
+                'catalog' => route('user.catalog'),
                 'reports' => route('reports.index'),
                 'reservations' => route('reservations.index'),
                 'profile' => route('profile.edit'),
@@ -82,6 +83,7 @@ class ReportController extends Controller
             'error' => session('error'),
             'urls' => [
                 'dashboard' => route('user.dashboard'),
+                'catalog' => route('user.catalog'),
                 'reports' => route('reports.index'),
                 'reservations' => route('reservations.index'),
                 'profile' => route('profile.edit'),

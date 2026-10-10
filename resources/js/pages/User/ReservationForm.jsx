@@ -1,22 +1,17 @@
+import { useEffect } from 'react';
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import { useRef, useState } from 'react';
-import FacilityCard from '../../components/FacilityCard';
 import useRoomSlots from '../../hooks/useRoomSlots';
 import AvailabilityTimeline from '../../components/AvailabilityTimeline';
 import { selectReservationRange } from '../../lib/reservationRange';
 import AppLayout from '../../components/AppLayout';
-import Button from '../../components/Button';
+import GuestFacilityFilters from '../../components/GuestFacilityFilters';
+import FacilitiesCatalog from '../../components/FacilitiesCatalog';
 
 const fieldClassName = 'mt-2 block w-full rounded-lg border border-gray-300 bg-white-01 px-4 py-3 text-sm text-gray-800 focus:border-teal-dark-01 focus:ring-teal-dark-01';
 
 function FieldError({ children }) {
 	return children ? <p role="alert" className="mt-2 text-sm text-red-700">{children}</p> : null;
-}
-
-function formatDate(value) {
-	if (!value) return '-';
-	const date = new Date(`${value}T00:00:00`);
-	return Number.isNaN(date.getTime()) ? '-' : new Intl.DateTimeFormat('id-ID', { dateStyle: 'long' }).format(date);
 }
 
 function getCatalogParams(filters) {
@@ -28,17 +23,12 @@ function getCatalogParams(filters) {
 	};
 }
 
-function paginationText(label) {
-	const text = label.replace('&laquo; ', '').replace(' &raquo;', '').trim();
-	return { Previous: 'Sebelumnya', Next: 'Berikutnya' }[text] ?? text;
-}
-
 export default function ReservationForm({
 	user,
 	auth,
 	csrfToken,
 	urls,
-	rooms = [],
+	locations = [],
 	facilities,
 	filters = {},
 	types = [],
@@ -50,6 +40,16 @@ export default function ReservationForm({
 	photoPlaceholderUrl,
 	photoFallbackUrl,
 }) {
+	// scroll langsung ke form
+	// useEffect(() => {
+	// 	const element = document.getElementById('reservation-form');
+	// 	if (element) {
+	// 		setTimeout(() => {
+	// 		element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+	// 		}, 250);
+	// 	}
+	// }, []);
+
 	const initialRoomId = oldInput.room_id ?? initialFacility?.id ?? '';
 	const form = useForm({
 		room_id: initialRoomId ? String(initialRoomId) : '',
@@ -62,6 +62,7 @@ export default function ReservationForm({
 	const [selectedFacility, setSelectedFacility] = useState(initialFacility);
 	const [slotAnchor, setSlotAnchor] = useState(null);
 	const [slotMessage, setSlotMessage] = useState('');
+	const [catalogProcessing, setCatalogProcessing] = useState(false);
 	const dateInputRef = useRef(null);
 	const mainSlotState = useRoomSlots(selectedFacility?.slots_url, form.data.date_to_reserv, Boolean(selectedFacility && form.data.date_to_reserv));
 	const slots = mainSlotState.slots;
@@ -73,7 +74,12 @@ export default function ReservationForm({
 
 	function resetFilters() {
 		const reset = { type: '', location: '', capacity: '', date: catalogDate };
+		filterForm.setData(reset);
 		router.get(urls.reservationForm, reset, { preserveScroll: true, replace: true });
+	}
+
+	function updateFilter(event) {
+		filterForm.setData(event.target.name, event.target.value);
 	}
 
 	function selectFacility(facility) {
@@ -125,94 +131,52 @@ export default function ReservationForm({
 		<AppLayout user={user} auth={auth} csrfToken={csrfToken} urls={urls} active="reservations" title="Form Reservasi" subtitle="Pilih fasilitas, periksa jadwal, lalu ajukan peminjaman.">
 			<Head title="Form Reservasi" />
 
-			<section className="mb-8 space-y-6">
-				{/* FILTERING */}
-				<section aria-labelledby="facility-browser-title" className="rounded-lg border border-gray-200 bg-white-01 p-5 sm:p-6">
-					{/* HEADER */}
-					<div className="mb-5 flex flex-wrap items-start justify-between gap-3">
-						<div>
-							<h2 id="facility-browser-title" className="text-xl font-bold text-teal-darker">Cari fasilitas</h2>
-							<p className="mt-1 text-sm text-gray-600">Temukan fasilitas dan periksa ketersediaan slot sebelum memilih.</p>
-						</div>
-						<p className="text-xs text-gray-500">Slot 30 menit · 07.00-20.00 · {timezone}</p>
-					</div>
+			{/* FILTER KATALOG */}
+			<GuestFacilityFilters
+				values={filterForm.data}
+				types={types}
+				locations={locations}
+				details={`07.00-20.00 ${timezone === 'Asia/Jakarta' ? 'WIB' : timezone} · Slot 30 menit`}
+				className="gff-contained"
+				errors={filterForm.errors}
+				processing={filterForm.processing}
+				onChange={updateFilter}
+				onSubmit={applyFilters}
+				onReset={resetFilters}
+			/>
+			
+			{/* HASIL FILTER KATALOG */}
+			<section className="py-6">
+				<FacilitiesCatalog
+					rooms={facilities}
+					selectedDate={catalogDate}
+					processing={filterForm.processing || catalogProcessing}
+					timezone={timezone}
+					selectedFacilityId={selectedFacility?.id}
+					photoPlaceholderUrl={photoPlaceholderUrl}
+					photoFallbackUrl={photoFallbackUrl}
+					onReset={resetFilters}
+					onProcessingChange={setCatalogProcessing}
+					showSchedule = {false}
+			>
+				{(facility, isSelected) => (
+					<button
+						type="button"
+						className={`fc-select ${isSelected ? 'fc-select-selected' : ''}`}
+						disabled={isSelected}
+						aria-pressed={isSelected}
+						onClick={() => selectFacility(facility)}
+					>
+						{isSelected ? 'Fasilitas dipilih' : 'Pilih fasilitas'}
+					</button>
+				)}
+			</FacilitiesCatalog>
+			</section>
 
-					{/* FILTER */}
-					<form onSubmit={applyFilters} className="grid gap-3 rounded-md bg-gray-50 p-4 sm:grid-cols-2 xl:grid-cols-4">
-						<div>
-							<label htmlFor="facility-type" className="block text-xs font-semibold text-gray-700">Tipe fasilitas</label>
-							<select id="facility-type" value={filterForm.data.type} onChange={event => filterForm.setData('type', event.target.value)} className={fieldClassName}>
-								<option value="">Semua tipe</option>
-								{types.map(type => <option key={type} value={type}>{type}</option>)}
-							</select>
-							<FieldError>{filterForm.errors.type}</FieldError>
-						</div>
-						<div>
-							<label htmlFor="facility-location" className="block text-xs font-semibold text-gray-700">Lokasi</label>
-							<input id="facility-location" type="search" maxLength={100} value={filterForm.data.location} onChange={event => filterForm.setData('location', event.target.value)} placeholder="Cari lokasi" className={fieldClassName} />
-							<FieldError>{filterForm.errors.location}</FieldError>
-						</div>
-						<div>
-							<label htmlFor="facility-capacity" className="block text-xs font-semibold text-gray-700">Kapasitas minimum</label>
-							<input id="facility-capacity" type="number" min="1" max="100000" step="1" value={filterForm.data.capacity} onChange={event => filterForm.setData('capacity', event.target.value)} placeholder="Jumlah orang" className={fieldClassName} />
-							<FieldError>{filterForm.errors.capacity}</FieldError>
-						</div>
-						<div>
-							<label htmlFor="facility-date" className="block text-xs font-semibold text-gray-700">Tanggal ketersediaan</label>
-							<input id="facility-date" type="date" required min={minimumDate} value={filterForm.data.date} onChange={event => filterForm.setData('date', event.target.value)} className={fieldClassName} />
-							<FieldError>{filterForm.errors.date}</FieldError>
-						</div>
-
-						{/* TOMBOL */}
-						<div className="flex flex-wrap items-center gap-4 sm:col-span-2 xl:col-span-4">
-							<Button type="submit" disabled={filterForm.processing}>Cari fasilitas</Button>
-							<button type="button" onClick={resetFilters} className="text-sm font-semibold text-teal-700 underline">Reset filter</button>
-						</div>
-					</form>
-
-					{/* HASIL FILTER KATALOG */}
-					{facilities.data.length ? (
-						<>
-							<div className="my-4 flex flex-wrap justify-between gap-2 text-xs text-gray-500" aria-live="polite">
-								<span>{facilities.total} fasilitas ditemukan</span>
-								<span>Slot untuk {formatDate(catalogDate)}</span>
-							</div>
-							<div className="grid items-start gap-4 md:grid-cols-2 xl:grid-cols-3">
-								{facilities.data.map(facility => (
-									<FacilityCard
-									key={facility.id}
-									facility={facility}
-									selected={String(selectedFacility?.id) === String(facility.id)}
-									date={catalogDate}
-									timezone={timezone}
-									photoPlaceholderUrl={photoPlaceholderUrl}
-									photoFallbackUrl={photoFallbackUrl}
-									onSelect={selectFacility}
-								/>
-								))}
-							</div>
-							{facilities.links.length > 3 && (
-								<nav aria-label="Halaman daftar fasilitas" className="mt-5 flex flex-wrap items-center justify-center gap-2">
-									{facilities.links.map((link, index) => link.url ? (
-										<Link key={`${link.label}-${index}`} href={link.url} preserveState preserveScroll className={`inline-flex min-h-9 min-w-9 items-center justify-center rounded border px-3 text-sm ${link.active ? 'border-teal-700 bg-teal-700 text-white' : 'border-gray-200 bg-white-01 text-teal-800 hover:bg-teal-50'}`}>
-											{paginationText(link.label)}
-										</Link>
-									) : <span key={`${link.label}-${index}`} aria-disabled="true" className="inline-flex min-h-9 min-w-9 items-center justify-center rounded border border-gray-100 px-3 text-sm text-gray-400">{paginationText(link.label)}</span>)}
-								</nav>
-							)}
-						</>
-					) : (
-						<div className="mt-5 rounded-md border border-dashed border-gray-300 bg-gray-50 p-8 text-center">
-							<h3 className="font-semibold text-teal-darker">Tidak ada fasilitas yang cocok</h3>
-							<p className="mt-1 text-sm text-gray-600">Coba ubah tipe, lokasi, atau kapasitas minimum.</p>
-							<button type="button" onClick={resetFilters} className="mt-3 text-sm font-semibold text-teal-700 underline">Reset filter</button>
-						</div>
-					)}
-				</section>
-
-				{/* FORM RESERVASI */}
-				<form onSubmit={submitReservation} className="space-y-6 rounded-md border border-gray-200 bg-white-01 p-5 sm:p-6">
-					<div className="reservation-schedule-layout">
+			{/* FORM RESERVASI */}
+			<form id="reservation-form" onSubmit={submitReservation} className="space-y-6 rounded-md border border-gray-200 bg-white-01 p-5 sm:p-6">
+				<div className="reservation-schedule-layout">
+					{/* ISI DETAIL */}
 					<section aria-labelledby="reservation-details-title" className="space-y-5">
 						<div>
 							<h2 id="reservation-details-title" className="text-lg font-bold text-teal-darker">Detail reservasi</h2>
@@ -242,6 +206,7 @@ export default function ReservationForm({
 						</div>
 					</section>
 
+					{/* ISI JADWAL */}
 					<section aria-labelledby="time-availability-title" className="reservation-schedule-panel">
 						<div className="mb-3 flex flex-wrap items-center justify-between gap-3">
 							<h2 id="time-availability-title" className="text-sm font-semibold text-teal-darker">Ketersediaan waktu</h2>
@@ -267,16 +232,17 @@ export default function ReservationForm({
 							<FieldError>{form.errors.end_time}</FieldError>
 						</div>
 					</section>
+				</div>
 
-					</div>
-					<div className="flex flex-wrap justify-end gap-3 border-t border-gray-100 pt-5">
-						<Link href={urls.reservations} className="inline-flex items-center rounded-md border border-gray-300 px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50">Batal</Link>
-						<button type="submit" disabled={form.processing} className="inline-flex min-h-11 items-center rounded-md bg-teal-normal-01 px-5 py-2.5 text-sm font-semibold text-white-01 hover:bg-teal-normal-02 disabled:cursor-not-allowed disabled:opacity-60">
-							{form.processing ? 'Mengirim...' : 'Kirim reservasi'}
-						</button>
-					</div>
-				</form>
-			</section>
+				{/* TOMBOL */}
+				<div className="flex flex-wrap justify-end gap-3 border-t border-gray-100 pt-5">
+					<Link href={urls.reservations} className="inline-flex items-center rounded-md border border-gray-300 px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50">Batal</Link>
+					<button type="submit" disabled={form.processing} className="inline-flex min-h-11 items-center rounded-md bg-teal-normal-01 px-5 py-2.5 text-sm font-semibold text-white-01 hover:bg-teal-normal-02 disabled:cursor-not-allowed disabled:opacity-60">
+						{form.processing ? 'Mengirim...' : 'Kirim reservasi'}
+					</button>
+				</div>
+			</form>
+
 		</AppLayout>
 	);
 }
