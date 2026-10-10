@@ -17,8 +17,7 @@ class RoomImageSeeder extends Seeder
             'Aula' => 'Aula',
             'Lapangan' => 'Lapangan',
             'Ruang Kelas' => 'RuangKelas',
-            // Temporary classroom pool until a laboratory photo pack is available.
-            'Laboratorium' => 'RuangKelas',
+            'Laboratorium' => 'Laboratorium',
         ];
         $disk = Storage::disk('public');
         $pools = [];
@@ -37,10 +36,11 @@ class RoomImageSeeder extends Seeder
 
         DB::transaction(function () use ($classes, $pools, $disk): void {
             $roomsByType = Room::query()
+                ->with('images')
                 ->whereIn('type', array_keys($classes))
-                ->whereDoesntHave('images')
                 ->orderBy('id')
                 ->get()
+                ->filter(fn (Room $room) => $room->images->isEmpty() || $this->hasTemporaryLaboratoryPhoto($room))
                 ->groupBy('type');
 
             foreach ($roomsByType as $type => $rooms) {
@@ -56,13 +56,29 @@ class RoomImageSeeder extends Seeder
                         throw new RuntimeException('Could not store facility photo '.$path.'.');
                     }
 
-                    $room->images()->create([
+                    $attributes = [
                         'path' => $path,
                         'alt_text' => 'Foto '.$room->name,
                         'display_order' => 0,
-                    ]);
+                    ];
+
+                    if ($this->hasTemporaryLaboratoryPhoto($room)) {
+                        $room->images->sole()->update($attributes);
+                    } else {
+                        $room->images()->create($attributes);
+                    }
                 }
             }
         });
+    }
+
+    private function hasTemporaryLaboratoryPhoto(Room $room): bool
+    {
+        return $room->type === 'Laboratorium'
+            && $room->images->count() === 1
+            && in_array($room->images->sole()->path, [
+                'facilities/db-photos/RuangKelas/01.jpg',
+                'facilities/db-photos/RuangKelas/02.jpg',
+            ], true);
     }
 }
