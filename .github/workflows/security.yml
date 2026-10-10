@@ -26,7 +26,7 @@ jobs:
       - run: composer audit --locked
       - run: npm ci --ignore-scripts
       - run: npm audit
+      - run: npm run build
       - run: php vendor/bin/phpstan analyse --no-progress --memory-limit=1G
       - run: php vendor/phpunit/phpunit/phpunit --do-not-cache-result
       - run: node --test tests/JavaScript/*.test.js
-      - run: npm run build
