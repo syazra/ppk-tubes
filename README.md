@@ -3,7 +3,7 @@
 ## Daftar Isi
 - [Tentang Buana & Asumsi Perancangan](#tentang-buana--asumsi-perancangan)
   - [Daftar User Story (US) & Asumsi](#daftar-user-story-us--asumsi)
-  - [Asumsi Tambahan (AS)](#asumsi-tambahan-as)
+  - [Asumsi Tambahan (AT)](#asumsi-tambahan-at)
 - [Panduan Menjalankan Proyek](#panduan-menjalankan-proyek)
 - [Akun Pengguna Siap Pakai](#akun-pengguna-siap-pakai)
 
