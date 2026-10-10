@@ -1,16 +1,71 @@
-# TUBES PPK/PBP
+# TUBES PPK/PBP - Buana (Sistem Manajemen Fasilitas & Reservasi Kampus)
 
 ## Daftar Isi
-- [Penjelasan Umum](#penjelasan-umum)
+- [Tentang Buana & Asumsi Perancangan](#tentang-buana--asumsi-perancangan)
+  - [Daftar User Story (US) & Asumsi](#daftar-user-story-us--asumsi)
+  - [Asumsi Tambahan (AS)](#asumsi-tambahan-as)
 - [Panduan Menjalankan Proyek](#panduan-menjalankan-proyek)
-- [Foto Fasilitas dari DBPhotos](#foto-fasilitas-dari-dbphotos)
-- [Data Contoh Laporan dan Reservasi](#data-contoh-laporan-dan-reservasi)
-- [Validasi dan Foto pada Form Admin](#validasi-dan-foto-pada-form-admin)
 - [Akun Pengguna Siap Pakai](#akun-pengguna-siap-pakai)
 
 ---
 
-## Penjelasan Umum
+## Tentang Buana & Asumsi Perancangan
+
+**Buana** adalah aplikasi berbasis web yang dirancang untuk membantu warga kampus menemukan fasilitas, melihat ketersediaan jadwal, mengajukan peminjaman, dan melaporkan kerusakan dalam satu platform layanan terpadu. Aplikasi ini dikembangkan sebagai pemenuhan Tugas Besar mata kuliah Pengembangan Platform Khusus (PPK) / Pemrograman Berbasis Platform (PBP).
+
+Dalam perancangan sistem ini, tim pengembang merumuskan beberapa *User Story* (US) beserta asumsi-asumsi teknis maupun fungsional untuk menyesuaikan dengan batasan dan kebutuhan studi kasus.
+
+### Daftar User Story (US) & Asumsi
+
+| US | User Story | Asumsi |
+|:--:|---|---|
+| **US 1** | Sebagai pengunjung/pengguna, saya bisa melihat daftar fasilitas beserta status ketersediaannya per slot waktu (tersedia/tidak tersedia), tanpa melihat detail pemohon atau tujuan penggunaan. | — |
+| **US 2** | Sebagai pengunjung/pengguna, saya bisa mencari fasilitas berdasarkan tipe/lokasi/kapasitas. | — |
+| **US 3** | Sebagai pengguna, saya bisa mengajukan reservasi pada rentang waktu tertentu dengan menyebutkan tujuan penggunaan. | Batas waktu pengajuan reservasi oleh user adalah **12 jam** sebelum *start-time* reservasi. |
+| **US 4** | Sebagai pengguna, saya bisa membatalkan reservasi saya sendiri sebelum batas waktu tertentu. | Batas waktu pembatalan reservasi oleh user adalah **6 jam** sebelum *start-time* reservasi. |
+| **US 5** | Sebagai pengguna, saya bisa melihat riwayat dan status reservasi saya, termasuk detail lengkap reservasi tersebut. | Mengimplementasikan QR reservasi (Lebih lengkap di AT 3). |
+| **US 6** | Sebagai pengguna, saya bisa melaporkan kerusakan/masalah pada fasilitas tertentu (kategori, deskripsi, foto). | Kategori tidak diimplementasikan secara eksplisit, tetapi digabung ke dalam deskripsi kerusakan. |
+| **US 7** | Sebagai pengguna, saya bisa melihat status laporan saya. | — |
+| **US 8** | Sebagai petugas, saya bisa melihat dashboard/antrian reservasi dan laporan yang masih menunggu diproses, agar tidak ada yang terlewat. | — |
+| **US 9** | Sebagai petugas, saya bisa menyetujui/menolak reservasi yang masuk secara manual; sistem mencegah persetujuan reservasi yang bentrok jadwal pada fasilitas yang sama. | — |
+| **US 10** | Sebagai petugas, saya bisa membatalkan reservasi yang sudah disetujui dalam kondisi mendesak (mis. fasilitas mendadak tidak bisa dipakai), dengan mencantumkan alasan pembatalan. | Pembatalan reservasi dapat dilakukan secara otomatis oleh sistem jika fasilitas terkait sedang dalam perbaikan. |
+| **US 11** | Sebagai petugas, saya bisa mengubah status laporan (baru/diproses/selesai/ditolak) beserta catatan resolusi saat laporan ditutup. | Resolusi dapat diketik manual maupun menggunakan pesan template yang disediakan. |
+| **US 12** | Sebagai petugas, saya bisa menandai fasilitas berstatus 'dalam perbaikan' terkait laporan kerusakan yang sedang ditangani, dan mengembalikannya ke status aktif setelah selesai diperbaiki. | Petugas dapat menambahkan tanggal estimasi perbaikan fasilitas, semua reservasi yang berada di rentang waktu tersebut akan otomatis dibatalkan (Lebih lengkap di AT 1). |
+| **US 13** | Sebagai admin, saya bisa mendaftarkan akun petugas secara langsung (petugas tidak melakukan registrasi mandiri dalam kondisi apa pun). | — |
+| **US 14** | Sebagai admin, saya bisa mendaftarkan akun pengguna (mahasiswa/dosen/staf) secara langsung tanpa melalui form registrasi mandiri. | — |
+| **US 15** | Sebagai admin, saya bisa memverifikasi atau menolak akun pengguna hasil registrasi mandiri (jika diimplementasikan) sebelum akun tersebut dapat digunakan untuk login. | Tidak diimplementasikan; seluruh registrasi akun dilakukan oleh Admin, pengguna kemudian dapat menyesuaikan passwordnya sendiri. |
+| **US 16** | Asumsi admin, saya bisa mengelola data fasilitas (tambah/edit/nonaktifkan). | — |
+
+### Asumsi Tambahan (AT)
+
+Berikut adalah rincian asumsi tambahan sebagai elaborasi maupun di luar daftar *User Story*:
+
+* **AT 1 (Terkait US 12):**
+  1. Jika Petugas mengubah status laporan ke ‘sedang diproses’, maka status fasilitas terkait akan berubah ke ‘nonaktif’. Petugas wajib memasukkan waktu estimasi perbaikan selesai.
+  2. Seluruh reservasi ke fasilitas terkait akan otomatis dibatalkan oleh sistem.
+  3. Petugas dapat memperpanjang waktu estimasi, yang berimbas pada pembatalan otomatis reservasi baru di rentang waktu baru tersebut.
+  4. Petugas dapat menandai status laporan ke ‘selesai’ sebelum waktu estimasi berakhir, yang otomatis mengembalikan status fasilitas ke ‘aktif’ (namun tidak mengembalikan status reservasi yang telanjur dibatalkan).
+  5. Jika petugas belum mengubah status laporan ke ‘selesai’ saat waktu estimasi berakhir, sistem akan otomatis memperpanjang estimasi sebesar satu hari.
+
+* **AT 2 (Terkait US 15):**
+  1. Seluruh pendaftaran akun (nama, email, NIP/NIM) dilakukan oleh Admin. Password digenerate otomatis oleh sistem dan dapat disalin oleh Admin untuk dikirimkan ke user terkait.
+  2. User dapat masuk ke website menggunakan akun dan password tersebut, kemudian mengubah password pilihannya sendiri melalui menu Profil.
+
+* **AT 3 (Terkait US 5):**
+  1. Detail lengkap reservasi ditampilkan dalam bentuk tiket yang berisi status reservasi, ID reservasi, nama peminjam, nama fasilitas, tanggal & waktu reservasi, tujuan penggunaan, dan *QR-code*.
+  2. *QR-code* dapat dipindai untuk membuka halaman detail tiket reservasi (berjalan secara lokal).
+  3. Tiket dapat diunduh dalam format PDF.
+  4. Tiket dapat diakses oleh user terkait maupun petugas.
+
+* **AT 4 (Terkait US 5, 9, 10, 11, 12):**
+  * User dapat melihat alasan penolakan reservasi maupun pelaporan pada kolom ‘aksi’, baik karena ditolak secara manual oleh petugas maupun dibatalkan otomatis oleh sistem.
+
+* **AT 5 (Terkait US 1, 2, 16):**
+  1. Tamu dan user dapat melihat katalog fasilitas (nama, lokasi, kategori, kapasitas, beserta foto).
+  2. User memiliki tombol pintasan (*shortcut*) cepat menuju menu reservasi dan pelaporan langsung dari halaman katalog.
+  3. Admin memiliki hak akses penuh untuk menambah, mengubah, dan menghapus foto dari sebuah fasilitas.
+
+---
 
 ## Panduan Menjalankan Proyek
 
@@ -54,111 +109,6 @@ Jika sudah pernah menjalankan `./setup.bat` satu kali, berikutnya cukup jalankan
 ```bash
 ./run-serve.bat
 ```
-
-## Foto Fasilitas dari DBPhotos
-
-Seeder utama memasang satu foto acak untuk setiap fasilitas yang belum memiliki foto.
-Foto dikelompokkan berdasarkan jenis: `Aula`, `Lapangan`, `Ruang Kelas`, dan `Laboratorium`.
-Laboratorium memakai delapan foto interior museum alkimia bernuansa gothic dari
-Wikimedia Commons, karya Edelmauswaldgeist dengan lisensi
-[CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/).
-Sumber, pembuat, dan lisensi setiap foto tercatat di
-[`sources.json`](database/seeders/photos/Laboratorium/sources.json).
-Setiap kumpulan diacak dan dipakai bergiliran, lalu diulang bila jumlah fasilitas melebihi jumlah foto.
-
-Untuk memperbarui database yang sudah berisi fasilitas tanpa membuat ulang data:
-
-```bash
-php artisan db:seed --class=FacilityThemeSeeder
-php artisan db:seed --class=RoomImageSeeder
-php artisan storage:link
-```
-
-Foto sumber disimpan di `database/seeders/photos` dan disalin ke disk public pada
-`facilities/db-photos`. Foto yang sudah ada tetap dipertahankan, kecuali foto sementara
-Laboratorium dari pool `RuangKelas` yang diganti dengan pack alkimia baru. Foto custom
-tetap dipertahankan; penjalanan ulang tidak menggandakan atau mengacak ulang foto.
-
-`FacilityThemeSeeder` mengganti nama Lab Komputer 1 menjadi Laboratorium Teknomansi
-Aether dan lokasi kampus menjadi Menara Ravenclaw, Citadel Gondor, Biara Obsidian,
-serta kawasan fantasy lainnya. Seeder ini memperbarui fasilitas yang sudah ada tanpa
-mengubah ID, status aktif, atau hubungan laporan dan reservasi. `RoomSeeder` otomatis
-menjalankannya untuk database baru.
-
-## Data Contoh Laporan dan Reservasi
-
-Seeder utama menyediakan 160 laporan dalam seluruh status (`baru`, `diproses`,
-`selesai`, `ditolak`, dan `dibatalkan`): 12 contoh awal ditambah empat keluhan untuk
-setiap fasilitas. Keluhan disesuaikan dengan jenis fasilitas, mencakup peralatan,
-penerangan, pintu, ventilasi, kursi, drainase, serta perlengkapan olahraga. Empat
-fasilitas dengan laporan yang sedang diproses membuat
-Laboratorium Teknomansi Aether, Ruang Rune Kuno, Ruang Dewan Putih, dan Lapangan Pelennor nonaktif.
-Laporan diproses dilengkapi estimasi perbaikan; laporan selesai dan ditolak memiliki
-catatan penyelesaian atau alasan penolakan.
-
-Setiap fasilitas memperoleh sepuluh reservasi contoh: lima riwayat dan lima
-pengajuan mendatang, sehingga 37 fasilitas menghasilkan 370 reservasi. Kegiatan
-meliputi sidang serikat, peracikan eliksir, latihan kesatria, kajian rune, nyanyian bard,
-dan musyawarah penjaga menara,
-sesuai jenis fasilitas. Jam mulai dan durasi bervariasi; tanggal mencakup hampir tiga
-bulan ke belakang dan dua bulan ke depan dari waktu seeding. Seluruh status reservasi
-terwakili; pengajuan mendatang untuk fasilitas nonaktif berstatus ditolak.
-
-Kedua seeder memakai seluruh akun berperan `user` dengan jenis mahasiswa, dosen,
-atau staf, termasuk 27 akun dalam pack demo. Setiap akun demo mempunyai minimal
-sepuluh reservasi dan lima laporan. Setiap fasilitas memiliki setidaknya delapan
-pemohon reservasi dan empat pelapor berbeda. Waktu pengajuan, alasan penolakan,
-estimasi, dan catatan perbaikan juga bervariasi.
-
-Untuk menambah contoh ke database yang sudah memiliki akun demo dan fasilitas:
-
-```bash
-php artisan db:seed --class=ReportSeeder
-php artisan db:seed --class=ReservationSeeder
-```
-
-Jalankan laporan sebelum reservasi agar status fasilitas diperhitungkan.
-Kedua seeder ini dapat dijalankan ulang tanpa menggandakan contoh atau menimpa
-keputusan operator, tanggal, atau pemohon/pelapor, termasuk ketika akun baru ditambahkan.
-Data lama tetap tersimpan, sehingga jumlah pada database lama bisa lebih besar dari
-jumlah contoh di atas. Untuk database baru, cukup jalankan
-`php artisan db:seed` setelah migrasi; jangan menjalankan ulang seeder utama pada
-database yang sudah berisi fasilitas karena `RoomSeeder` membuat fasilitas baru.
-
-Deskripsi kegiatan, keluhan, alasan penolakan, dan catatan perbaikan memakai tema
-fantasy/gothic: grimoire, kristal aether, alkimia, lentera, serta perkakas benteng.
-Saat kedua seeder dijalankan pada database lama, teks contoh modern yang dikenali
-diganti dengan versi bertema tanpa membuat baris baru atau mengubah ID, pemohon,
-pelapor, tanggal, status, maupun waktu pembaruan. Catatan khusus operator dan teks
-buatan pengguna tetap dipertahankan.
-
-## Validasi dan Foto pada Form Admin
-
-Aturan berikut berlaku saat admin membuat maupun mengubah data. Browser memberi
-petunjuk format, sedangkan server memeriksa ulang sebelum menulis ke database.
-
-| Data | Aturan |
-|---|---|
-| Nama akun | 2–255 karakter, mengandung huruf, tanpa tag atau karakter kontrol |
-| NIM mahasiswa | Tepat 14 digit angka, unik, tidak seluruhnya nol |
-| Identitas dosen, staf, petugas | Tepat 18 digit angka, unik, tidak seluruhnya nol |
-| Email | Format email dengan domain bertitik, maksimal 255 karakter, unik tanpa membedakan kapital |
-| Nama dan lokasi fasilitas | Masing-masing 2–100 karakter, tanpa tag atau karakter kontrol; pasangan nama/lokasi tidak boleh duplikat |
-| Kapasitas | Angka bulat 1–100.000 orang |
-| Deskripsi fasilitas | Opsional, maksimal 2.000 karakter |
-| Foto fasilitas | Opsional, total maksimal 3 foto; JPG/JPEG, PNG, WebP; masing-masing maksimal 2 MB dan 6.000 × 6.000 piksel |
-
-NIM dan identitas pegawai disimpan sebagai teks agar angka nol di depan tetap utuh.
-Nama, lokasi, dan email dibersihkan dari spasi di awal/akhir; email disimpan dalam
-huruf kecil. Admin dapat menambah foto saat membuat fasilitas, serta menambah atau
-menghapus foto melalui **Ubah**. Penghapusan baru diterapkan saat perubahan disimpan.
-
-Unggahan memakai tabel `room_images` yang sudah ada dan disk public pada
-`facilities/uploads`. Pastikan `php artisan storage:link` sudah dijalankan supaya
-foto tampil di website. Penyimpanan fasilitas dan metadata foto menggunakan
-transaksi; unggahan baru dibersihkan jika penyimpanan gagal. Foto seeder yang
-dipakai bersama fasilitas lain tetap tersedia. Tidak diperlukan migrasi tambahan
-untuk fitur ini.
 
 ## Akun Pengguna Siap Pakai
 
