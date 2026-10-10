@@ -47,6 +47,14 @@ class ReportController extends Controller
             'images.*.mimes' => 'Format foto harus berjenis jpeg, png, atau jpg.',
             'images.*.max' => 'Ukuran setiap foto maksimal adalah 2MB.',
         ]);
+        $totalSize = collect($request->file('images', []))
+            ->sum(fn ($image) => $image->getSize());
+
+        if ($totalSize > 5 * 1024 * 1024) {
+            return back()->withErrors([
+                'images' => 'Total ukuran semua foto tidak boleh lebih dari 2 MB.',
+            ])->withInput();
+        }
 
         // Simpan laporan utama
         $report = Report::create([
