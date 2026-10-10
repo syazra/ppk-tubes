@@ -57,26 +57,38 @@ Jika sudah pernah menjalankan `./setup.bat` satu kali, berikutnya cukup jalankan
 ## Foto Fasilitas dari DBPhotos
 
 Seeder utama memasang satu foto acak untuk setiap fasilitas yang belum memiliki foto.
-Foto dikelompokkan berdasarkan jenis: `Aula`, `Lapangan`, dan `Ruang Kelas`.
-Untuk sementara, `Laboratorium` memakai kumpulan foto `RuangKelas` sampai tersedia pack tersendiri.
+Foto dikelompokkan berdasarkan jenis: `Aula`, `Lapangan`, `Ruang Kelas`, dan `Laboratorium`.
+Laboratorium memakai delapan foto interior museum alkimia bernuansa gothic dari
+Wikimedia Commons, karya Edelmauswaldgeist dengan lisensi
+[CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/).
+Sumber, pembuat, dan lisensi setiap foto tercatat di
+[`sources.json`](database/seeders/photos/Laboratorium/sources.json).
 Setiap kumpulan diacak dan dipakai bergiliran, lalu diulang bila jumlah fasilitas melebihi jumlah foto.
 
 Untuk memperbarui database yang sudah berisi fasilitas tanpa membuat ulang data:
 
 ```bash
+php artisan db:seed --class=FacilityThemeSeeder
 php artisan db:seed --class=RoomImageSeeder
 php artisan storage:link
 ```
 
 Foto sumber disimpan di `database/seeders/photos` dan disalin ke disk public pada
-`facilities/db-photos`. Seeder tidak mengubah data fasilitas atau foto yang sudah ada;
-menjalankannya ulang tidak menggandakan atau mengacak ulang foto sebelumnya.
+`facilities/db-photos`. Foto yang sudah ada tetap dipertahankan, kecuali foto sementara
+Laboratorium dari pool `RuangKelas` yang diganti dengan pack alkimia baru. Foto custom
+tetap dipertahankan; penjalanan ulang tidak menggandakan atau mengacak ulang foto.
+
+`FacilityThemeSeeder` mengganti nama Lab Komputer 1 menjadi Laboratorium Teknomansi
+Aether dan lokasi kampus menjadi Menara Ravenclaw, Citadel Gondor, Biara Obsidian,
+serta kawasan fantasy lainnya. Seeder ini memperbarui fasilitas yang sudah ada tanpa
+mengubah ID, status aktif, atau hubungan laporan dan reservasi. `RoomSeeder` otomatis
+menjalankannya untuk database baru.
 
 ## Data Contoh Laporan dan Reservasi
 
 Seeder utama menyediakan 12 laporan dalam seluruh status (`baru`, `diproses`,
 `selesai`, `ditolak`, dan `dibatalkan`). Empat laporan yang sedang diproses membuat
-Lab Komputer 1, Ruang Rune Kuno, Ruang Dewan Putih, dan Lapangan Pelennor nonaktif.
+Laboratorium Teknomansi Aether, Ruang Rune Kuno, Ruang Dewan Putih, dan Lapangan Pelennor nonaktif.
 Laporan diproses dilengkapi estimasi perbaikan; laporan selesai dan ditolak memiliki
 catatan penyelesaian atau alasan penolakan.
 

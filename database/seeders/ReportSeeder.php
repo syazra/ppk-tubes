@@ -24,7 +24,7 @@ class ReportSeeder extends Seeder
         }
 
         $examples = [
-            ['Lab Komputer 1', 'diproses', 'Beberapa komputer tidak dapat menyala dan jaringan terputus.'],
+            ['Laboratorium Teknomansi Aether', 'diproses', 'Kristal komputasi tidak menyala dan jaringan rune terputus.'],
             ['Ruang Rune Kuno', 'diproses', 'Lampu dan proyektor ruang kelas perlu diperbaiki.'],
             ['Ruang Dewan Putih', 'diproses', 'Pendingin aula tidak berfungsi dan kursi perlu diperbaiki.'],
             ['Lapangan Pelennor', 'diproses', 'Permukaan lapangan berlubang dan perlu diratakan.'],

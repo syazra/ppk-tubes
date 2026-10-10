@@ -30,6 +30,8 @@ class DemoActivitySeederTest extends TestCase
         $this->assertDatabaseCount('room_images', 37);
         $this->assertDatabaseCount('reports', 12);
         $this->assertDatabaseCount('reservations', 74);
+        $this->assertSame(0, Room::where('location', 'like', 'Gedung %')->orWhere('location', 'like', 'Area %')->count());
+        $this->assertSame(1, Room::where('name', 'Laboratorium Teknomansi Aether')->count());
         $this->assertSame(['baru', 'dibatalkan', 'diproses', 'ditolak', 'selesai'], Report::distinct()->orderBy('status')->pluck('status')->all());
         $this->assertSame(['dibatalkan', 'disetujui', 'ditolak', 'menunggu'], Reservation::distinct()->orderBy('status')->pluck('status')->all());
         $this->assertSame(['Aula', 'Laboratorium', 'Lapangan', 'Ruang Kelas'], Room::where('is_avail', false)->orderBy('type')->pluck('type')->all());
@@ -97,8 +99,8 @@ class DemoActivitySeederTest extends TestCase
     {
         $this->seed(UserSeeder::class);
         $room = Room::create([
-            'name' => 'Lab Komputer 1',
-            'location' => 'Gedung E Lt. 2',
+            'name' => 'Laboratorium Teknomansi Aether',
+            'location' => 'Menara Aether - Tingkat II',
             'type' => 'Laboratorium',
             'capacity' => 40,
             'is_avail' => true,
