@@ -15,9 +15,8 @@ class RoomSeeder extends Seeder
             'desc' => 'Laboratorium komputer untuk praktikum',
             'type' => 'Laboratorium',
             'capacity' => 40,
-            'is_avail' => true
+            'is_avail' => true,
         ]);
-
 
         Room::create([
             'name' => 'Aula Utama',
@@ -25,9 +24,8 @@ class RoomSeeder extends Seeder
             'desc' => 'Aula untuk kegiatan besar',
             'type' => 'Aula',
             'capacity' => 200,
-            'is_avail' => true
+            'is_avail' => true,
         ]);
-
 
         Room::create([
             'name' => 'Ruang Kelas A301',
@@ -35,7 +33,7 @@ class RoomSeeder extends Seeder
             'desc' => 'Ruang kelas reguler',
             'type' => 'Ruang Kelas',
             'capacity' => 50,
-            'is_avail' => true
+            'is_avail' => true,
         ]);
 
         Room::create([
@@ -44,7 +42,7 @@ class RoomSeeder extends Seeder
             'desc' => 'Ruang studi untuk kegiatan belajar',
             'type' => 'Ruang Kelas',
             'capacity' => 30,
-            'is_avail' => true
+            'is_avail' => true,
         ]);
 
         Room::create([
@@ -53,7 +51,7 @@ class RoomSeeder extends Seeder
             'desc' => 'Ruang seminar untuk diskusi dan presentasi',
             'type' => 'Aula',
             'capacity' => 100,
-            'is_avail' => true
+            'is_avail' => true,
         ]);
 
         Room::create([
@@ -62,7 +60,7 @@ class RoomSeeder extends Seeder
             'desc' => 'Ruang untuk kegiatan kajian dan diskusi',
             'type' => 'Ruang Kelas',
             'capacity' => 30,
-            'is_avail' => true
+            'is_avail' => true,
         ]);
 
         Room::create([
@@ -71,7 +69,7 @@ class RoomSeeder extends Seeder
             'desc' => 'Ruang kelas untuk pembelajaran aritmatika',
             'type' => 'Ruang Kelas',
             'capacity' => 25,
-            'is_avail' => true
+            'is_avail' => true,
         ]);
 
         Room::create([
@@ -80,7 +78,7 @@ class RoomSeeder extends Seeder
             'desc' => 'Ruang pembelajaran simbol dan rune kuno',
             'type' => 'Ruang Kelas',
             'capacity' => 25,
-            'is_avail' => true
+            'is_avail' => true,
         ]);
 
         Room::create([
@@ -89,7 +87,7 @@ class RoomSeeder extends Seeder
             'desc' => 'Ruang pembelajaran sejarah',
             'type' => 'Ruang Kelas',
             'capacity' => 30,
-            'is_avail' => true
+            'is_avail' => true,
         ]);
 
         Room::create([
@@ -98,7 +96,7 @@ class RoomSeeder extends Seeder
             'desc' => 'Ruang pembelajaran transfigurasi',
             'type' => 'Ruang Kelas',
             'capacity' => 30,
-            'is_avail' => true
+            'is_avail' => true,
         ]);
 
         Room::create([
@@ -107,7 +105,7 @@ class RoomSeeder extends Seeder
             'desc' => 'Ruang pembelajaran bahasa Quenya',
             'type' => 'Ruang Kelas',
             'capacity' => 25,
-            'is_avail' => true
+            'is_avail' => true,
         ]);
 
         Room::create([
@@ -116,7 +114,7 @@ class RoomSeeder extends Seeder
             'desc' => 'Ruang pertemuan dan rapat',
             'type' => 'Aula',
             'capacity' => 100,
-            'is_avail' => true
+            'is_avail' => true,
         ]);
 
         Room::create([
@@ -125,7 +123,7 @@ class RoomSeeder extends Seeder
             'desc' => 'Ruang diskusi dan pengembangan pengetahuan',
             'type' => 'Ruang Kelas',
             'capacity' => 35,
-            'is_avail' => true
+            'is_avail' => true,
         ]);
 
         Room::create([
@@ -134,7 +132,7 @@ class RoomSeeder extends Seeder
             'desc' => 'Ruang belajar dan diskusi kelompok',
             'type' => 'Ruang Kelas',
             'capacity' => 30,
-            'is_avail' => true
+            'is_avail' => true,
         ]);
 
         Room::create([
@@ -143,7 +141,7 @@ class RoomSeeder extends Seeder
             'desc' => 'Ruang membaca dan belajar mandiri',
             'type' => 'Ruang Kelas',
             'capacity' => 40,
-            'is_avail' => true
+            'is_avail' => true,
         ]);
 
         Room::create([
@@ -152,7 +150,7 @@ class RoomSeeder extends Seeder
             'desc' => 'Laboratorium untuk praktikum ramuan',
             'type' => 'Laboratorium',
             'capacity' => 25,
-            'is_avail' => true
+            'is_avail' => true,
         ]);
 
         Room::create([
@@ -161,7 +159,7 @@ class RoomSeeder extends Seeder
             'desc' => 'Laboratorium praktikum alkimia',
             'type' => 'Laboratorium',
             'capacity' => 20,
-            'is_avail' => true
+            'is_avail' => true,
         ]);
 
         Room::create([
@@ -170,7 +168,7 @@ class RoomSeeder extends Seeder
             'desc' => 'Laboratorium praktikum herbologi',
             'type' => 'Laboratorium',
             'capacity' => 25,
-            'is_avail' => true
+            'is_avail' => true,
         ]);
 
         Room::create([
@@ -179,7 +177,7 @@ class RoomSeeder extends Seeder
             'desc' => 'Observatorium untuk pengamatan astronomi',
             'type' => 'Laboratorium',
             'capacity' => 20,
-            'is_avail' => true
+            'is_avail' => true,
         ]);
 
         Room::create([
@@ -188,7 +186,7 @@ class RoomSeeder extends Seeder
             'desc' => 'Laboratorium penelitian artefak',
             'type' => 'Laboratorium',
             'capacity' => 20,
-            'is_avail' => true
+            'is_avail' => true,
         ]);
 
         Room::create([
@@ -197,7 +195,7 @@ class RoomSeeder extends Seeder
             'desc' => 'Laboratorium penelitian artefak dan pengamatan',
             'type' => 'Laboratorium',
             'capacity' => 20,
-            'is_avail' => true
+            'is_avail' => true,
         ]);
 
         Room::create([
@@ -206,7 +204,7 @@ class RoomSeeder extends Seeder
             'desc' => 'Laboratorium penelitian material',
             'type' => 'Laboratorium',
             'capacity' => 20,
-            'is_avail' => true
+            'is_avail' => true,
         ]);
 
         Room::create([
@@ -215,7 +213,7 @@ class RoomSeeder extends Seeder
             'desc' => 'Laboratorium praktikum mantra',
             'type' => 'Laboratorium',
             'capacity' => 25,
-            'is_avail' => true
+            'is_avail' => true,
         ]);
 
         Room::create([
@@ -224,7 +222,7 @@ class RoomSeeder extends Seeder
             'desc' => 'Laboratorium praktikum pertahanan',
             'type' => 'Laboratorium',
             'capacity' => 25,
-            'is_avail' => true
+            'is_avail' => true,
         ]);
 
         Room::create([
@@ -233,7 +231,7 @@ class RoomSeeder extends Seeder
             'desc' => 'Laboratorium praktikum botani',
             'type' => 'Laboratorium',
             'capacity' => 25,
-            'is_avail' => true
+            'is_avail' => true,
         ]);
 
         Room::create([
@@ -242,7 +240,7 @@ class RoomSeeder extends Seeder
             'desc' => 'Lapangan untuk kegiatan olahraga dan kompetisi',
             'type' => 'Lapangan',
             'capacity' => 200,
-            'is_avail' => true
+            'is_avail' => true,
         ]);
 
         Room::create([
@@ -251,7 +249,7 @@ class RoomSeeder extends Seeder
             'desc' => 'Lapangan untuk kegiatan olahraga',
             'type' => 'Lapangan',
             'capacity' => 150,
-            'is_avail' => true
+            'is_avail' => true,
         ]);
 
         Room::create([
@@ -260,7 +258,7 @@ class RoomSeeder extends Seeder
             'desc' => 'Lapangan untuk kegiatan luar ruangan',
             'type' => 'Lapangan',
             'capacity' => 100,
-            'is_avail' => true
+            'is_avail' => true,
         ]);
 
         Room::create([
@@ -269,7 +267,7 @@ class RoomSeeder extends Seeder
             'desc' => 'Lapangan untuk kegiatan dan acara bersama',
             'type' => 'Lapangan',
             'capacity' => 100,
-            'is_avail' => true
+            'is_avail' => true,
         ]);
 
         Room::create([
@@ -278,7 +276,7 @@ class RoomSeeder extends Seeder
             'desc' => 'Arena untuk kompetisi dan acara besar',
             'type' => 'Lapangan',
             'capacity' => 250,
-            'is_avail' => true
+            'is_avail' => true,
         ]);
 
         Room::create([
@@ -287,7 +285,7 @@ class RoomSeeder extends Seeder
             'desc' => 'Taman untuk kegiatan santai dan pertemuan',
             'type' => 'Lapangan',
             'capacity' => 80,
-            'is_avail' => true
+            'is_avail' => true,
         ]);
 
         Room::create([
@@ -296,7 +294,7 @@ class RoomSeeder extends Seeder
             'desc' => 'Taman untuk kegiatan luar ruangan',
             'type' => 'Lapangan',
             'capacity' => 60,
-            'is_avail' => true
+            'is_avail' => true,
         ]);
 
         Room::create([
@@ -305,7 +303,7 @@ class RoomSeeder extends Seeder
             'desc' => 'Taman untuk kegiatan dan acara komunitas',
             'type' => 'Lapangan',
             'capacity' => 80,
-            'is_avail' => true
+            'is_avail' => true,
         ]);
 
         Room::create([
@@ -314,7 +312,7 @@ class RoomSeeder extends Seeder
             'desc' => 'Pelataran untuk acara dan pertemuan',
             'type' => 'Lapangan',
             'capacity' => 150,
-            'is_avail' => true
+            'is_avail' => true,
         ]);
 
         Room::create([
@@ -323,7 +321,7 @@ class RoomSeeder extends Seeder
             'desc' => 'Pelataran untuk kegiatan bersama',
             'type' => 'Lapangan',
             'capacity' => 150,
-            'is_avail' => true
+            'is_avail' => true,
         ]);
 
         Room::create([
@@ -332,7 +330,7 @@ class RoomSeeder extends Seeder
             'desc' => 'Halaman untuk kegiatan luar ruangan',
             'type' => 'Lapangan',
             'capacity' => 60,
-            'is_avail' => true
+            'is_avail' => true,
         ]);
 
         Room::create([
@@ -341,8 +339,9 @@ class RoomSeeder extends Seeder
             'desc' => 'Kebun untuk praktikum dan kegiatan herbologi',
             'type' => 'Lapangan',
             'capacity' => 50,
-            'is_avail' => true
+            'is_avail' => true,
         ]);
 
+        $this->call(FacilityThemeSeeder::class);
     }
 }

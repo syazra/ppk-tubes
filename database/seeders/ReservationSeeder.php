@@ -2,61 +2,63 @@
 
 namespace Database\Seeders;
 
+use App\Models\Reservation;
+use App\Models\Room;
+use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
+use LogicException;
 
 class ReservationSeeder extends Seeder
 {
     public function run(): void
     {
-        $now = Carbon::now();
+        $users = User::where('role', 'user')->whereIn('email', [
+            'ruthseptriana@students.kampus.ac.id',
+            'sandykurniawan@lecturer.kampus.ac.id',
+            'benynugroho@staff.kampus.ac.id',
+        ])->orderBy('email')->get();
+        $rooms = Room::orderBy('id')->get();
 
-        DB::table('reservations')->insert([
-            [
-                'user_id' => 5,
-                'room_id' => 2,
-                'desc' => 'Rapat organisasi mahasiswa',
-                'date_to_reserv' => $now->copy()->addDays(1)->toDateString(),
-                'start_time' => '08:00:00',
-                'end_time' => '10:00:00',
-                'status' => 'menunggu',
-                'created_at' => $now,
-                'updated_at' => $now,
-            ],
-            [
-                'user_id' => 4,
-                'room_id' => 3,
-                'desc' => 'Diskusi kelompok tugas kuliah',
-                'date_to_reserv' => $now->copy()->addDays(2)->toDateString(),
-                'start_time' => '13:00:00',
-                'end_time' => '15:00:00',
-                'status' => 'ditolak',
-                'created_at' => $now,
-                'updated_at' => $now,
-            ],
-            [
-                'user_id' => 6,
-                'room_id' => 2,
-                'desc' => 'Seminar internal mahasiswa',
-                'date_to_reserv' => $now->copy()->addDays(3)->toDateString(),
-                'start_time' => '09:00:00',
-                'end_time' => '14:00:00',
-                'status' => 'disetujui',
-                'created_at' => $now,
-                'updated_at' => $now,
-            ],
-            [
-                'user_id' => 7,
-                'room_id' => 1,
-                'desc' => 'Peminjaman ruangan',
-                'date_to_reserv' => $now->copy()->addDays(4)->toDateString(),
-                'start_time' => '10:00:00',
-                'end_time' => '12:00:00',
-                'status' => 'dibatalkan',
-                'created_at' => $now,
-                'updated_at' => $now,
-            ],
-        ]);
+        if ($users->count() !== 3 || $rooms->isEmpty()) {
+            throw new LogicException('Seed demo users and facilities before reservations.');
+        }
+
+        $today = now(config('app.timezone'))->startOfDay();
+        $statuses = ['menunggu', 'disetujui', 'ditolak', 'dibatalkan'];
+
+        DB::transaction(function () use ($users, $rooms, $today, $statuses): void {
+            foreach ($rooms as $index => $room) {
+                $user = $users[$index % $users->count()];
+
+                Reservation::firstOrCreate([
+                    'user_id' => $user->id,
+                    'room_id' => $room->id,
+                    'desc' => 'Kegiatan belajar bersama di '.$room->name,
+                ], [
+                    'date_to_reserv' => $today->copy()->subDays(1 + $index % 14)->toDateString(),
+                    'start_time' => '08:00:00',
+                    'end_time' => '10:00:00',
+                    'status' => 'disetujui',
+                    'rejection_reason' => null,
+                ]);
+
+                $status = $room->is_avail ? $statuses[$index % count($statuses)] : 'ditolak';
+
+                Reservation::firstOrCreate([
+                    'user_id' => $user->id,
+                    'room_id' => $room->id,
+                    'desc' => 'Diskusi dan persiapan kegiatan di '.$room->name,
+                ], [
+                    'date_to_reserv' => $today->copy()->addDays(2 + $index % 7)->toDateString(),
+                    'start_time' => '13:00:00',
+                    'end_time' => '15:00:00',
+                    'status' => $status,
+                    'rejection_reason' => $status === 'ditolak'
+                        ? ($room->is_avail ? 'Pengajuan belum memenuhi persyaratan kegiatan.' : 'Fasilitas sedang dalam perbaikan')
+                        : null,
+                ]);
+            }
+        });
     }
 }

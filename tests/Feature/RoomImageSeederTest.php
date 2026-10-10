@@ -29,7 +29,7 @@ class RoomImageSeederTest extends TestCase
             'Aula' => 'Aula',
             'Lapangan' => 'Lapangan',
             'Ruang Kelas' => 'RuangKelas',
-            'Laboratorium' => 'RuangKelas',
+            'Laboratorium' => 'Laboratorium',
         ];
         $this->assertDatabaseCount('room_images', 37);
         $this->assertSame($before, Room::all()->toArray());
@@ -46,7 +46,7 @@ class RoomImageSeederTest extends TestCase
         }
 
         // Exhaust each pool before reusing photos for facilities in that class.
-        foreach (['Aula' => 3, 'Lapangan' => 11, 'Ruang Kelas' => 2, 'Laboratorium' => 2] as $type => $uniquePhotos) {
+        foreach (['Aula' => 3, 'Lapangan' => 11, 'Ruang Kelas' => 2, 'Laboratorium' => 8] as $type => $uniquePhotos) {
             $paths = Room::with('images')->where('type', $type)->get()
                 ->map(fn (Room $room) => $room->images->first()->path);
             $this->assertCount($uniquePhotos, $paths->unique());
@@ -86,5 +86,28 @@ class RoomImageSeederTest extends TestCase
 
         $this->assertDatabaseCount('rooms', 37);
         $this->assertDatabaseCount('room_images', 0);
+    }
+
+    public function test_temporary_lab_photos_are_replaced_without_touching_custom_or_classroom_photos(): void
+    {
+        Storage::fake('public');
+        $this->seed(RoomSeeder::class);
+        $labs = Room::where('type', 'Laboratorium')->orderBy('id')->get();
+        $temporary = $labs[0]->images()->create(['path' => 'facilities/db-photos/RuangKelas/01.jpg']);
+        $custom = $labs[1]->images()->create(['path' => 'facilities/custom-lab.jpg']);
+        $classroom = Room::where('type', 'Ruang Kelas')->firstOrFail()
+            ->images()->create(['path' => 'facilities/db-photos/RuangKelas/01.jpg']);
+
+        $this->seed(RoomImageSeeder::class);
+
+        $this->assertStringStartsWith('facilities/db-photos/Laboratorium/', $temporary->fresh()->path);
+        $this->assertSame('facilities/custom-lab.jpg', $custom->fresh()->path);
+        $this->assertSame('facilities/db-photos/RuangKelas/01.jpg', $classroom->fresh()->path);
+        $this->assertDatabaseCount('room_images', 37);
+        $before = RoomImage::orderBy('id')->get()->toArray();
+
+        $this->seed(RoomImageSeeder::class);
+
+        $this->assertSame($before, RoomImage::orderBy('id')->get()->toArray());
     }
 }
