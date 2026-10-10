@@ -7,7 +7,7 @@
         "dev": "vp dev"
     },
     "dependencies": {
-        "@inertiajs/react": "^3.7.1",
+        "@inertiajs/react": "^3.8.0",
         "@inertiajs/vite": "^3.7.1",
         "concurrently": "^10.0.6",
         "heroicons": "^2.2.0",
