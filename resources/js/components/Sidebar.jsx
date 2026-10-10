@@ -13,7 +13,6 @@ const adminNavigation = [
     { key: 'registrations', icon: 'student', label: 'Kelola Akun' },
     { key: 'facilities', icon: 'room', label: 'Kelola Fasilitas' },
     { key: 'recap', icon: 'chart', label: 'Rekap Fasilitas' },
-    { key: 'profile', icon: 'user', label: 'Profil' },
 ];
 
 const operatorNavigation = [
@@ -64,7 +63,7 @@ export default function Sidebar({
                     return (
                         <Link 
                             key={item.key} 
-                            href={urls?.[item.key] || '#'} 
+                            href={urls?.[item.key] || (item.key === 'profile' ? '/profile' : '#')} 
                             onClick={onNavigate} 
                             className={`app-nav-link ${isActive ? 'is-active' : ''}`}
                         >
@@ -83,7 +82,7 @@ export default function Sidebar({
             </nav>
 
             <div className="app-sidebar-footer">
-                <Link href={urls?.profile || '#'} onClick={onNavigate} className="app-sidebar-account">
+                <Link href={urls?.profile || '/profile'} onClick={onNavigate} className="app-sidebar-account">
                     <span className="app-avatar shrink-0">{initials(userName)}</span>
                     {!collapsed && (
                         <span className="min-w-0">

@@ -3,12 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
-use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
-use Illuminate\View\View;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -17,36 +15,39 @@ class ProfileController extends Controller
     /**
      * Display the user's profile form.
      */
-    public function edit(Request $request): View|Response
+    public function edit(Request $request): Response
     {
-        if ($request->user()->isAdmin()) {
-            $user = $request->user();
+        $user = $request->user();
+        $navigationUrls = match ($user->role) {
+            'admin' => [
+                'dashboard' => route('admin.dashboard'),
+                'registrations' => route('admin.registrations.index'),
+                'facilities' => route('admin.facilities.index'),
+                'recap' => route('admin.facilities.recap'),
+            ],
+            'operator' => [
+                'dashboard' => route('operator.dashboard'),
+                'reservations' => route('operator.reservations'),
+                'reports' => route('operator.reports'),
+            ],
+            default => [
+                'dashboard' => route('user.dashboard'),
+                'reservations' => route('reservations.index'),
+                'reports' => route('reports.index'),
+            ],
+        };
 
-            return Inertia::render('Admin/Profile', [
-                'user' => $user->only('name', 'email', 'role', 'account_type'),
-                'admin' => $user->only('name', 'email', 'role', 'account_type'),
-                'status' => session('status'),
-                'csrfToken' => csrf_token(),
-                'mustVerifyEmail' => $user instanceof MustVerifyEmail,
-                'emailVerified' => $user->hasVerifiedEmail(),
-                'urls' => [
-                    'dashboard' => route('admin.dashboard'),
-                    'registrations' => route('admin.registrations.index'),
-                    'facilities' => route('admin.facilities.index'),
-                    'recap' => route('admin.facilities.recap'),
-                    'profile' => route('profile.edit'),
-                    'profileUpdate' => route('profile.update'),
-                    'profileDestroy' => route('profile.destroy'),
-                    'passwordUpdate' => route('password.update'),
-                    'verificationSend' => route('verification.send'),
-                    'guest' => route('landing'),
-                    'logout' => route('logout'),
-                ],
-            ]);
-        }
-
-        return view('profile.edit', [
-            'user' => $request->user(),
+        return Inertia::render('Profile/Edit', [
+            'user' => $user->only('name', 'email', 'role', 'account_type'),
+            'status' => session('status'),
+            'csrfToken' => csrf_token(),
+            'urls' => $navigationUrls + [
+                'profile' => route('profile.edit'),
+                'profileUpdate' => route('profile.update'),
+                'passwordUpdate' => route('password.update'),
+                'guest' => route('landing'),
+                'logout' => route('logout'),
+            ],
         ]);
     }
 

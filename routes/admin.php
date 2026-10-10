@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\FacilityController;
 use App\Http\Controllers\Admin\FacilityRecapController;
 use App\Http\Controllers\Admin\RegistrationController;
+use App\Models\Report;
 use App\Models\Reservation;
 use App\Models\Room;
 use App\Models\User;
@@ -13,12 +14,26 @@ Route::middleware(['auth', 'role:admin', 'verified'])->prefix('admin')->name('ad
     Route::get('/dashboard', function () {
         $summary = [
             'students' => User::where('account_type', 'mahasiswa')->count(),
-            'pending_reservations' => Reservation::where('status', 'menunggu')->count(),
+            // 'pending_reservations' => Reservation::where('status', 'menunggu')->count(),
             'monthly_reservations' => Reservation::whereMonth('created_at', now()->month)
+                ->whereYear('created_at', now()->year)
+                ->count(),
+            'monthly_reports' => Report::whereMonth('created_at', now()->month)
                 ->whereYear('created_at', now()->year)
                 ->count(),
             'active_rooms' => Room::where('is_avail', true)->count(),
         ];
+
+        $recentReservations = Reservation::with('room')
+            ->latest()
+            ->take(5)
+            ->get();
+
+        $recentReports = Report::with('room')
+            // ->whereIn('status', ['diproses', 'selesai'])
+            ->latest('updated_at')
+            ->take(5)
+            ->get();
 
         return Inertia::render('Admin/Dashboard', [
             'user' => request()->user()->only('name', 'email', 'role', 'account_type'),
@@ -26,6 +41,8 @@ Route::middleware(['auth', 'role:admin', 'verified'])->prefix('admin')->name('ad
             'status' => session('status'),
             'csrfToken' => csrf_token(),
             'summary' => $summary,
+            'recentReservations' => $recentReservations,
+            'recentReports' => $recentReports,
             'urls' => [
                 'dashboard' => route('admin.dashboard'),
                 'registrations' => route('admin.registrations.index'),

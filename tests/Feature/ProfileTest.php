@@ -22,31 +22,26 @@ class ProfileTest extends TestCase
         $response->assertOk();
     }
 
-    public function test_admin_profile_uses_inertia_and_other_roles_keep_the_blade_view(): void
+    public function test_profile_page_uses_the_shared_inertia_page_for_all_roles(): void
     {
-        $admin = User::factory()->create(['role' => 'admin']);
-
-        $this->actingAs($admin)
-            ->get('/profile')
-            ->assertOk()
-            ->assertInertia(fn (Assert $page) => $page
-                ->component('Admin/Profile')
-                ->where('admin.name', $admin->name)
-                ->where('admin.email', $admin->email)
-                ->where('urls.dashboard', route('admin.dashboard'))
-                ->where('urls.profileUpdate', route('profile.update'))
-                ->where('urls.passwordUpdate', route('password.update'))
-                ->where('urls.profileDestroy', route('profile.destroy'))
-                ->etc());
-
-        foreach (['operator', 'user'] as $role) {
+        foreach ([
+            'admin' => route('admin.dashboard'),
+            'operator' => route('operator.dashboard'),
+            'user' => route('user.dashboard'),
+        ] as $role => $dashboardUrl) {
             $user = User::factory()->create(['role' => $role]);
 
             $this->actingAs($user)
                 ->get('/profile')
                 ->assertOk()
-                ->assertViewIs('profile.edit')
-                ->assertSee('Profile');
+                ->assertInertia(fn (Assert $page) => $page
+                    ->component('Profile/Edit')
+                    ->where('user.name', $user->name)
+                    ->where('urls.dashboard', $dashboardUrl)
+                    ->where('urls.profile', route('profile.edit'))
+                    ->where('urls.profileUpdate', route('profile.update'))
+                    ->where('urls.passwordUpdate', route('password.update'))
+                    ->etc());
         }
     }
 
