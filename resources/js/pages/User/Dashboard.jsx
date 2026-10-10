@@ -5,7 +5,7 @@ import ActionCard from '../../components/ActionCard';
 import StatusBadge, { getStatusColor } from '../../components/StatusBadge';
 import Icon from '../../components/Icons';
 import Button from '../../components/Button';
-import botanicalBackground from '../../../images/landing-botanical.webp';
+import leafDecoration from '../../../../background-preview.png';
 
 const statusLabels = {
 	baru: 'Menunggu diproses',
@@ -66,7 +66,7 @@ export default function Dashboard({ user, csrfToken, urls, recentReservations = 
 						transition={{ duration: 0.35, delay: shouldReduceMotion ? 0 : index * 0.08 }}
 						className={`app-quick-card app-quick-card-${action.key}`}
 					>
-						<img src={botanicalBackground} alt="" aria-hidden="true" className="app-quick-texture" />
+						<img src={leafDecoration} alt="" aria-hidden="true" className="app-quick-texture" />
 						<div className="app-quick-content">
 							<p className="app-quick-label"><span className="app-quick-icon"><Icon name={action.icon} /></span>{action.label}</p>
 							<h2>{action.title}</h2>

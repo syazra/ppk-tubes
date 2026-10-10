@@ -144,10 +144,10 @@
 .app-page-content { max-width: 1440px; margin-inline: auto; }
 
 .app-quick-actions { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; margin-bottom: 32px; }
-.app-quick-card { position: relative; isolation: isolate; min-width: 0; overflow: hidden; padding: 28px; border: 1px solid #d8e2d5; border-radius: 22px; background: #eef1e6; color: #254b40; box-shadow: 0 8px 24px #183b2f06; }
+.app-quick-card { position: relative; isolation: isolate; min-width: 0; overflow: hidden; padding: 28px; border: 1px solid #d8e2d5; border-radius: 22px; background: linear-gradient(115deg, #eef1e6 35%, #e1e7db); color: #254b40; box-shadow: 0 8px 24px #183b2f06; }
 .app-quick-card-reservation { border-color: #336358; background: radial-gradient(ellipse at 100% 0%, #f3ecd133, transparent 65%), linear-gradient(125deg, #336358, #234c42); color: #fff; }
-.app-quick-texture { position: absolute; z-index: -1; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: .3; mix-blend-mode: luminosity; mask-image: linear-gradient(90deg, transparent 20%, #000); pointer-events: none; }
-.app-quick-card-report .app-quick-texture { opacity: .16; mix-blend-mode: multiply; }
+.app-quick-texture { position: absolute; z-index: -1; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: .5; mask-image: linear-gradient(90deg, transparent 20%, #000); pointer-events: none; }
+.app-quick-card-report .app-quick-texture { opacity: .4; mix-blend-mode: multiply; }
 .app-quick-content { position: relative; display: flex; flex-direction: column; align-items: flex-start; min-height: 248px; }
 .app-quick-label { display: flex; align-items: center; gap: 10px; margin: 0 0 20px; font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; }
 .app-quick-icon { display: grid; place-items: center; width: 36px; height: 36px; flex-shrink: 0; border: 1px solid #ffffff30; border-radius: 11px; background: #ffffff0c; color: #d3e9a6; }
@@ -163,7 +163,7 @@
 .app-quick-button:hover svg { transform: translateX(3px); }
 @media (min-width: 768px) { .app-quick-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (min-width: 1280px) { .app-quick-card { padding: 32px; } }
-@media (max-width: 639px) { .app-quick-card { padding: 24px; } .app-quick-content { min-height: 240px; } }
+@media (max-width: 639px) { .app-quick-card { padding: 24px; } .app-quick-content { min-height: 240px; } .app-quick-texture { object-position: right center; } }
 @media (prefers-reduced-motion: reduce) { .app-quick-button:hover svg { transform: none; } }
 .app-page-content > section.px-6 { padding-inline: 0; }
 .app-mobile-dialog { position: fixed; inset: 0; width: 100%; max-width: none; height: 100%; height: 100dvh; max-height: none; margin: 0; padding: 0; overflow: hidden; border: 0; background: transparent; }
