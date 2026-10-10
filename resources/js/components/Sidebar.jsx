@@ -1,6 +1,9 @@
 import { Link, router } from '@inertiajs/react';
 import { motion } from 'motion/react';
 import Icon, { initials } from './Icons';
+import AmbientParticles from './AmbientParticles';
+import { fogImage } from './IntroOverlay';
+import botanicalBackground from '../../images/landing-botanical.webp';
 
 const userNavigation = [
     { key: 'dashboard', icon: 'home', label: 'Dasbor' },
@@ -44,8 +47,14 @@ export default function Sidebar({
 
     return (
         <aside className={`app-sidebar ${collapsed ? 'is-collapsed' : ''}`}>
+            <div className="app-sidebar-atmosphere" aria-hidden="true" style={{ backgroundImage: `linear-gradient(160deg, #062e29c9, #062e29ed 55%, #03231ff5), url('${botanicalBackground}')` }}>
+                <div className="app-sidebar-glow app-sidebar-glow-top" />
+                <div className="app-sidebar-glow app-sidebar-glow-bottom" />
+                <div className="app-sidebar-fog" style={{ backgroundImage: fogImage(7) }} />
+                <AmbientParticles compact />
+            </div>
             <div className="app-sidebar-brand">
-                <a href={urls?.guest || '#'} className="flex min-w-0 items-center gap-3">
+                <a href={urls?.guest || '#'} onClick={onNavigate} aria-label="CampuSpace — Beranda" className="flex min-w-0 items-center gap-3">
                     <span className="app-brand-mark"><Icon name="campus" className="h-6 w-6" /></span>
                     {!collapsed && (
                         <span className="app-sidebar-label">
@@ -54,10 +63,10 @@ export default function Sidebar({
                         </span>
                     )}
                 </a>
-                {mobile && <button type="button" className="app-sidebar-close" onClick={onClose}><Icon name="close" /></button>}
+                {mobile && <button type="button" className="app-sidebar-close" aria-label="Tutup menu navigasi" data-drawer-close onClick={onClose}><Icon name="close" /></button>}
             </div>
 
-            <nav className="app-sidebar-nav">
+            <nav className="app-sidebar-nav" aria-label="Menu utama">
                 <p className={`app-nav-heading ${collapsed ? 'sr-only' : ''}`}>Menu utama</p>
                 {navItems.map(item => {
                     const isActive = active === item.key;
@@ -65,7 +74,10 @@ export default function Sidebar({
                         <Link 
                             key={item.key} 
                             href={urls?.[item.key] || (item.key === 'profile' ? '/profile' : '#')} 
-                            onClick={onNavigate} 
+                            onStart={onNavigate}
+                            aria-current={isActive ? 'page' : undefined}
+                            title={collapsed ? item.label : undefined}
+                            aria-label={collapsed ? item.label : undefined}
                             className={`app-nav-link ${isActive ? 'is-active' : ''}`}
                         >
                             {isActive && (
@@ -75,7 +87,7 @@ export default function Sidebar({
                                     transition={{ type: 'spring', stiffness: 380, damping: 32 }} 
                                 />
                             )}
-                            <Icon name={item.icon} className="relative z-10 h-5 w-5 shrink-0" />
+                            <span className="app-nav-icon"><Icon name={item.icon} /></span>
                             {!collapsed && <span className="app-sidebar-label relative z-10">{item.label}</span>}
                         </Link>
                     );
@@ -83,7 +95,7 @@ export default function Sidebar({
             </nav>
 
             <div className="app-sidebar-footer">
-                <Link href={urls?.profile || '/profile'} onClick={onNavigate} className="app-sidebar-account">
+                <Link href={urls?.profile || '/profile'} onStart={onNavigate} className="app-sidebar-account" aria-label={`Buka profil ${userName}`} title={collapsed ? userName : undefined}>
                     <span className="app-avatar shrink-0">{initials(userName)}</span>
                     {!collapsed && (
                         <span className="min-w-0">
@@ -97,7 +109,7 @@ export default function Sidebar({
                     router.post(urls?.logout || '/logout', {}, { preserveState: false });
                 }}>
                     {csrfToken && <input type="hidden" name="_token" value={csrfToken} />}
-                    <button type="submit" className="app-logout">
+                    <button type="submit" className="app-logout" aria-label={collapsed ? 'Keluar' : undefined} title={collapsed ? 'Keluar' : undefined}>
                         <Icon name="logout" className="h-5 w-5 shrink-0" />
                         {!collapsed && <span>Keluar</span>}
                     </button>
