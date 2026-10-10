@@ -34,7 +34,7 @@ class ReservationSeeder extends Seeder
                 Reservation::firstOrCreate([
                     'user_id' => $user->id,
                     'room_id' => $room->id,
-                    'desc' => 'Kegiatan belajar bersama di '.$room->name,
+                    'activity_name' => 'Kegiatan belajar bersama di '.$room->name,
                 ], [
                     'date_to_reserv' => $today->copy()->subDays(1 + $index % 14)->toDateString(),
                     'start_time' => '08:00:00',
@@ -48,7 +48,7 @@ class ReservationSeeder extends Seeder
                 Reservation::firstOrCreate([
                     'user_id' => $user->id,
                     'room_id' => $room->id,
-                    'desc' => 'Diskusi dan persiapan kegiatan di '.$room->name,
+                    'activity_name' => 'Diskusi dan persiapan kegiatan di '.$room->name,
                 ], [
                     'date_to_reserv' => $today->copy()->addDays(2 + $index % 7)->toDateString(),
                     'start_time' => '13:00:00',

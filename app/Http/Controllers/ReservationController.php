@@ -49,17 +49,27 @@ class ReservationController extends Controller
             ->withQueryString()
             ->through(fn (Reservation $reservation): array => [
                 'id' => $reservation->id,
+
                 'room' => [
                     'name' => $reservation->room?->name,
                     'type' => $reservation->room?->type,
                 ],
+
+                'reservation_type' => $reservation->reservation_type,
+                'institution' => $reservation->institution,
+                'activity_name' => $reservation->activity_name,
+                'participant_count' => $reservation->participant_count,
+                'proposal_path' => $reservation->proposal_path,
+
                 'date_to_reserv' => $reservation->date_to_reserv,
                 'start_time' => $reservation->start_time,
                 'end_time' => $reservation->end_time,
                 'desc' => $reservation->desc,
+
                 'status' => $reservation->status,
                 'rejection_reason' => $reservation->rejection_reason,
-                'can_cancel' => $reservation->status === 'menunggu' && $reservation->canStillBeProcessed(),
+                'can_cancel' => $reservation->status === 'menunggu'
+                    && $reservation->canStillBeProcessed(),
                 'cancel_url' => route('reservations.cancel', $reservation),
                 'ticket_url' => route('reservations.ticket', $reservation),
                 'qr_url' => route('reservations.qrcode', $reservation),
@@ -331,10 +341,36 @@ class ReservationController extends Controller
                 'integer',
                 Rule::exists('rooms', 'id')->where('is_avail', true)
             ],
-            'desc' => [
-                'required',
-                'string'
+            'reservation_type' => [
+            'required',
+            Rule::in(['Individu', 'Instansi']),
             ],
+            'institution' => [
+            'nullable',
+            'required_if:reservation_type,Instansi',
+            'string',
+            'max:255',
+            ],
+            // Wajib untuk individu maupun instansi.
+            // Pada individu, field ini berisi tujuan penggunaan.
+            'activity_name' => [
+                'required',
+                'string',
+                'max:255',
+            ],
+
+            // Deskripsi hanya diwajibkan untuk instansi.
+            'desc' => [
+                'nullable',
+                'required_if:reservation_type,Instansi',
+                'string',
+            ],
+
+            'participant_count' => [
+                'required',
+                'integer',
+            ],
+        
             'date_to_reserv' => [
                 'required',
                 'date_format:Y-m-d'
@@ -356,7 +392,7 @@ class ReservationController extends Controller
 
         if ($reservationStart->lt($availability->earliestStart())) {
             return back()->withErrors([
-                'time' => 'Reservasi harus dimulai minimal tiga jam dari sekarang.',
+                'time' => 'Reservasi harus dimulai minimal 12 jam dari sekarang.',
             ])->withInput();
         }
 
@@ -441,11 +477,27 @@ class ReservationController extends Controller
         Reservation::create([
             'user_id' => Auth::id(),
             'room_id' => $validated['room_id'],
-            'desc' => $validated['desc'],
+
+            'reservation_type' => $validated['reservation_type'],
+            'institution' => $validated['reservation_type'] === 'Instansi'
+                ? $validated['institution']
+                : null,
+
+            'activity_name' => $validated['activity_name'],
+            'participant_count' => $validated['participant_count'],
+
+            'desc' => $validated['reservation_type'] === 'Instansi'
+                ? ($validated['desc'] ?? null)
+                : ($validated['desc'] ?? null),
+
+            'proposal_path' => isset($validated['proposal'])
+                ? $request->file('proposal')->store('proposals', 'public')
+                : null,
+
             'date_to_reserv' => $validated['date_to_reserv'],
             'start_time' => $validated['start_time'],
             'end_time' => $validated['end_time'],
-            'status' => 'menunggu'
+            'status' => 'menunggu',
         ]);
 
         return redirect()
