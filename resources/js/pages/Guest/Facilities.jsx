@@ -1,4 +1,4 @@
-import { Head, router, usePage } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import Icon from '../../components/Icons';
 import PublicBrand from '../../components/PublicBrand';
@@ -14,9 +14,15 @@ function dateLabel(date) {
     return monthNames[Number(month) - 1] ? `${Number(day)} ${monthNames[Number(month) - 1]} ${year}` : date;
 }
 
-export default function Facilities({ rooms, filters = {}, types = [], locations = [], today, urls, photoPlaceholderUrl, photoFallbackUrl }) {
-    const { errors = {}, auth } = usePage().props;
-    const accountUrl = auth?.user ? auth.dashboardUrl : urls.login;
+export default function Facilities({ rooms, filters = {}, types = [], locations = [], today, urls = {}, photoPlaceholderUrl, photoFallbackUrl }) {
+    const page = usePage() || {};
+    const { errors = {}, auth } = page.props || {};
+    const safeUrls = urls || {};
+    const landingUrl = safeUrls.landing || '/';
+    const facilitiesUrl = safeUrls.facilities || '/fasilitas';
+    const aboutUrl = safeUrls.about || '/tentang';
+    const loginUrl = safeUrls.login || '/login';
+    const accountUrl = auth?.user ? (auth.dashboardUrl || '/dashboard') : loginUrl;
     const accountLabel = auth?.user ? 'Kembali ke dasbor' : 'Masuk';
     const selectedDate = filters.date || today;
     const [query, setQuery] = useState({ search: filters.search || '', type: filters.type || '', location: filters.location || '', capacity: filters.capacity || '', date: selectedDate });
@@ -33,9 +39,13 @@ export default function Facilities({ rooms, filters = {}, types = [], locations 
     }, []);
 
     const updateField = event => setQuery(previous => ({ ...previous, [event.target.name]: event.target.value }));
-    const visit = values => router.get(urls.facilities, values, { preserveState: true, preserveScroll: true, onStart: () => setProcessing(true), onFinish: () => setProcessing(false) });
+    const visit = values => {
+        if (processing) return;
+        router.get(facilitiesUrl, values, { preserveState: true, preserveScroll: true, onStart: () => setProcessing(true), onFinish: () => setProcessing(false) });
+    };
     const submit = event => { event.preventDefault(); visit(query); };
     const reset = () => {
+        if (processing) return;
         const values = { search: '', type: '', location: '', capacity: '', date: query.date || selectedDate };
         setQuery(values);
         visit(values);
@@ -44,7 +54,7 @@ export default function Facilities({ rooms, filters = {}, types = [], locations 
         <div className="gf">
             <Head title="Fasilitas"><meta name="description" content="Cari fasilitas kampus berdasarkan tipe, lokasi, dan kapasitas. Lihat ketersediaan setiap slot waktu tanpa perlu masuk." /></Head>
             <a href="#daftar-fasilitas" className="gf-skip">Lewati ke daftar fasilitas</a>
-            <PublicNavbar urls={urls} active="facilities" />
+            <PublicNavbar urls={safeUrls} active="facilities" />
             <main>
                 {/* HEADER */}
                 <section className="gf-intro" aria-labelledby="gf-heading">
@@ -85,10 +95,10 @@ export default function Facilities({ rooms, filters = {}, types = [], locations 
                         />
                     </section>
                     
-                    <aside className="gf-reserve-note"><div><h2>Sudah menemukan fasilitas yang sesuai?</h2><p>{auth?.user ? 'Kembali ke dasbor untuk melanjutkan aktivitas akun.' : 'Masuk dengan akun kampus untuk mengajukan reservasi.'}</p></div><a href={accountUrl} className="gf-button gf-button-forest">{accountLabel} <Icon name="landing-arrow" className="gf-icon" /></a></aside>
+                    <aside className="gf-reserve-note"><div><h2>Sudah menemukan fasilitas yang sesuai?</h2><p>{auth?.user ? 'Kembali ke dasbor untuk melanjutkan aktivitas akun.' : 'Masuk dengan akun kampus untuk mengajukan reservasi.'}</p></div><Link href={accountUrl} className="gf-button gf-button-forest">{accountLabel} <Icon name="landing-arrow" className="gf-icon" /></Link></aside>
                 </div>
             </main>
-            <footer className="gf-footer"><div className="gf-wrap gf-footer-inner"><a href={urls.landing} className="cs-brand" aria-label="CampuSpace — Beranda"><PublicBrand /></a><p>Layanan fasilitas kampus.</p><nav aria-label="Navigasi footer"><a href={urls.landing}>Beranda</a><a href={urls.about}>Tentang</a></nav></div></footer>
+            <footer className="gf-footer"><div className="gf-wrap gf-footer-inner"><Link href={landingUrl} className="cs-brand" aria-label="Buana — Beranda"><PublicBrand /></Link><p>Layanan fasilitas kampus.</p><nav aria-label="Navigasi footer"><Link href={landingUrl}>Beranda</Link><Link href={aboutUrl}>Tentang</Link></nav></div></footer>
         </div>
     );
 }

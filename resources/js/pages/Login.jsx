@@ -9,8 +9,8 @@ import AmbientParticles from '../components/AmbientParticles';
 import IntroOverlay, { INTRO_DELAY, fogImage, useIntro } from '../components/IntroOverlay';
 
 const styles = `
-@font-face { font-family: 'CampuSpace Ogg'; src: url('${oggRegular}') format('opentype'); font-weight: 400; font-style: normal; font-display: swap; }
-@font-face { font-family: 'CampuSpace Ogg'; src: url('${oggItalic}') format('opentype'); font-weight: 400; font-style: italic; font-display: swap; }
+@font-face { font-family: 'Buana Ogg'; src: url('${oggRegular}') format('opentype'); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Buana Ogg'; src: url('${oggItalic}') format('opentype'); font-weight: 400; font-style: italic; font-display: swap; }
 .lg {
     --forest: #003b33; --deep: #062e29; --teal: #007f6d; --lime: #d3e9a6; --paper: #f8f9f3; --ink: #163f35; --muted: #5b6e62;
     position: relative; min-height: 100vh; min-height: 100dvh; display: grid; place-items: center; padding: 32px 20px; overflow: hidden;
@@ -43,7 +43,7 @@ const styles = `
 .lg-brand { display: flex; align-items: center; justify-content: center; gap: 10px; color: var(--forest); font-size: 24px; font-weight: 600; letter-spacing: -.8px; }
 .lg-brand span span { font-weight: 400; }
 .lg-brand-mark { width: 34px; height: 34px; padding: 6px; border-radius: 10px; background: var(--forest); color: var(--lime); animation: lg-bob 4s ease-in-out infinite; }
-.lg-title { margin-top: 26px !important; text-align: center; font-family: 'CampuSpace Ogg', Georgia, serif; font-size: 38px; line-height: 1.15; letter-spacing: -.035em; color: var(--forest); font-weight: 400; }
+.lg-title { margin-top: 26px !important; text-align: center; font-family: 'Buana Ogg', Georgia, serif; font-size: 38px; line-height: 1.15; letter-spacing: -.035em; color: var(--forest); font-weight: 400; }
 .lg-title em { color: var(--teal); }
 .lg-sub { margin-top: 10px !important; text-align: center; font-size: 14px; color: var(--muted); }
 .lg-form { margin-top: 28px; display: grid; gap: 18px; }
@@ -101,7 +101,7 @@ const styles = `
 `;
 
 function Brand() {
-    return <><svg className="lg-brand-mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" d="M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347m-15.482 0a50.636 50.636 0 0 0-2.658-.813A59.906 59.906 0 0 1 12 3.493a59.903 59.903 0 0 1 10.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.717 50.717 0 0 1 12 13.489a50.702 50.702 0 0 1 7.74-3.342M6.75 15a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Zm0 0v-3.675A55.378 55.378 0 0 1 12 8.443m-7.007 11.55A5.981 5.981 0 0 0 6.75 15.75v-1.5" /></svg><span>Campu<span>Space</span></span></>;
+    return <><svg className="lg-brand-mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" d="M12.75 3.03v.568c0 .334.148.65.405.864l1.068.89c.442.369.535 1.01.216 1.49l-.51.766a2.25 2.25 0 0 1-1.161.886l-.143.048a1.107 1.107 0 0 0-.57 1.664c.369.555.169 1.307-.427 1.605L9 13.125l.423 1.059a.956.956 0 0 1-1.652.928l-.679-.906a1.125 1.125 0 0 0-1.906.172L4.5 15.75l-.612.153M12.75 3.031a9 9 0 0 0-8.862 12.872M12.75 3.031a9 9 0 0 1 6.69 14.036m0 0-.177-.529A2.25 2.25 0 0 0 17.128 15H16.5l-.324-.324a1.453 1.453 0 0 0-2.328.377l-.036.073a1.586 1.586 0 0 1-.982.816l-.99.282c-.55.157-.894.702-.8 1.267l.073.438c.08.474.49.821.97.821.846 0 1.598.542 1.865 1.345l.215.643m5.276-3.67a9.012 9.012 0 0 1-5.276 3.67m0 0a9 9 0 0 1-10.275-4.835M15.75 9c0 .896-.393 1.7-1.016 2.25" /></svg><span>Buana</span></>;
 }
 
 const animatedItem = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 220, damping: 24 } } };
@@ -176,7 +176,7 @@ export default function Login({ status, landingUrl = '/', demoAccounts = [] }) {
 
     return (
         <>
-            <Head title="Masuk — CampuSpace">
+            <Head title="Masuk — Buana">
                 <meta name="theme-color" content="#062e29" />
                 <link rel="preload" href={oggRegular} as="font" type="font/otf" crossOrigin="anonymous" />
             </Head>
@@ -204,7 +204,7 @@ export default function Login({ status, landingUrl = '/', demoAccounts = [] }) {
                                 <motion.div variants={container} initial={reduced ? false : 'hidden'} animate="show" style={{ position: 'relative' }}>
                                     <motion.header variants={item}>
                                         <div className="lg-brand"><Brand /></div>
-                                        <h1 className="lg-title">Selamat datang <em>kembali</em></h1>
+                                        <h1 className="lg-title">Selamat datang kembali</h1>
                                         <p className="lg-sub">Masuk untuk mengelola peminjaman fasilitas kampus.</p>
                                     </motion.header>
 

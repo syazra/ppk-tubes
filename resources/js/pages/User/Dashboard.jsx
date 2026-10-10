@@ -43,7 +43,7 @@ export default function Dashboard({ user, csrfToken, urls, recentReservations = 
 			title={`Selamat datang, ${user?.name || 'Petugas'}`}
 			subtitle="Lihat aktivitas reservasi dan pelaporan kamu di Buana."
 		>
-			<Head title="Beranda CampuSpace" />
+			<Head title="Beranda Buana" />
 
 			<section className="app-quick-actions" aria-label="Mulai aktivitas">
 				{[
