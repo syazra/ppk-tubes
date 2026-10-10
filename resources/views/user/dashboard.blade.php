@@ -7,8 +7,8 @@
     <!-- Header -->
     <div class="flex justify-between items-center mr-8">
         <x-title-bar 
-            title="Beranda Buana" 
-            subtitle="Selamat datang di halaman beranda Buana." 
+            title="Beranda Buana"
+            subtitle="Selamat datang di halaman beranda Buana."
         />
 
         <div class="flex items-center gap-4">

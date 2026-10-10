@@ -179,4 +179,3 @@ test('Landing page scroll handler safely guards nav, hero, and root element refe
     assert.match(landingContent, /if\s*\(\s*root\?\.dataset\s*&&\s*hero\s*&&\s*nav\s*\)\s*root\.dataset\.pastHero/);
     assert.match(landingContent, /const\s+initialAnchor\s*=\s*initialHash\s*\?\s*document\.getElementById\(initialHash\.slice\(1\)\)\s*:\s*null/);
 });
-
