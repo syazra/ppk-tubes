@@ -119,6 +119,24 @@ export default function ReservationForm({
 			setSlotMessage('Tunggu sampai jadwal selesai dimuat sebelum mengirim reservasi.');
 			return;
 		}
+		
+		const participantCount = Number(form.data.participant_count);
+		const roomCapacity = Number(selectedFacility.capacity);
+
+		if (
+			!form.data.participant_count ||
+			participantCount < 1 ||
+			participantCount > roomCapacity
+		) {
+			form.setError(
+				'participant_count',
+				`Jumlah peserta harus antara 1 hingga ${roomCapacity} orang sesuai kapasitas ruangan.`
+			);
+			return;
+		}
+
+		form.clearErrors('participant_count');
+
 		form.post(urls.store, {
 			forceFormData: true,
 			preserveScroll: true,
@@ -378,20 +396,31 @@ export default function ReservationForm({
 							>
 								Jumlah Pengguna / Peserta
 							</label>
-
 							<input
 								id="participant_count"
 								name="participant_count"
 								type="number"
 								min="1"
+								max={selectedFacility?.capacity ?? undefined}
 								value={form.data.participant_count}
-								onChange={event =>
-									form.setData('participant_count', event.target.value)
-								}
+								onChange={event => {
+									form.setData('participant_count', event.target.value);
+									form.clearErrors('participant_count');
+								}}
 								className={fieldClassName}
 								placeholder="Contoh: 15"
 								required
 							/>
+
+							{selectedFacility && (
+								<p className="mt-2 text-sm text-gray-500">
+									Kapasitas ruangan: {selectedFacility.capacity} orang.
+									Maksimal peserta mengikuti kapasitas ruangan.
+								</p>
+							)}
+
+							<FieldError>{form.errors.participant_count}</FieldError>
+
 
 							<FieldError>{form.errors.participant_count}</FieldError>
 						</div>
@@ -406,6 +435,7 @@ export default function ReservationForm({
 						<div className="rounded-xl border bg-gray-50 p-4 sm:p-5">
 							{!selectedFacility || !form.data.date_to_reserv ? (
 								<p className="text-sm italic text-gray-400">Pilih fasilitas dan tanggal untuk melihat jadwal.</p>
+							
 							) : mainSlotState.loading ? (
 								<p role="status" className="text-sm text-gray-500">Memuat jadwal...</p>
 							) : mainSlotState.error ? (
