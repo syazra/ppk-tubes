@@ -3,6 +3,7 @@ import { useState } from 'react';
 import AppLayout from '../../components/AppLayout';
 import FacilitiesCatalog from '../../components/FacilitiesCatalog';
 import GuestFacilityFilters from '../../components/GuestFacilityFilters';
+import Button from '../../components/Button';
 import Icon from '../../components/Icons';
 
 function getCatalogParams(filters, date) {
@@ -45,14 +46,6 @@ export default function Catalog({
 		router.get(urls.catalog, reset, { preserveScroll: true, replace: true });
 	}
 
-	function reservationFormHref(facility) {
-		const params = new URLSearchParams({
-			room_id: String(facility.id),
-			date: catalogDate,
-		});
-		return `${urls.reservationForm}?${params.toString()}#reservation-form`;
-	}
-
 	return (
 		<AppLayout
 			user={user}
@@ -90,12 +83,14 @@ export default function Catalog({
 					onReset={resetFilters}
 					onProcessingChange={setCatalogProcessing}
 				>
-					{facility => (
-						<Link href={reservationFormHref(facility)} className="fc-select">
-							<span>Ajukan Reservasi</span>
-							<Icon name="arrow" className="fc-icon" />
-						</Link>
-					)}
+					<div className="flex flex-row gap-2">
+						<Button as={Link} href="/report/create">
+							Laporkan kerusakan
+						</Button>
+						<Button as={Link} href="/reservations/form">
+							Ajukan reservasi
+						</Button>
+					</div>
 				</FacilitiesCatalog>
 			</section>
 		</AppLayout>

@@ -491,7 +491,7 @@ export default function MyReservations({ user, csrfToken, urls, reservations, fi
 					{ label: 'Tanggal & waktu' },
 					{ label: 'Tujuan penggunaan', type: 'desc' },
 					{ label: 'Status' },
-					{ label: 'Aksi' },
+					{ label: 'Aksi', type: 'act' },
 				]}
 				renderRow={reservation => (
 					<>

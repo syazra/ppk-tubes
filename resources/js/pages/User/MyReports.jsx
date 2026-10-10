@@ -158,7 +158,7 @@ export default function MyReports({ reports, user, auth, csrfToken, urls, error,
 					{ label: 'Bukti' },
 					{ label: 'Status' },
 					{ label: 'Tanggal' },
-					{ label: 'Aksi' },
+					{ label: 'Aksi', type: 'act' },
 				]}
 				renderRow={report => (
 					<>

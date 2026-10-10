@@ -40,16 +40,6 @@ export default function ReservationForm({
 	photoPlaceholderUrl,
 	photoFallbackUrl,
 }) {
-	// scroll langsung ke form
-	// useEffect(() => {
-	// 	const element = document.getElementById('reservation-form');
-	// 	if (element) {
-	// 		setTimeout(() => {
-	// 		element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-	// 		}, 250);
-	// 	}
-	// }, []);
-
 	const initialRoomId = oldInput.room_id ?? initialFacility?.id ?? '';
 	const form = useForm({
 		room_id: initialRoomId ? String(initialRoomId) : '',
