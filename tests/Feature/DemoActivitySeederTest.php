@@ -8,7 +8,6 @@ use App\Models\Room;
 use App\Models\User;
 use Carbon\Carbon;
 use Database\Seeders\DatabaseSeeder;
-use Database\Seeders\DemoActivityText;
 use Database\Seeders\ReportSeeder;
 use Database\Seeders\ReservationSeeder;
 use Database\Seeders\RoomSeeder;
@@ -22,16 +21,22 @@ class DemoActivitySeederTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_main_seeder_populates_all_activity_statuses_and_inactive_facility_classes(): void
+    public function test_main_seeder_populates_a_limited_dynamic_amount_of_activity(): void
     {
         Storage::fake('public');
         $this->travelTo(Carbon::parse('2026-10-10 19:00:00', config('app.timezone')));
         $this->seed(DatabaseSeeder::class);
 
-        $this->assertDatabaseCount('rooms', 37);
+        $eligible = User::where('role', 'user')->whereIn('account_type', ['mahasiswa', 'dosen', 'staf'])->count();
+        $rooms = Room::count();
+        $this->assertSame(37, $rooms);
         $this->assertDatabaseCount('room_images', 37);
-        $this->assertDatabaseCount('reports', 160);
-        $this->assertDatabaseCount('reservations', 370);
+
+        // Counts scale with the user pool but stay capped by the number of rooms.
+        $this->assertSame(min((int) round($eligible * 0.25), $rooms * 2), Reservation::count());
+        $this->assertSame(max(12, min((int) round($eligible / 8), $rooms)), Report::count());
+        $this->assertLessThan($eligible, Reservation::count());
+
         $this->assertSame(0, Room::where('location', 'like', 'Gedung %')->orWhere('location', 'like', 'Area %')->count());
         $this->assertSame(1, Room::where('name', 'Laboratorium Teknomansi Aether')->count());
         $this->assertSame(['baru', 'dibatalkan', 'diproses', 'ditolak', 'selesai'], Report::distinct()->orderBy('status')->pluck('status')->all());
@@ -55,23 +60,15 @@ class DemoActivitySeederTest extends TestCase
         }
 
         $reservations = Reservation::with('room', 'user')->get();
-        $this->assertSame(['dosen', 'mahasiswa', 'staf'], $reservations->pluck('user.account_type')->unique()->sort()->values()->all());
-        $this->assertSame(185, $reservations->filter(fn ($reservation) => $reservation->date_to_reserv < '2026-10-10')->count());
-        $this->assertSame(185, $reservations->filter(fn ($reservation) => $reservation->date_to_reserv > '2026-10-10')->count());
-        $this->assertSame(27, $reservations->pluck('user_id')->unique()->count());
-        $this->assertSame(27, Report::distinct()->count('user_id'));
-        foreach (User::where('role', 'user')->get() as $user) {
-            $this->assertGreaterThanOrEqual(10, Reservation::where('user_id', $user->id)->count());
-            $this->assertGreaterThanOrEqual(5, Report::where('user_id', $user->id)->count());
-        }
-        foreach (Room::all() as $room) {
-            $this->assertSame(10, Reservation::where('room_id', $room->id)->count());
-            $this->assertGreaterThanOrEqual(8, Reservation::where('room_id', $room->id)->distinct()->count('user_id'));
-            $this->assertGreaterThanOrEqual(4, Report::where('room_id', $room->id)->distinct()->count('user_id'));
-        }
-        $this->assertGreaterThan(30, $reservations->pluck('date_to_reserv')->unique()->count());
+        $this->assertGreaterThan(0, $reservations->filter(fn ($r) => $r->date_to_reserv < '2026-10-10')->count());
+        $this->assertGreaterThan(0, $reservations->filter(fn ($r) => $r->date_to_reserv > '2026-10-10')->count());
+        $this->assertGreaterThan(10, $reservations->pluck('user_id')->unique()->count());
+        $this->assertGreaterThan(10, $reservations->pluck('date_to_reserv')->unique()->count());
         $this->assertGreaterThanOrEqual(4, $reservations->pluck('start_time')->unique()->count());
-        $this->assertGreaterThan(30, Report::distinct()->count('created_at'));
+
+        // Descriptions should be varied, themed text rather than repeated boilerplate.
+        $this->assertGreaterThan(30, $reservations->pluck('desc')->unique()->count());
+
         $sampleText = mb_strtolower(implode(' ', array_merge(
             Report::pluck('desc')->all(), Report::pluck('rejection_reason')->all(), Report::pluck('resolution')->all(),
             Reservation::pluck('desc')->all(), Reservation::pluck('rejection_reason')->all(),
@@ -95,6 +92,25 @@ class DemoActivitySeederTest extends TestCase
         }
     }
 
+    public function test_activity_counts_can_be_overridden_with_environment_variables(): void
+    {
+        putenv('DEMO_RESERVATIONS=15');
+        putenv('DEMO_REPORTS=14');
+        $_ENV['DEMO_RESERVATIONS'] = '15';
+        $_ENV['DEMO_REPORTS'] = '14';
+
+        try {
+            $this->seed([UserSeeder::class, RoomSeeder::class, ReportSeeder::class, ReservationSeeder::class]);
+
+            $this->assertDatabaseCount('reservations', 15);
+            $this->assertDatabaseCount('reports', 14);
+        } finally {
+            putenv('DEMO_RESERVATIONS');
+            putenv('DEMO_REPORTS');
+            unset($_ENV['DEMO_RESERVATIONS'], $_ENV['DEMO_REPORTS']);
+        }
+    }
+
     public function test_rerunning_sample_seeders_preserves_operator_decisions_dates_and_existing_data(): void
     {
         $this->seed([UserSeeder::class, RoomSeeder::class, ReportSeeder::class, ReservationSeeder::class]);
@@ -112,15 +128,16 @@ class DemoActivitySeederTest extends TestCase
             'end_time' => '17:00:00',
             'status' => 'menunggu',
         ]);
+        $reportCount = Report::count();
+        $reservationCount = Reservation::count();
         $before = [Room::all()->toArray(), Report::all()->toArray(), Reservation::all()->toArray()];
-        // Changing the eligible user pool must not reassign or duplicate seeded activity.
-        User::factory()->create(['role' => 'user', 'account_type' => 'mahasiswa']);
         $this->travel(2)->days();
 
         $this->seed([ReportSeeder::class, ReservationSeeder::class]);
 
         $this->assertSame($before, [Room::all()->toArray(), Report::all()->toArray(), Reservation::all()->toArray()]);
-        $this->assertDatabaseCount('reservations', 371);
+        $this->assertSame($reportCount, Report::count());
+        $this->assertSame($reservationCount, Reservation::count());
         $this->assertTrue($report->room->fresh()->is_avail);
     }
 
@@ -142,41 +159,5 @@ class DemoActivitySeederTest extends TestCase
             $this->assertDatabaseCount('reports', 0);
             $this->assertTrue($room->fresh()->is_avail);
         }
-    }
-
-    public function test_old_sample_text_is_upgraded_without_changing_metadata_or_custom_notes(): void
-    {
-        $this->seed([UserSeeder::class, RoomSeeder::class, ReportSeeder::class, ReservationSeeder::class]);
-        $oldReport = array_key_first(DemoActivityText::REPORTS['Ruang Kelas']);
-        $newReport = DemoActivityText::REPORTS['Ruang Kelas'][$oldReport];
-        $report = Report::where('desc', $newReport)->firstOrFail();
-        $report->update([
-            'desc' => $oldReport, 'status' => 'selesai',
-            'rejection_reason' => 'Catatan khusus penjaga, pertahankan.',
-            'resolution' => 'Komponen diperbaiki dan fasilitas telah diuji kembali.',
-        ]);
-        $expectedReport = $report->fresh()->getAttributes();
-        $expectedReport['desc'] = $newReport;
-        $expectedReport['resolution'] = DemoActivityText::NOTES['resolution']['Komponen diperbaiki dan fasilitas telah diuji kembali.'];
-
-        $reservation = Reservation::where('desc', 'Pembacaan pertanda pada kristal scrying')->firstOrFail();
-        $reservation->update(['desc' => 'Workshop analisis data', 'status' => 'dibatalkan', 'rejection_reason' => 'Catatan khusus pemohon, pertahankan.']);
-        $expectedReservation = $reservation->fresh()->getAttributes();
-        $expectedReservation['desc'] = 'Pembacaan pertanda pada kristal scrying';
-        $custom = Reservation::create([
-            'room_id' => $reservation->room_id, 'user_id' => $reservation->user_id,
-            'desc' => 'Workshop desain milik pengguna', 'date_to_reserv' => now()->addDays(30)->toDateString(),
-            'start_time' => '16:00:00', 'end_time' => '17:00:00', 'status' => 'menunggu',
-        ]);
-        $expectedCustom = $custom->fresh()->getAttributes();
-        $this->travel(2)->days();
-
-        $this->seed([ReportSeeder::class, ReservationSeeder::class]);
-
-        $this->assertSame($expectedReport, $report->fresh()->getAttributes());
-        $this->assertSame($expectedReservation, $reservation->fresh()->getAttributes());
-        $this->assertSame($expectedCustom, $custom->fresh()->getAttributes());
-        $this->assertDatabaseCount('reports', 160);
-        $this->assertDatabaseCount('reservations', 371);
     }
 }

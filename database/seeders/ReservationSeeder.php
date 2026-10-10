@@ -11,6 +11,20 @@ use LogicException;
 
 class ReservationSeeder extends Seeder
 {
+    /**
+     * Roughly one reservation per four eligible users, never more than two per room.
+     * Override with the DEMO_RESERVATIONS environment variable.
+     */
+    private function targetCount(int $userCount, int $roomCount): int
+    {
+        $override = env('DEMO_RESERVATIONS');
+        if (is_numeric($override)) {
+            return max(0, (int) $override);
+        }
+
+        return max(1, min((int) round($userCount * 0.25), $roomCount * 2));
+    }
+
     public function run(): void
     {
         $users = User::where('role', 'user')->whereIn('account_type', ['mahasiswa', 'dosen', 'staf'])->orderBy('id')->get();
@@ -21,86 +35,52 @@ class ReservationSeeder extends Seeder
         }
 
         $today = now(config('app.timezone'))->startOfDay();
-        $statuses = ['menunggu', 'disetujui', 'ditolak', 'dibatalkan'];
+        $total = $this->targetCount($users->count(), $rooms->count());
+        $times = [['08:00:00', '09:30:00'], ['10:00:00', '12:00:00'], ['13:00:00', '14:30:00'], ['15:00:00', '17:00:00']];
+        $pastStatuses = ['disetujui', 'disetujui', 'ditolak', 'dibatalkan', 'disetujui'];
+        $futureStatuses = ['menunggu', 'disetujui', 'menunggu', 'ditolak', 'dibatalkan', 'disetujui'];
+        $groups = DemoActivityPools::GROUPS;
 
-        DB::transaction(function () use ($users, $rooms, $today, $statuses): void {
-            foreach ($rooms as $index => $room) {
-                $user = $users[$index % $users->count()];
-                $activityMap = DemoActivityText::RESERVATIONS[$room->type];
-                DemoActivityText::upgrade('reservations', $room->id, $activityMap + [
-                    'Kegiatan belajar bersama di '.$room->name => 'Kajian gulungan kuno di '.$room->name,
-                    'Diskusi dan persiapan kegiatan di '.$room->name => 'Musyawarah serikat dan persiapan perayaan di '.$room->name,
-                ]);
+        DB::transaction(function () use ($users, $rooms, $today, $total, $times, $pastStatuses, $futureStatuses, $groups): void {
+            for ($i = 0; $i < $total; $i++) {
+                $room = $rooms[($i * 7 + 3) % $rooms->count()];
+                $user = $users[($i * 13 + 5) % $users->count()];
+                $activities = DemoActivityPools::RESERVATIONS[$room->type];
+                $activity = $activities[intdiv($i, $rooms->count()) + $i % count($activities)] ?? $activities[$i % count($activities)];
+                $desc = $activity.' ('.$groups[$i % count($groups)].')';
 
-                $history = Reservation::firstOrCreate([
+                $past = $i % 2 === 0;
+                $date = $past
+                    ? $today->copy()->subDays(2 + ($i * 5) % 60)
+                    : $today->copy()->addDays(1 + ($i * 3) % 45);
+                [$start, $end] = $times[$i % count($times)];
+
+                $status = $past ? $pastStatuses[intdiv($i, 2) % count($pastStatuses)] : $futureStatuses[intdiv($i, 2) % count($futureStatuses)];
+                $repair = ! $past && ! $room->is_avail;
+                if ($repair) {
+                    $status = 'ditolak';
+                }
+
+                $reservation = Reservation::firstOrCreate([
                     'room_id' => $room->id,
-                    'desc' => 'Kajian gulungan kuno di '.$room->name,
+                    'desc' => $desc,
                 ], [
                     'user_id' => $user->id,
-                    'date_to_reserv' => $today->copy()->subDays(1 + $index % 14)->toDateString(),
-                    'start_time' => '08:00:00',
-                    'end_time' => '10:00:00',
-                    'status' => 'disetujui',
-                    'rejection_reason' => null,
-                ]);
-                if ($history->wasRecentlyCreated) {
-                    $submitted = $today->copy()->subDays(3 + $index % 14)->setTime(9, 0);
-                    $history->forceFill(['created_at' => $submitted, 'updated_at' => $submitted->copy()->addHours(6)])->save();
-                }
-
-                $status = $room->is_avail ? $statuses[$index % count($statuses)] : 'ditolak';
-
-                $upcoming = Reservation::firstOrCreate([
-                    'room_id' => $room->id,
-                    'desc' => 'Musyawarah serikat dan persiapan perayaan di '.$room->name,
-                ], [
-                    'user_id' => $users[($index + 1) % $users->count()]->id,
-                    'date_to_reserv' => $today->copy()->addDays(2 + $index % 7)->toDateString(),
-                    'start_time' => '13:00:00',
-                    'end_time' => '15:00:00',
+                    'date_to_reserv' => $date->toDateString(),
+                    'start_time' => $start,
+                    'end_time' => $end,
                     'status' => $status,
                     'rejection_reason' => $status === 'ditolak'
-                        ? ($room->is_avail ? 'Piagam kegiatan belum memenuhi ketentuan dewan penjaga.' : 'Fasilitas sedang dalam perbaikan')
+                        ? ($repair ? 'Fasilitas sedang dalam perbaikan' : DemoActivityPools::REJECTIONS_RESERVATION[$i % count(DemoActivityPools::REJECTIONS_RESERVATION)])
                         : null,
                 ]);
-                if ($upcoming->wasRecentlyCreated) {
-                    $submitted = $today->copy()->subDays(1 + $index % 7)->setTime(11, 0);
-                    $upcoming->forceFill(['created_at' => $submitted, 'updated_at' => $status === 'menunggu' ? $submitted : $submitted->copy()->addHours(4)])->save();
-                }
 
-                $activities = array_values($activityMap);
-                $times = [['08:00:00', '09:30:00'], ['10:00:00', '12:00:00'], ['13:00:00', '14:30:00'], ['15:00:00', '17:00:00']];
-                foreach ($activities as $sample => $activity) {
-                    $past = $sample < 4;
-                    $dayOffset = $past ? -(20 + $sample * 20 + $index % 11) : 14 + ($sample - 4) * 14 + $index % 7;
-                    $date = $today->copy()->addDays($dayOffset);
-                    $status = $past
-                        ? ['disetujui', 'ditolak', 'dibatalkan'][($index + $sample) % 3]
-                        : $statuses[($index + $sample) % count($statuses)];
-                    if (! $past && ! $room->is_avail) {
-                        $status = 'ditolak';
-                    }
-                    [$start, $end] = $times[($index + $sample) % count($times)];
-                    $reservation = Reservation::firstOrCreate([
-                        'room_id' => $room->id,
-                        'desc' => $activity,
-                    ], [
-                        'user_id' => $users[($index * 8 + $sample + 7) % $users->count()]->id,
-                        'date_to_reserv' => $date->toDateString(),
-                        'start_time' => $start,
-                        'end_time' => $end,
-                        'status' => $status,
-                        'rejection_reason' => $status === 'ditolak'
-                            ? (! $past && ! $room->is_avail ? 'Fasilitas sedang dalam perbaikan' : ['Gulungan permohonan belum dilengkapi segel serikat.', 'Waktu pertemuan perlu diselaraskan dengan kalender dewan.', 'Penjaga yang menjamin kegiatan belum menyatakan sumpahnya.'][($index + $sample) % 3])
-                            : null,
-                    ]);
-                    if ($reservation->wasRecentlyCreated) {
-                        $submitted = ($past ? $date->copy()->subDays(3 + $sample) : $today->copy()->subDays(1 + $index % 10))->setTime(9, 0);
-                        $reservation->forceFill([
-                            'created_at' => $submitted,
-                            'updated_at' => $status === 'menunggu' ? $submitted : $submitted->copy()->addHours(4 + $sample),
-                        ])->save();
-                    }
+                if ($reservation->wasRecentlyCreated) {
+                    $submitted = ($past ? $date->copy()->subDays(3 + $i % 4) : $today->copy()->subDays(1 + $i % 10))->setTime(9, 0);
+                    $reservation->forceFill([
+                        'created_at' => $submitted,
+                        'updated_at' => $status === 'menunggu' ? $submitted : $submitted->copy()->addHours(4 + $i % 6),
+                    ])->save();
                 }
             }
         });
