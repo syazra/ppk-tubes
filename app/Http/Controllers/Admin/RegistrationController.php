@@ -3,13 +3,14 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
+use App\Http\Requests\Admin\AccountRequest;
 use App\Models\Report;
 use App\Models\Reservation;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -52,6 +53,7 @@ class RegistrationController extends Controller
             'createdAccount' => $request->session()->pull('createdAccount'),
             'status' => $request->session()->get('status'),
             'accounts' => $accounts,
+            'identityLengths' => AccountRequest::IDENTITY_LENGTHS,
             'filters' => [
                 'search' => $filters['search'] ?? '',
                 'type' => $filters['type'] ?? '',
@@ -70,14 +72,9 @@ class RegistrationController extends Controller
         ]);
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(AccountRequest $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'identity_number' => ['required', 'string', 'max:50', 'unique:users,identity_number'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:users,email'],
-            'account_type' => ['required', Rule::in(['mahasiswa', 'dosen', 'staf', 'petugas'])],
-        ]);
+        $validated = $request->validated();
 
         $password = Str::password(16, symbols: false);
         $role = $validated['account_type'] === 'petugas' ? 'operator' : 'user';
@@ -98,16 +95,11 @@ class RegistrationController extends Controller
         ]);
     }
 
-    public function update(Request $request, User $user): RedirectResponse
+    public function update(AccountRequest $request, User $user): RedirectResponse
     {
         $this->ensureManagedAccount($user);
 
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'identity_number' => ['required', 'string', 'max:50', Rule::unique('users', 'identity_number')->ignore($user->id)],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
-            'account_type' => ['required', Rule::in(['mahasiswa', 'dosen', 'staf', 'petugas'])],
-        ]);
+        $validated = $request->validated();
 
         $user->fill([
             ...$validated,
@@ -140,5 +132,4 @@ class RegistrationController extends Controller
     {
         abort_unless(in_array($user->role, ['user', 'operator'], true), 404);
     }
-
 }

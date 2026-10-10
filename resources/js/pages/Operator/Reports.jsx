@@ -167,7 +167,7 @@ export default function Reports({ user, status, csrfToken, urls, reports, filter
                         { label: 'Tanggal' },
                         { label: 'Estimasi Selesai' },
                         { label: 'Status' },
-                        { label: 'Aksi' },
+                        { label: 'Aksi', type: 'act' },
                     ]}
                     renderRow={report => (
                         <>
@@ -187,7 +187,7 @@ export default function Reports({ user, status, csrfToken, urls, reports, filter
                             </td>
                             <td className="whitespace-nowrap px-4 py-3 text-gray-600">{formatReportDate(report.created_at)}</td>
                             <td className="whitespace-nowrap px-4 py-3 text-gray-600">
-                                <div className="flex flex-col items-start gap-1">
+                                <div className="flex flex-row items-start gap-2 align-center">
                                     <span>{report.estimated_completion_at ? formatReportDate(report.estimated_completion_at) : '—'}</span>
                                     {/* Tombol edit/perpanjang hanya muncul jika status laporan sedang 'diproses' */}
                                     {report.status === 'diproses' && (

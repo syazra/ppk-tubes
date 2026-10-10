@@ -6,6 +6,7 @@ import StatusBadge, { getStatusColor } from '../../components/StatusBadge';
 import Icon from '../../components/Icons';
 import Button from '../../components/Button';
 import leafDecoration from '../../../../background-preview.png';
+import reservationImage from '../../../../background-preview.png';
 
 const statusLabels = {
 	baru: 'Menunggu diproses',
@@ -77,6 +78,7 @@ export default function Dashboard({ user, csrfToken, urls, recentReservations = 
 				))}
 			</section>
 
+			{/* RINGKASAN / RIWAYAT TERBARU */}
 			<motion.section
 				className="app-insights-grid"
 				initial={{ opacity: 0, y: 16 }}

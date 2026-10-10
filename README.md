@@ -5,6 +5,7 @@
 - [Panduan Menjalankan Proyek](#panduan-menjalankan-proyek)
 - [Foto Fasilitas dari DBPhotos](#foto-fasilitas-dari-dbphotos)
 - [Data Contoh Laporan dan Reservasi](#data-contoh-laporan-dan-reservasi)
+- [Validasi dan Foto pada Form Admin](#validasi-dan-foto-pada-form-admin)
 - [Akun Pengguna Siap Pakai](#akun-pengguna-siap-pakai)
 
 ---
@@ -86,16 +87,28 @@ menjalankannya untuk database baru.
 
 ## Data Contoh Laporan dan Reservasi
 
-Seeder utama menyediakan 12 laporan dalam seluruh status (`baru`, `diproses`,
-`selesai`, `ditolak`, dan `dibatalkan`). Empat laporan yang sedang diproses membuat
+Seeder utama menyediakan 160 laporan dalam seluruh status (`baru`, `diproses`,
+`selesai`, `ditolak`, dan `dibatalkan`): 12 contoh awal ditambah empat keluhan untuk
+setiap fasilitas. Keluhan disesuaikan dengan jenis fasilitas, mencakup peralatan,
+penerangan, pintu, ventilasi, kursi, drainase, serta perlengkapan olahraga. Empat
+fasilitas dengan laporan yang sedang diproses membuat
 Laboratorium Teknomansi Aether, Ruang Rune Kuno, Ruang Dewan Putih, dan Lapangan Pelennor nonaktif.
 Laporan diproses dilengkapi estimasi perbaikan; laporan selesai dan ditolak memiliki
 catatan penyelesaian atau alasan penolakan.
 
-Setiap fasilitas memperoleh dua reservasi contoh: satu riwayat yang disetujui dan
-satu pengajuan mendatang dalam berbagai status, sehingga 37 fasilitas menghasilkan
-74 reservasi. Pengajuan mendatang untuk fasilitas nonaktif berstatus ditolak.
-Tanggal mengikuti waktu seeding dan pemohon berasal dari akun mahasiswa, dosen, dan staf.
+Setiap fasilitas memperoleh sepuluh reservasi contoh: lima riwayat dan lima
+pengajuan mendatang, sehingga 37 fasilitas menghasilkan 370 reservasi. Kegiatan
+meliputi sidang serikat, peracikan eliksir, latihan kesatria, kajian rune, nyanyian bard,
+dan musyawarah penjaga menara,
+sesuai jenis fasilitas. Jam mulai dan durasi bervariasi; tanggal mencakup hampir tiga
+bulan ke belakang dan dua bulan ke depan dari waktu seeding. Seluruh status reservasi
+terwakili; pengajuan mendatang untuk fasilitas nonaktif berstatus ditolak.
+
+Kedua seeder memakai seluruh akun berperan `user` dengan jenis mahasiswa, dosen,
+atau staf, termasuk 27 akun dalam pack demo. Setiap akun demo mempunyai minimal
+sepuluh reservasi dan lima laporan. Setiap fasilitas memiliki setidaknya delapan
+pemohon reservasi dan empat pelapor berbeda. Waktu pengajuan, alasan penolakan,
+estimasi, dan catatan perbaikan juga bervariasi.
 
 Untuk menambah contoh ke database yang sudah memiliki akun demo dan fasilitas:
 
@@ -106,9 +119,46 @@ php artisan db:seed --class=ReservationSeeder
 
 Jalankan laporan sebelum reservasi agar status fasilitas diperhitungkan.
 Kedua seeder ini dapat dijalankan ulang tanpa menggandakan contoh atau menimpa
-keputusan operator. Data lama tetap tersimpan. Untuk database baru, cukup jalankan
+keputusan operator, tanggal, atau pemohon/pelapor, termasuk ketika akun baru ditambahkan.
+Data lama tetap tersimpan, sehingga jumlah pada database lama bisa lebih besar dari
+jumlah contoh di atas. Untuk database baru, cukup jalankan
 `php artisan db:seed` setelah migrasi; jangan menjalankan ulang seeder utama pada
 database yang sudah berisi fasilitas karena `RoomSeeder` membuat fasilitas baru.
+
+Deskripsi kegiatan, keluhan, alasan penolakan, dan catatan perbaikan memakai tema
+fantasy/gothic: grimoire, kristal aether, alkimia, lentera, serta perkakas benteng.
+Saat kedua seeder dijalankan pada database lama, teks contoh modern yang dikenali
+diganti dengan versi bertema tanpa membuat baris baru atau mengubah ID, pemohon,
+pelapor, tanggal, status, maupun waktu pembaruan. Catatan khusus operator dan teks
+buatan pengguna tetap dipertahankan.
+
+## Validasi dan Foto pada Form Admin
+
+Aturan berikut berlaku saat admin membuat maupun mengubah data. Browser memberi
+petunjuk format, sedangkan server memeriksa ulang sebelum menulis ke database.
+
+| Data | Aturan |
+|---|---|
+| Nama akun | 2–255 karakter, mengandung huruf, tanpa tag atau karakter kontrol |
+| NIM mahasiswa | Tepat 14 digit angka, unik, tidak seluruhnya nol |
+| Identitas dosen, staf, petugas | Tepat 18 digit angka, unik, tidak seluruhnya nol |
+| Email | Format email dengan domain bertitik, maksimal 255 karakter, unik tanpa membedakan kapital |
+| Nama dan lokasi fasilitas | Masing-masing 2–100 karakter, tanpa tag atau karakter kontrol; pasangan nama/lokasi tidak boleh duplikat |
+| Kapasitas | Angka bulat 1–100.000 orang |
+| Deskripsi fasilitas | Opsional, maksimal 2.000 karakter |
+| Foto fasilitas | Opsional, total maksimal 3 foto; JPG/JPEG, PNG, WebP; masing-masing maksimal 2 MB dan 6.000 × 6.000 piksel |
+
+NIM dan identitas pegawai disimpan sebagai teks agar angka nol di depan tetap utuh.
+Nama, lokasi, dan email dibersihkan dari spasi di awal/akhir; email disimpan dalam
+huruf kecil. Admin dapat menambah foto saat membuat fasilitas, serta menambah atau
+menghapus foto melalui **Ubah**. Penghapusan baru diterapkan saat perubahan disimpan.
+
+Unggahan memakai tabel `room_images` yang sudah ada dan disk public pada
+`facilities/uploads`. Pastikan `php artisan storage:link` sudah dijalankan supaya
+foto tampil di website. Penyimpanan fasilitas dan metadata foto menggunakan
+transaksi; unggahan baru dibersihkan jika penyimpanan gagal. Foto seeder yang
+dipakai bersama fasilitas lain tetap tersedia. Tidak diperlukan migrasi tambahan
+untuk fitur ini.
 
 ## Akun Pengguna Siap Pakai
 
