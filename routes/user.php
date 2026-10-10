@@ -18,6 +18,8 @@ Route::middleware(['auth', 'role:admin,operator,user'])->group(function () {
     })->middleware('verified')->name('dashboard');
 
     Route::middleware(['role:user', 'verified'])->group(function () {
+        Route::get('/catalog', [ReservationController::class, 'catalog'])->name('user.catalog');
+
         Route::get('/user/dashboard', function () {
             $user = auth()->user();
             $recentReservations = Reservation::with('room')->where('user_id', $user->id)->latest()->take(3)->get();
@@ -30,6 +32,7 @@ Route::middleware(['auth', 'role:admin,operator,user'])->group(function () {
                 'recentReports' => $recentReports,
                 'urls' => [
                     'dashboard' => route('user.dashboard'),
+                    'catalog' => route('user.catalog'),
                     'reservations' => route('reservations.index'),
                     'reservationForm' => route('reservations.form'),
                     'reports' => route('reports.index'),

@@ -10,7 +10,7 @@
 .gf button:disabled { cursor: wait; opacity: .65; }
 .gf svg { display: block; }
 .gf ::selection { background: var(--lime); color: var(--forest); }
-.gf :focus-visible { outline: 3px solid var(--teal); outline-offset: 4px; }
+.gf :focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
 .gf main { padding-top: 80px; }
 .gf-wrap { width: min(1240px, calc(100% - 96px)); margin-inline: auto; }
 .gf-icon { width: 19px; height: 19px; flex: none; }
@@ -49,8 +49,10 @@
 .gf-pagination { display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 7px; margin-top: 32px; }
 .gf-page { display: inline-flex; align-items: center; justify-content: center; min-width: 40px; min-height: 42px; padding: 9px 13px; border: 1px solid #d2dfca; border-radius: 7px; background: white; font-size: 12px; }
 .gf-page:hover { background: #edf5e5; }
-.gf-page-active { background: var(--forest); border-color: var(--forest); color: white; font-weight: 600; }
-.gf-page-active:hover { background: var(--forest); }
+.gf-page-active { background: #007F6D; border-color: #007F6D; color: white; font-weight: 600; }
+.gf-page-active:hover { background: #007F6D; }
+.gf .gf-page-active { background: #007F6D; border-color: #007F6D; }
+.gf .gf-page-active:hover { background: #007F6D; }
 .gf-page-disabled { color: #6f7d6b; background: #f1f4eb; }
 .gf-reserve-note { display: flex; justify-content: space-between; align-items: center; gap: 28px; margin-top: 60px; padding: 32px; border: 1px solid #d4e4d3; border-radius: 14px; background: #eaf4ed; color: var(--forest); }
 .gf-reserve-note h2 { font-size: 18px; font-weight: 600; letter-spacing: -.015em; }

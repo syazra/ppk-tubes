@@ -45,7 +45,7 @@ function SlotDetails({ facility, date, timezone, providedSlots }) {
     );
 }
 
-export default function FacilityCard({ facility, selected = false, date, timezone = 'WIB', slots, photoPlaceholderUrl = '/images/facility-placeholder-photo.jpg', photoFallbackUrl = '/images/facility-placeholder.svg', onSelect }) {
+export default function FacilityCard({ facility, selected = false, date, timezone = 'WIB', slots, showSchedule = true, photoPlaceholderUrl = '/images/facility-placeholder-photo.jpg', photoFallbackUrl = '/images/facility-placeholder.svg', children }) {
     const [showGallery, setShowGallery] = useState(false);
     const photos = facility.images ?? [];
     const cover = photos[0];
@@ -71,13 +71,13 @@ export default function FacilityCard({ facility, selected = false, date, timezon
                         <span>{photo.alt_text || `Foto ${index + 1}`}</span>
                     </a>)}</div>}
                 </div>}
-                <SlotDetails facility={facility} date={date} timezone={timezone} providedSlots={slots} />
+                {showSchedule && <SlotDetails facility={facility} date={date} timezone={timezone} providedSlots={slots} />}
                 {!facility.is_available && <p className="fc-inactive">Fasilitas nonaktif; slot tidak tersedia.</p>}
-                {onSelect && facility.is_available && <div className="fc-action">
-                    <button type="button" className={`fc-select ${selected ? 'fc-select-selected' : ''}`} disabled={selected} aria-pressed={selected} onClick={() => onSelect(facility)}>
-                        <span>{selected ? 'Fasilitas dipilih' : 'Pilih fasilitas'}</span><Icon name={selected ? 'check' : 'arrow'} className="fc-icon" />
-                    </button>
-                </div>}
+                {children && facility.is_available && (
+                    <div className="fc-action">
+                        {typeof children === 'function' ? children(facility, selected) : children}
+                    </div>
+                )}
             </div>
         </article>
     );
