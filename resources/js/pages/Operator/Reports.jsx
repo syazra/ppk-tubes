@@ -42,6 +42,12 @@ function getCurrentDateTimeLocal() {
     return now.toISOString().slice(0, 16);
 }
 
+function openPicker(event) {
+    if (typeof event.currentTarget.showPicker === 'function') {
+        event.currentTarget.showPicker();
+    }
+}
+
 export default function Reports({ user, status, csrfToken, urls, reports, filters, summary }) {
     const filterForm = useForm({ search: filters.search, status: filters.status });
 
@@ -78,7 +84,7 @@ export default function Reports({ user, status, csrfToken, urls, reports, filter
     function handleOpenExtendModal(report) {
         setSelectedReportForExtend(report);
         const initialDate = report.estimated_completion_at 
-            ? new Date(report.estimated_completion_at).toISOString().slice(0, 16) 
+            ? toDateTimeLocal(report.estimated_completion_at)
             : '';
         extendForm.setData('estimated_completion_at', initialDate);
     }
@@ -167,7 +173,7 @@ export default function Reports({ user, status, csrfToken, urls, reports, filter
                         { label: 'Tanggal' },
                         { label: 'Estimasi Selesai' },
                         { label: 'Status' },
-                        { label: 'Aksi' },
+                        { label: 'Aksi', type: 'act' },
                     ]}
                     renderRow={report => (
                         <>
@@ -180,14 +186,30 @@ export default function Reports({ user, status, csrfToken, urls, reports, filter
                                 {report.room?.location && <p className="text-xs text-gray-500">{report.room.location}</p>}
                             </td>
                             <td className="whitespace-normal text-xs px-4 py-3 text-gray-600">{report.desc}</td>
-                            <td className="whitespace-nowrap px-4 py-3">
-                                {report.image_url
-                                    ? <a href={report.image_url} target="_blank" rel="noreferrer" className="font-medium text-teal-normal-01 underline">Lihat foto</a>
-                                    : <span className="text-gray-400">Tidak ada foto</span>}
+                            <td className="whitespace-nowrap px-4 py-4">
+                                {report.images?.length > 0 ? (
+                                    <div className="flex flex-col gap-2">
+                                        {report.images.map((image, index) => (
+                                            <a
+                                                key={image.id ?? index}
+                                                href={`/storage/${image.image.replace(/^\/+/, '')}`}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className="text-sm font-semibold text-teal-dark-01 hover:underline"
+                                            >
+                                                Lihat foto {index + 1}
+                                            </a>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <span className="text-xs text-gray-400">
+                                        Tidak ada
+                                    </span>
+                                )}
                             </td>
                             <td className="whitespace-nowrap px-4 py-3 text-gray-600">{formatReportDate(report.created_at)}</td>
                             <td className="whitespace-nowrap px-4 py-3 text-gray-600">
-                                <div className="flex flex-col items-start gap-1">
+                                <div className="flex flex-row items-start gap-2 align-center">
                                     <span>{report.estimated_completion_at ? formatReportDate(report.estimated_completion_at) : '—'}</span>
                                     {/* Tombol edit/perpanjang hanya muncul jika status laporan sedang 'diproses' */}
                                     {report.status === 'diproses' && (
@@ -254,6 +276,7 @@ export default function Reports({ user, status, csrfToken, urls, reports, filter
                                         min={getCurrentDateTimeLocal()}
                                         value={processForm.data.estimated_completion_at}
                                         onChange={e => processForm.setData('estimated_completion_at', e.target.value)}
+                                        onClick={openPicker}
                                         className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none"
                                         required
                                     />
@@ -284,6 +307,7 @@ export default function Reports({ user, status, csrfToken, urls, reports, filter
                                         min={getCurrentDateTimeLocal()}
                                         value={extendForm.data.estimated_completion_at}
                                         onChange={e => extendForm.setData('estimated_completion_at', e.target.value)}
+                                        onClick={openPicker}
                                         className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none bg-white text-gray-800"
                                         required
                                     />

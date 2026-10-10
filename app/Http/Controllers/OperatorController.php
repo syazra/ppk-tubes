@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Reservation;
 use App\Models\Report;
+use Carbon\Carbon;
 
 class OperatorController extends Controller
 {
@@ -65,6 +66,7 @@ class OperatorController extends Controller
     {
         $reservation = Reservation::findOrFail($id);
         $reservation->status = 'ditolak';
+        $reservation->rejection_reason = 'Ditolak oleh operator';
         $reservation->save();
 
         return redirect()->route('operator.reservations')->with('success', 'Reservasi ditolak.');
@@ -95,14 +97,7 @@ class OperatorController extends Controller
         $report->save();
 
         $report->room()->update(['is_avail' => false]);
-
-        Reservation::where('room_id', $report->room_id)
-            ->whereIn('status', ['menunggu', 'disetujui'])
-            ->where('date_to_reserv', '<=', $request->estimated_completion_at)
-            ->update([
-                'status' => 'ditolak',
-                'rejection_reason' => 'Fasilitas sedang dalam perbaikan'
-            ]);
+        $this->rejectReservationsDuringRepair($report->room_id, $request->estimated_completion_at);
 
         return back()->with('success', 'Laporan diproses, estimasi disimpan, dan reservasi terkait otomatis ditolak.');
     }
@@ -143,14 +138,7 @@ class OperatorController extends Controller
 
         $report->estimated_completion_at = $request->estimated_completion_at;
         $report->save();
-
-        Reservation::where('room_id', $report->room_id)
-            ->whereIn('status', ['menunggu', 'disetujui'])
-            ->where('date_to_reserv', '<=', $request->estimated_completion_at)
-            ->update([
-                'status' => 'ditolak',
-                'rejection_reason' => 'Fasilitas sedang dalam perbaikan'
-            ]);
+        $this->rejectReservationsDuringRepair($report->room_id, $request->estimated_completion_at);
 
         return back()->with('success', 'Waktu estimasi perbaikan berhasil diperpanjang.');
     }
@@ -169,5 +157,38 @@ class OperatorController extends Controller
         $report->save();
 
         return back()->with('success', 'Report ditolak.');
+    }
+
+    private function rejectReservationsDuringRepair(int $roomId, $estimatedCompletionAt): void
+    {
+        $tz = config('app.timezone');
+        $estimate = Carbon::parse($estimatedCompletionAt, $tz);
+        $now = Carbon::now($tz);
+
+        Reservation::where('room_id', $roomId)
+            ->whereIn('status', ['menunggu', 'disetujui'])
+
+            // 1. Mulai sebelum estimasi selesai
+            ->where(function ($q) use ($estimate) {
+                $q->where('date_to_reserv', '<', $estimate->toDateString())
+                ->orWhere(function ($q) use ($estimate) {
+                    $q->where('date_to_reserv', $estimate->toDateString())
+                        ->where('start_time', '<', $estimate->format('H:i:s'));
+                });
+            })
+
+            // 2. Belum selesai (berakhir setelah sekarang)
+            ->where(function ($q) use ($now) {
+                $q->where('date_to_reserv', '>', $now->toDateString())
+                ->orWhere(function ($q) use ($now) {
+                    $q->where('date_to_reserv', $now->toDateString())
+                        ->where('end_time', '>', $now->format('H:i:s'));
+                });
+            })
+
+            ->update([
+                'status' => 'ditolak',
+                'rejection_reason' => 'Fasilitas sedang dalam perbaikan',
+            ]);
     }
 }

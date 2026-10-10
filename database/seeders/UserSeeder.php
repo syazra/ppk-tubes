@@ -323,8 +323,45 @@ class UserSeeder extends Seeder
                 'email_verified_at' => now(),
             ],
 
-
         ];
+
+        // Additional mahasiswa (ids 31+), themed on Tolkien's Legendarium and A Song of Ice and Fire.
+        $password = Hash::make('password');
+        $nextId = 31;
+        $nextIdentity = 24060124140187;
+        foreach ($this->mahasiswaNames() as $name) {
+            $users[] = [
+                'id' => $nextId++,
+                'name' => $name,
+                'email' => preg_replace('/[^a-z0-9]/', '', strtolower($name)).'@students.kampus.ac.id',
+                'role' => 'user',
+                'account_type' => 'mahasiswa',
+                'identity_number' => (string) $nextIdentity++,
+                'password' => $password,
+                'email_verified_at' => now(),
+            ];
+        }
+
+        // Themed dosen (ids 281-290) and staf (ids 291-300).
+        $nextId = 281;
+        $staffRoster = [
+            ['dosen', 'lecturer', '1975', $this->dosenNames()],
+            ['staf', 'staff', '1988', $this->stafNames()],
+        ];
+        foreach ($staffRoster as [$type, $domain, $birthYear, $names]) {
+            foreach ($names as $n => $name) {
+                $users[] = [
+                    'id' => $nextId++,
+                    'name' => $name,
+                    'email' => preg_replace('/[^a-z0-9]/', '', strtolower(preg_replace('/,.*$/', '', $name))).'@'.$domain.'.kampus.ac.id',
+                    'role' => 'user',
+                    'account_type' => $type,
+                    'identity_number' => $birthYear.sprintf('%02d', $n + 1).'012020'.($type === 'dosen' ? '01' : '02').sprintf('%04d', $n + 1),
+                    'password' => $password,
+                    'email_verified_at' => now(),
+                ];
+            }
+        }
 
         foreach ($users as $user) {
             User::updateOrCreate(
@@ -332,5 +369,119 @@ class UserSeeder extends Seeder
                 $user
             );
         }
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function dosenNames(): array
+    {
+        return [
+            'Prof. Gandalf Mithrandir, S.Si., M.T.',
+            'Dr. Elrond Halfelven, M.Kom.',
+            'Dr. Galadriel Artanis, S.Kom., M.Sc.',
+            'Dr. Saruman Curunir, M.T.',
+            'Maester Aemon Targaryen, S.Si., M.Sc.',
+            'Dr. Luthien Tinuviel, S.Kom., M.Kom.',
+            'Dr. Tyrion Lannister, S.T., M.Eng.',
+            'Prof. Cirdan Shipwright, Ph.D.',
+            'Maester Pycelle Citadel, S.Kom., M.T.',
+            'Dr. Melian Maia, S.Si., M.Kom.',
+        ];
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function stafNames(): array
+    {
+        return [
+            'Samwise Gamgee, A.Md.',
+            'Bilbo Baggins, S.Kom.',
+            'Hodor Stableborn, A.Md.',
+            'Podrick Payne, S.Kom.',
+            'Treebeard Fangorn, S.Si.',
+            'Gimli Gloin, A.Md.',
+            'Gendry Waters, A.Md.',
+            'Rosie Cotton, S.Kom.',
+            'Beregond Minas, A.Md.',
+            'Brienne Tarth, S.Kom.',
+        ];
+    }
+
+    /**
+     * 100 original (non-canon) names in Legendarium / Westeros style. Pairs are unique by
+     * construction: within a block of 25 the given name differs, across blocks the house shifts.
+     *
+     * @return list<string>
+     */
+    private function genericMahasiswaNames(): array
+    {
+        $first = [
+            'Aerwen', 'Belegon', 'Calenor', 'Daeron', 'Elenwe', 'Faelivrin', 'Galathil', 'Haldan', 'Ithilwen', 'Jorlan',
+            'Kaelen', 'Lothwen', 'Marwen', 'Narvian', 'Orophin', 'Brynden', 'Cassana', 'Aemon', 'Rhaenys', 'Talisa',
+            'Ulmo', 'Vaelor', 'Wulfric', 'Yarwen', 'Edrick',
+        ];
+        $last = [
+            'Greenvale', 'Stonehelm', 'Ravenmoor', 'Brightwater', 'Oakenfist',
+            'Silverbrook', 'Frostmere', 'Goldenleaf', 'Ironwood', 'Dawnstrider',
+        ];
+
+        $names = [];
+        for ($i = 0; $i < 100; $i++) {
+            $names[] = $first[$i % 25].' '.$last[($i * 3 + intdiv($i, 25)) % 10];
+        }
+
+        return $names;
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function mahasiswaNames(): array
+    {
+        return array_merge($this->themedMahasiswaNames(), $this->genericMahasiswaNames());
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function themedMahasiswaNames(): array
+    {
+        return [
+            // Legendarium: Fellowship, Rohan, Gondor, Shire
+            'Frodo Baggins', 'Samwise Gamgee', 'Meriadoc Brandybuck', 'Peregrin Took', 'Gandalf Grey',
+            'Aragorn Elessar', 'Legolas Greenleaf', 'Gimli Gloin', 'Boromir Denethor', 'Faramir Denethor',
+            'Eowyn Eomund', 'Eomer Eomund', 'Theoden Thengel', 'Theodred Theoden', 'Grima Wormtongue',
+            'Bilbo Baggins', 'Rosie Cotton', 'Elanor Gamgee', 'Fatty Bolger', 'Lobelia Sackville',
+            'Galadriel Finarfin', 'Celeborn Doriath', 'Elrond Peredhel', 'Arwen Undomiel', 'Elladan Elrondion',
+            'Elrohir Elrondion', 'Glorfindel Gondolin', 'Haldir Lorien', 'Thranduil Greenwood', 'Tauriel Mirkwood',
+            'Gollum Smeagol', 'Radagast Brown', 'Saruman Curunir', 'Treebeard Fangorn', 'Tom Bombadil',
+            'Goldberry Riverdaughter', 'Beregond Minas', 'Imrahil Dol Amroth', 'Denethor Ecthelion', 'Halbarad Dunedain',
+            // Silmarillion
+            'Luthien Tinuviel', 'Beren Erchamion', 'Turin Turambar', 'Tuor Huor', 'Earendil Mariner',
+            'Elwing Dior', 'Idril Celebrindal', 'Eol Dark Elf', 'Aredhel Ar-Feiniel', 'Maeglin Lomion',
+            'Thingol Elwe', 'Melian Maia', 'Morwen Eledhwen', 'Nienor Niniel', 'Hurin Thalion',
+            'Huor Galdor', 'Finduilas Orodreth', 'Orodreth Angrod', 'Angrod Finarfin', 'Aegnor Finarfin',
+            'Gwindor Nargothrond', 'Beleg Cuthalion', 'Elmo Doriath', 'Galdor Tall', 'Amrod Feanorian',
+            'Amras Feanorian', 'Curufin Fëanorion', 'Nerdanel Mahtan', 'Miriel Serindë', 'Olwe Alqualonde',
+            'Cirdan Shipwright', 'Gil-galad Fingon', 'Elendil Faithful', 'Isildur Elendil', 'Anarion Elendil',
+            'Numenor Elros', 'Elros Tar-Minyatur', 'Ar-Pharazon Golden', 'Tar-Miriel Numenor', 'Eonwe Herald',
+            // A Song of Ice and Fire / Game of Thrones
+            'Eddard Stark', 'Catelyn Tully', 'Robb Stark', 'Sansa Stark', 'Arya Stark',
+            'Bran Stark', 'Rickon Stark', 'Jon Snow', 'Benjen Stark', 'Lyanna Stark',
+            'Tyrion Lannister', 'Cersei Lannister', 'Jaime Lannister', 'Tywin Lannister', 'Joffrey Baratheon',
+            'Myrcella Baratheon', 'Tommen Baratheon', 'Lancel Lannister', 'Kevan Lannister', 'Robert Baratheon',
+            'Stannis Baratheon', 'Renly Baratheon', 'Shireen Baratheon', 'Davos Seaworth', 'Melisandre Asshai',
+            'Daenerys Targaryen', 'Viserys Targaryen', 'Rhaegar Targaryen', 'Aegon Targaryen', 'Jorah Mormont',
+            'Missandei Naath', 'Grey Worm', 'Daario Naharis', 'Barristan Selmy', 'Khal Drogo',
+            'Petyr Baelish', 'Varys Spider', 'Sandor Clegane', 'Gregor Clegane', 'Brienne Tarth',
+            'Podrick Payne', 'Bronn Blackwater', 'Margaery Tyrell', 'Loras Tyrell', 'Olenna Tyrell',
+            'Oberyn Martell', 'Ellaria Sand', 'Doran Martell', 'Theon Greyjoy', 'Yara Greyjoy',
+            'Euron Greyjoy', 'Balon Greyjoy', 'Samwell Tarly', 'Gilly Craster', 'Tormund Giantsbane',
+            'Ygritte Wildling', 'Mance Rayder', 'Jeor Mormont', 'Roose Bolton', 'Ramsay Snow',
+            'Walder Frey', 'Hodor Stable', 'Osha Wildling', 'Meera Reed', 'Jojen Reed',
+            'Lysa Arryn', 'Robin Arryn', 'Jaqen Hghar', 'Gendry Waters', 'Edmure Tully',
+        ];
     }
 }

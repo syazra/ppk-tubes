@@ -12,7 +12,7 @@ Route::middleware(['auth', 'role:operator', 'verified'])->prefix('operator')->na
     Route::get('/dashboard', function (Request $request) {
         $recentReservations = \App\Models\Reservation::with('room')
             ->latest()
-            ->take(3)
+            ->take(5)
             ->get()
             ->map(fn (\App\Models\Reservation $reservation): array => [
                 'id' => $reservation->id,
@@ -26,11 +26,13 @@ Route::middleware(['auth', 'role:operator', 'verified'])->prefix('operator')->na
                 'end_time' => $reservation->end_time,
                 'status' => $reservation->status,
                 'rejection_reason' => $reservation->rejection_reason,
+                'ticket_url' => route('reservations.ticket', $reservation),
+                'qr_url' => route('reservations.qrcode', $reservation),
             ]);
 
         $recentReports = \App\Models\Report::with('room')
             ->latest()
-            ->take(3)
+            ->take(5)
             ->get()
             ->map(fn (\App\Models\Report $report): array => [
                 'id' => $report->id,
@@ -100,6 +102,8 @@ Route::middleware(['auth', 'role:operator', 'verified'])->prefix('operator')->na
                 'desc' => $reservation->desc,
                 'status' => $reservation->status,
                 'rejection_reason' => $reservation->rejection_reason,
+                'ticket_url' => route('reservations.ticket', $reservation),
+                'qr_url' => route('reservations.qrcode', $reservation),
             ]);
 
         return Inertia::render('Operator/Reservations', [
@@ -138,7 +142,7 @@ Route::middleware(['auth', 'role:operator', 'verified'])->prefix('operator')->na
             'completed' => \App\Models\Report::where('status', 'selesai')->count(),
         ];
 
-        $reports = \App\Models\Report::with(['room', 'user'])
+        $reports = \App\Models\Report::with(['room', 'user', 'images'])
             ->when($filters['status'] ?? null, fn ($query, string $status) => $query->where('status', $status))
             ->when($filters['search'] ?? null, function ($query, string $search): void {
                 $query->where(function ($query) use ($search): void {
@@ -161,9 +165,10 @@ Route::middleware(['auth', 'role:operator', 'verified'])->prefix('operator')->na
                     'location' => $report->room?->location,
                 ],
                 'desc' => $report->desc,
-                'image_url' => $report->image
-                    ? \Illuminate\Support\Facades\Storage::disk('public')->url($report->image)
-                    : null,
+                'images' => $report->images->map(fn ($img) => [
+                    'id' => $img->id,
+                    'image' => $img->image,
+                ])->values()->all(),
                 'status' => $report->status,
                 'created_at' => $report->created_at?->toIso8601String(),
                 'estimated_completion_at' => $report->estimated_completion_at,

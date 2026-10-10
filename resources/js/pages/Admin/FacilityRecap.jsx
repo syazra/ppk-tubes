@@ -3,6 +3,14 @@ import AppLayout from '../../components/AppLayout';
 
 const inputClass = 'mt-1 block w-full rounded-xl border-gray-300 bg-white-01 px-3 py-2.5 text-sm text-teal-darker focus:border-teal-dark-01 focus:ring-teal-dark-01';
 
+function openPicker(event) {
+    try {
+        event.currentTarget.showPicker?.();
+    } catch (e) {
+        // abaikan, picker tetap bisa dibuka lewat ikon
+    }
+}
+
 function RecapTable({ title, headers, rows, empty, renderRow }) {
     return <section className="rounded-xl border border-green-light-03 bg-white-01 p-6 shadow-sm">
         <h2 className="text-xl font-bold text-teal-darker">{title}</h2>
@@ -34,12 +42,12 @@ export default function FacilityRecap({ user, csrfToken, urls, filters, location
                 {/* download rekap */}
                 <section className="rounded-xl border border-green-light-03 bg-white-01 p-6 shadow-sm">
                     <div className="flex flex-wrap items-start justify-between gap-3"><div><h2 className="text-xl font-bold text-teal-darker">Filter rekap</h2><p className="mt-1 text-sm text-gray-600">Okupansi: reservasi disetujui dan jam terpakai. Kerusakan: laporan baru, diproses, atau selesai.</p></div><Link href={urls.facilities} className="text-sm font-semibold text-teal-dark-01 underline">Kelola fasilitas</Link></div>
-                    <form onSubmit={apply} className="mt-5 grid items-end gap-3 sm:grid-cols-2 lg:grid-cols-5">
-                        <div><label htmlFor="from" className="text-sm font-semibold text-teal-darker">Dari tanggal</label><input id="from" type="date" value={form.data.from} onChange={event => form.setData('from', event.target.value)} className={inputClass} required />{form.errors.from && <p role="alert" className="mt-1 text-sm text-red-600">{form.errors.from}</p>}</div>
-                        <div><label htmlFor="to" className="text-sm font-semibold text-teal-darker">Sampai tanggal</label><input id="to" type="date" value={form.data.to} onChange={event => form.setData('to', event.target.value)} className={inputClass} required />{form.errors.to && <p role="alert" className="mt-1 text-sm text-red-600">{form.errors.to}</p>}</div>
+                    <form onSubmit={apply} className="mt-5 grid items-start gap-3 sm:grid-cols-2 lg:grid-cols-5">
+                        <div><label htmlFor="from" className="text-sm font-semibold text-teal-darker">Dari tanggal</label><input id="from" type="date" value={form.data.from} onChange={event => form.setData('from', event.target.value)} onClick={openPicker} className={inputClass} required />{form.errors.from && <p role="alert" className="mt-1 text-sm text-red-600">{form.errors.from}</p>}</div>
+                        <div><label htmlFor="to" className="text-sm font-semibold text-teal-darker">Sampai tanggal</label><input id="to" type="date" value={form.data.to} onChange={event => form.setData('to', event.target.value)} onClick={openPicker} className={inputClass} required />{form.errors.to && <p role="alert" className="mt-1 text-sm text-red-600">{form.errors.to}</p>}</div>
                         <div><label htmlFor="location" className="text-sm font-semibold text-teal-darker">Lokasi</label><select id="location" value={form.data.location} onChange={event => form.setData({ ...form.data, location: event.target.value, room_id: '' })} className={inputClass}><option value="">Semua lokasi</option>{locations.map(location => <option key={location} value={location}>{location}</option>)}</select></div>
                         <div><label htmlFor="room" className="text-sm font-semibold text-teal-darker">Fasilitas</label><select id="room" value={form.data.room_id} onChange={event => form.setData('room_id', event.target.value)} className={inputClass}><option value="">Semua fasilitas</option>{roomChoices.map(room => <option key={room.id} value={room.id}>{room.name}</option>)}</select></div>
-                        <button type="submit" disabled={form.processing} className="rounded-xl bg-teal-dark-01 px-5 py-2.5 text-sm font-semibold text-white-01 hover:bg-teal-dark-02 disabled:opacity-60">Terapkan filter</button>
+                        <button type="submit" disabled={form.processing} className="rounded-xl bg-teal-dark-01 px-5 py-2.5 text-sm font-semibold text-white-01 hover:bg-teal-dark-02 disabled:opacity-60 lg:mt-6">Terapkan filter</button>
                     </form>
                     <div className="mt-5 flex flex-wrap items-center gap-2"><span className="mr-2 text-sm font-semibold text-teal-darker">Ekspor hasil:</span>{[['csv', 'CSV'], ['xlsx', 'Excel'], ['pdf', 'PDF']].map(([format, label]) => <a key={format} href={`${urls.export.replace('FORMAT', format)}?${query}`} className="rounded-xl border border-teal-dark-01 px-4 py-2 text-sm font-semibold text-teal-dark-01 hover:bg-teal-light-01">{label}</a>)}</div>
                 </section>

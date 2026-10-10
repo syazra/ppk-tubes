@@ -1,4 +1,5 @@
-import { useEffect, useId, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
+import { validateFiles } from '../lib/fileValidation';
 
 const getFileType = (fileName = '') => {
     const extension = fileName.split('.').pop().toLowerCase();
@@ -120,9 +121,15 @@ export default function UploadFile({
     error,
     helperText,
     className = '',
+    maxFiles,
+    maxSizeBytes,
+    allowedTypes,
+    disabled = false,
 }) {
     const generatedId = useId();
     const inputId = `upload-${generatedId}`;
+    const inputRef = useRef(null);
+    const [selectionError, setSelectionError] = useState(null);
     const files = Array.isArray(value)
         ? value
         : value
@@ -159,13 +166,16 @@ export default function UploadFile({
             ? [...files, ...selectedFiles]
             : [selectedFiles[0]];
 
-        onChange?.(nextFiles);
+        const validationError = validateFiles(nextFiles, { maxFiles, maxSizeBytes, allowedTypes });
+        setSelectionError(validationError);
+        if (!validationError) onChange?.(nextFiles);
 
         // Memungkinkan file yang sama dipilih kembali.
         event.target.value = '';
     };
 
     const handleRemove = (index) => {
+        setSelectionError(null);
         const nextFiles = files.filter(
             (_, fileIndex) => fileIndex !== index
         );
@@ -212,6 +222,7 @@ export default function UploadFile({
 
                                     <button
                                         type="button"
+                                        disabled={disabled}
                                         onClick={() => handleRemove(index)}
                                         className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-gray-200/80 text-gray-700 shadow-sm transition-colors hover:bg-transparent hover:text-gray-900"
                                         aria-label={`Hapus ${preview.file.name}`}
@@ -233,23 +244,29 @@ export default function UploadFile({
 
                 <input
                     id={inputId}
+                    ref={inputRef}
                     name={multiple ? `${name}[]` : name}
                     type="file"
                     accept={accept}
                     multiple={multiple}
+                    disabled={disabled}
+                    aria-invalid={Boolean(error || selectionError)}
+                    aria-describedby={`${inputId}-hint ${inputId}-error`}
                     onChange={handleChange}
                     className="hidden"
                 />
 
                 <div className="my-2 flex w-full items-center justify-center gap-3">
-                    <label
-                        htmlFor={inputId}
+                    <button
+                        type="button"
+                        disabled={disabled || maxFiles === 0}
+                        onClick={() => inputRef.current?.click()}
                         className="shrink-0 cursor-pointer rounded-md border border-gray-300 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-widest text-gray-700 shadow-sm transition hover:bg-gray-50"
                     >
                         {files.length > 0
                             ? '+ Tambah File'
                             : 'Pilih File'}
-                    </label>
+                    </button>
 
                     {files.length === 0 && (
                         <span className="max-w-xs truncate text-xs text-gray-500">
@@ -259,15 +276,15 @@ export default function UploadFile({
                 </div>
 
                 {helperText && (
-                    <p className="mt-1 text-xs text-gray-400">
+                    <p id={`${inputId}-hint`} className="mt-1 text-xs text-gray-500">
                         {helperText}
                     </p>
                 )}
             </div>
 
-            {error && (
-                <p role="alert" className="mt-2 text-sm text-red-700">
-                    {error}
+            {(error || selectionError) && (
+                <p id={`${inputId}-error`} role="alert" className="mt-2 text-sm text-red-700">
+                    {selectionError || error}
                 </p>
             )}
         </div>

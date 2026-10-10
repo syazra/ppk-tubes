@@ -1,8 +1,10 @@
 import { Head, router, useForm } from '@inertiajs/react';
+import { useState } from 'react';
 import AppLayout from '../../components/AppLayout';
 import FilterTable from '../../components/FilterTable';
 import MetricCard from '../../components/MetricCard';
 import StatusBadge, { getStatusColor } from '../../components/StatusBadge';
+import PopCard from '../../components/PopCard';
 
 const metrics = [
     { summaryKey: 'total', label: 'Total Reservasi', icon: 'calendar' },
@@ -39,6 +41,7 @@ function statusLabel(value) {
 
 export default function Reservations({ user, status, csrfToken, urls, reservations, filters, summary }) {
     const filterForm = useForm({ search: filters.search, status: filters.status });
+    const [selectedReservation, setSelectedReservation] = useState(null);
 
     function applyFilters(event) {
         event.preventDefault();
@@ -104,7 +107,7 @@ export default function Reservations({ user, status, csrfToken, urls, reservatio
                         { label: 'Tanggal & Waktu' },
                         { label: 'Deskripsi', type: 'desc' },
                         { label: 'Status' },
-                        { label: 'Aksi' },
+                        { label: 'Aksi', type: 'act' },
                     ]}
                     renderRow={reservation => (
                         <>
@@ -131,9 +134,17 @@ export default function Reservations({ user, status, csrfToken, urls, reservatio
                                             <button type="button" onClick={() => updateReservation(reservation, 'approve')} className="font-medium text-teal-normal-01 underline">Setujui</button>
                                             <button type="button" onClick={() => updateReservation(reservation, 'reject')} className="font-medium text-red-600 underline">Tolak</button>
                                         </>
+                                    ) : reservation.status === 'disetujui' ? (
+                                        <button 
+                                            type="button" 
+                                            onClick={() => setSelectedReservation(reservation)} 
+                                            className="rounded-md border border-blue-400 px-3 py-1 text-xs font-medium text-blue-600 hover:bg-blue-50"
+                                        >
+                                            Lihat tiket
+                                        </button>
                                     ) : reservation.status === 'ditolak' ? (
                                         <span className="text-xs text-gray-400 italic">
-                                            {reservation.rejection_reason ?? 'Tidak ada alasan'}
+                                            {reservation.rejection_reason ?? 'Ditolak oleh oprator'}
                                         </span>
                                     ) : (
                                         <span className="text-xs text-gray-400 italic">Aksi tidak tersedia</span>
@@ -146,7 +157,58 @@ export default function Reservations({ user, status, csrfToken, urls, reservatio
                     recordLabel="reservasi"
                     paginationLabel="Navigasi halaman reservasi"
                 />
+                {/* PREVIEW TIKET MODAL (Hanya Tampilan) */}
+                {selectedReservation && (
+                    <PopCard
+                        title="Tiket reservasi"
+                        description={null}
+                        onCancel={null}
+                        onDone={null}
+                        onClose={() => setSelectedReservation(null)}
+                    >
+                        <div className="flex items-start justify-between gap-4 px-3">
+                            <div className="space-y-3 text-sm">
+                                <div>
+                                    <p className="text-gray-500">Status</p>
+                                    <StatusBadge color="teal">Disetujui</StatusBadge>
+                                </div>
+                                <div>
+                                    <p className="text-gray-500">ID reservasi</p>
+                                    <p className="font-semibold">RSV-{selectedReservation.id}</p>
+                                </div>
+                                <div>
+                                    <p className="text-gray-500">Peminjam</p>
+                                    <p className="font-semibold">{selectedReservation.user?.email ?? '-'}</p>
+                                </div>
+                                <div>
+                                    <p className="text-gray-500">Fasilitas</p>
+                                    <p className="font-semibold">{selectedReservation.room?.name ?? '-'}</p>
+                                </div>
+                                <div>
+                                    <p className="text-gray-500">Tanggal</p>
+                                    <p className="font-semibold">{formatReservationDate(selectedReservation.date_to_reserv)}</p>
+                                </div>
+                                <div>
+                                    <p className="text-gray-500">Waktu</p>
+                                    <p className="font-semibold">{formatTime(selectedReservation.start_time)} - {formatTime(selectedReservation.end_time)}</p>
+                                </div>
+                                <div>
+                                    <p className="text-gray-500">Tujuan</p>
+                                    <p className="font-semibold">{selectedReservation.desc}</p>
+                                </div>
+                            </div>
 
+                            <div className="flex shrink-0 flex-col items-center gap-3">
+                                <img
+                                    src={selectedReservation.qr_url}
+                                    alt={`QR Code reservasi RSV-${selectedReservation.id}`}
+                                    className="h-36 w-36 object-contain"
+                                />
+                                <span className="text-xs text-gray-400 text-center">Scan QR untuk verifikasi</span>
+                            </div>
+                        </div>
+                    </PopCard>
+                )}
             </AppLayout>
         </>
     );
