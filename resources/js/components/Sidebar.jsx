@@ -47,7 +47,7 @@ export default function Sidebar({
 
     return (
         <aside className={`app-sidebar ${collapsed ? 'is-collapsed' : ''}`}>
-            <div className="app-sidebar-atmosphere" aria-hidden="true" style={{ backgroundImage: `linear-gradient(160deg, #336358eb, #336358f5 55%, #336358fa), url('${botanicalBackground}')` }}>
+            <div className="app-sidebar-atmosphere" aria-hidden="true" style={{ backgroundImage: `linear-gradient(160deg, #336358ee, #2f5b51f5 55%, #24483ffb), url('${botanicalBackground}')` }}>
                 <div className="app-sidebar-glow app-sidebar-glow-top" />
                 <div className="app-sidebar-glow app-sidebar-glow-bottom" />
                 <div className="app-sidebar-fog" style={{ backgroundImage: fogImage(7) }} />
