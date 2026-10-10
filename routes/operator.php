@@ -16,11 +16,17 @@ Route::middleware(['auth', 'role:operator', 'verified'])->prefix('operator')->na
             ->get()
             ->map(fn (\App\Models\Reservation $reservation): array => [
                 'id' => $reservation->id,
+                'user' => [
+                    'name' => $reservation->user?->name,
+                    'email' => $reservation->user?->email,
+                ],
                 'room' => [
                     'name' => $reservation->room?->name,
                     'type' => $reservation->room?->type,
                     'location' => $reservation->room?->location,
                 ],
+                'activity_name' => $reservation->activity_name,
+                'desc' => $reservation->desc,
                 'date_to_reserv' => $reservation->date_to_reserv,
                 'start_time' => $reservation->start_time,
                 'end_time' => $reservation->end_time,
@@ -80,6 +86,7 @@ Route::middleware(['auth', 'role:operator', 'verified'])->prefix('operator')->na
                 $query->where(function ($query) use ($search): void {
                     $query->whereHas('user', fn ($userQuery) => $userQuery->where('name', 'like', "%{$search}%"))
                         ->orWhereHas('room', fn ($roomQuery) => $roomQuery->where('name', 'like', "%{$search}%"))
+                        ->orWhere('activity_name', 'like', "%{$search}%")
                         ->orWhere('desc', 'like', "%{$search}%");
                 });
             })
@@ -99,6 +106,10 @@ Route::middleware(['auth', 'role:operator', 'verified'])->prefix('operator')->na
                 'date_to_reserv' => $reservation->date_to_reserv,
                 'start_time' => $reservation->start_time,
                 'end_time' => $reservation->end_time,
+                'reservation_type' => $reservation->reservation_type,
+                'institution' => $reservation->institution,
+                'activity_name' => $reservation->activity_name,
+                'participant_count' => $reservation->participant_count,
                 'desc' => $reservation->desc,
                 'status' => $reservation->status,
                 'rejection_reason' => $reservation->rejection_reason,

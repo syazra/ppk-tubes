@@ -103,6 +103,7 @@ export default function Reservations({ user, status, csrfToken, urls, reservatio
                     rows={reservations}
                     columns={[
                         { label: 'Peminjam' },
+                        { label: 'Jenis' },
                         { label: 'Fasilitas' },
                         { label: 'Tanggal & Waktu' },
                         { label: 'Deskripsi', type: 'desc' },
@@ -115,6 +116,9 @@ export default function Reservations({ user, status, csrfToken, urls, reservatio
                                 <p className="font-semibold text-teal-darker">{reservation.user?.name ?? '—'}</p>
                                 <p className="text-xs text-gray-500">{reservation.user?.email ?? '—'}</p>
                             </td>
+                            <td className="whitespace-normal text-xs max-w-xs px-4 py-3 text-gray-600">
+                                <p className="text-xs py-0.5 text-gray-600">{reservation.reservation_type ?? '—'}</p>
+                            </td>
                             <td className="whitespace-nowrap px-4 py-3 font-medium text-teal-darker">
                                 <p>{reservation.room?.name ?? '—'}</p>
                                 {reservation.room?.location && <p className="text-xs font-normal text-gray-500">{reservation.room.location}</p>}
@@ -123,7 +127,9 @@ export default function Reservations({ user, status, csrfToken, urls, reservatio
                                 <p>{formatReservationDate(reservation.date_to_reserv)}</p>
                                 <p className="text-xs text-gray-500">{formatTime(reservation.start_time)}–{formatTime(reservation.end_time)}</p>
                             </td>
-                            <td className="whitespace-normal text-xs max-w-xs px-4 py-3 text-gray-600">{reservation.desc}</td>
+                            <td className="whitespace-normal text-xs max-w-xs px-4 py-3 text-gray-600">
+                                <p className="font-normal py-0.5 text-gray-800">{reservation.activity_name ?? reservation.desc ?? '—'}</p>
+                            </td>
                             <td className="whitespace-nowrap px-4 py-3">
                                 <StatusBadge color={getStatusColor(reservation.status)}>{statusLabel(reservation.status)}</StatusBadge>
                             </td>
