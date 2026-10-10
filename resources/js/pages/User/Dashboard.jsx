@@ -3,8 +3,10 @@ import { motion, useReducedMotion } from 'motion/react';
 import AppLayout from '../../components/AppLayout';
 import ActionCard from '../../components/ActionCard';
 import StatusBadge, { getStatusColor } from '../../components/StatusBadge';
-import reservationImage from '../../../../background-preview.png';
+import Icon from '../../components/Icons';
 import Button from '../../components/Button';
+import leafDecoration from '../../../../background-preview.png';
+import reservationImage from '../../../../background-preview.png';
 
 const statusLabels = {
 	baru: 'Menunggu diproses',
@@ -43,26 +45,37 @@ export default function Dashboard({ user, csrfToken, urls, recentReservations = 
 		>
 			<Head title="Beranda CampuSpace" />
 
-			{/* SHORTCUT BUTTON */}
-			<section className="mb-8">
-				<motion.article
-					initial={shouldReduceMotion ? false : { opacity: 0, y: 12 }}
-					animate={{ opacity: 1, y: 0 }}
-					transition={{ duration: 0.35 }}
-					className="relative isolate flex min-h-56 overflow-hidden rounded-xl border border-emerald-100 bg-emerald-50 p-6 sm:p-8"
-				>
-					<img src={reservationImage} alt="" aria-hidden="true" className="absolute inset-y-0 right-0 -z-10 h-full w-1/2 object-cover object-center opacity-35" />
-					<div className="flex max-w-2xl flex-col items-start justify-between gap-6">
-						<div>
-							<p className="text-sm font-medium text-teal-800">Tombol Cepat Katalog Fasilitas</p>
-							<h2 className="mt-2 text-xl sm:text-3xl font-bold leading-tight text-teal-darker">Cari & Temukan Fasilitas Kampus</h2>
-							<p className="mt-1 text-sm text-teal-700">Lihat ketersediaan ruangan dan ajukan peminjaman fasilitas kampus dengan mudah melalui katalog.</p>
+			<section className="app-quick-actions" aria-label="Mulai aktivitas">
+				{[
+					{
+						key: 'reservation', icon: 'calendar', label: 'Reservasi fasilitas',
+						title: 'Temukan ruang untuk kegiatanmu.',
+						description: 'Pilih fasilitas dan jadwal yang sesuai, lalu ajukan reservasi.',
+						href: urls.reservationForm, action: 'Mulai reservasi',
+					},
+					{
+						key: 'report', icon: 'shield', label: 'Laporan fasilitas',
+						title: 'Bantu jaga fasilitas tetap nyaman.',
+						description: 'Menemukan kerusakan? Sampaikan laporan agar segera ditangani.',
+						href: urls.reportCreate, action: 'Buat laporan',
+					},
+				].map((action, index) => (
+					<motion.article
+						key={action.key}
+						initial={shouldReduceMotion ? false : { opacity: 0, y: 12 }}
+						animate={{ opacity: 1, y: 0 }}
+						transition={{ duration: 0.35, delay: shouldReduceMotion ? 0 : index * 0.08 }}
+						className={`app-quick-card app-quick-card-${action.key}`}
+					>
+						<img src={leafDecoration} alt="" aria-hidden="true" className="app-quick-texture" />
+						<div className="app-quick-content">
+							<p className="app-quick-label"><span className="app-quick-icon"><Icon name={action.icon} /></span>{action.label}</p>
+							<h2>{action.title}</h2>
+							<p className="app-quick-description">{action.description}</p>
+							<Button as={Link} href={action.href} variant={action.key === 'reservation' ? 'secondary' : 'primary'} className="app-quick-button">{action.action}<Icon name="arrow" /></Button>
 						</div>
-						<Button as={Link} href={urls?.catalog || route('user.catalog')}>
-							Lihat katalog fasilitas
-						</Button>
-					</div>
-				</motion.article>
+					</motion.article>
+				))}
 			</section>
 
 			{/* RINGKASAN / RIWAYAT TERBARU */}

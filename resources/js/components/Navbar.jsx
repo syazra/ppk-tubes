@@ -2,7 +2,7 @@ import { Link } from '@inertiajs/react';
 import { motion } from 'motion/react';
 import Icon, { initials } from './Icons';
 
-export default function Navbar({ user, auth, urls, title, collapsed, onToggleSidebar, onOpenMenu, mobileOpen }) {
+export default function Navbar({ user, auth, urls, title, collapsed, onToggleSidebar, onOpenMenu, mobileOpen, drawerId }) {
     const currentUser = user || auth?.user;
     const userName = currentUser?.name || 'Pengguna';
     const shouldHideBreadcrumbTitle = typeof title === 'string' && /selamat datang|beranda/i.test(title.trim());
@@ -23,7 +23,7 @@ export default function Navbar({ user, auth, urls, title, collapsed, onToggleSid
     return (
         <header className="app-navbar">
             <div className="flex min-w-0 items-center gap-3">
-                <motion.button type="button" whileTap={{ scale: 0.92 }} onClick={onOpenMenu} className="app-icon-button lg:hidden" aria-label="Buka menu navigasi" aria-expanded={mobileOpen}>
+                <motion.button type="button" whileTap={{ scale: 0.92 }} onClick={onOpenMenu} className="app-icon-button app-menu-toggle flex lg:hidden" aria-label="Buka menu navigasi" aria-expanded={mobileOpen} aria-controls={drawerId} aria-haspopup="dialog">
                     <Icon name="menu" />
                 </motion.button>
                 <motion.button type="button" whileTap={{ scale: 0.92 }} onClick={onToggleSidebar} className="app-icon-button hidden lg:flex" aria-label={collapsed ? 'Perluas menu' : 'Ciutkan menu'} aria-expanded={!collapsed}>
