@@ -458,17 +458,9 @@ class ReservationController extends Controller
 
     public function qrcode(Reservation $reservation)
     {
-        abort_if(
-            $reservation->user_id != Auth::id(),
-            403
-        );
+        $this->authorizeTicketAccess($reservation);
 
-
-        $url = route(
-            'reservations.ticket',
-            $reservation->id
-        );
-
+        $url = route('reservations.ticket', $reservation->id);
 
         $result = Builder::create()
             ->writer(new SvgWriter())
@@ -476,31 +468,28 @@ class ReservationController extends Controller
             ->size(150)
             ->build();
 
-
         return response($result->getString())
-            ->header(
-                'Content-Type',
-                'image/svg+xml'
-            );
-
-        
+            ->header('Content-Type', 'image/svg+xml');
     }
 
     public function ticket(Reservation $reservation)
     {
-        abort_if(
-            $reservation->user_id != Auth::id(),
-            403
-        );
+        $this->authorizeTicketAccess($reservation);
 
         $reservation->load('room');
 
-        return view(
-            'user.ticket',
-            compact('reservation')
-        );
+        return view('user.ticket', compact('reservation'));
     }
 
+    private function authorizeTicketAccess(Reservation $reservation): void
+    {
+        $user = Auth::user();
+
+        $allowed = $reservation->user_id === $user->id
+            || in_array($user->role, ['operator', 'admin'], true);
+
+        abort_unless($allowed, 403);
+    }
 
 
 }

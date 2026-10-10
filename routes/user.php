@@ -51,6 +51,11 @@ Route::middleware(['auth', 'role:admin,operator,user'])->group(function () {
         Route::delete('/', 'destroy')->middleware('throttle:6,1')->name('destroy');
     });
 
+    Route::middleware(['auth', 'verified'])->group(function () {
+        Route::get('/reservations/{reservation}/ticket', [ReservationController::class, 'ticket'])->name('reservations.ticket');
+        Route::get('/reservations/{reservation}/qrcode', [ReservationController::class, 'qrcode'])->name('reservations.qrcode');
+    });
+
     Route::middleware(['role:user', 'verified'])->group(function () {
         Route::controller(ReservationController::class)->prefix('reservations')->name('reservations.')->group(function () {
             Route::get('/', 'index')->name('index');
@@ -59,8 +64,8 @@ Route::middleware(['auth', 'role:admin,operator,user'])->group(function () {
             Route::get('/facilities', 'facilities')->name('facilities');
             Route::get('/facilities/{room}/slots', 'facilitySlots')->name('facility-slots');
             Route::post('/', 'store')->name('store');
-            Route::get('/{reservation}/ticket', 'ticket')->name('ticket');
-            Route::get('/{reservation}/qrcode', 'qrcode')->name('qrcode');
+            // Route::get('/{reservation}/ticket', 'ticket')->name('ticket');
+            // Route::get('/{reservation}/qrcode', 'qrcode')->name('qrcode');
             Route::patch('/{reservation}/cancel', 'cancel')->name('cancel');
         });
 
