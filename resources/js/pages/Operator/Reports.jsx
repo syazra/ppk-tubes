@@ -42,6 +42,12 @@ function getCurrentDateTimeLocal() {
     return now.toISOString().slice(0, 16);
 }
 
+function openPicker(event) {
+    if (typeof event.currentTarget.showPicker === 'function') {
+        event.currentTarget.showPicker();
+    }
+}
+
 export default function Reports({ user, status, csrfToken, urls, reports, filters, summary }) {
     const filterForm = useForm({ search: filters.search, status: filters.status });
 
@@ -78,7 +84,7 @@ export default function Reports({ user, status, csrfToken, urls, reports, filter
     function handleOpenExtendModal(report) {
         setSelectedReportForExtend(report);
         const initialDate = report.estimated_completion_at 
-            ? new Date(report.estimated_completion_at).toISOString().slice(0, 16) 
+            ? toDateTimeLocal(report.estimated_completion_at)
             : '';
         extendForm.setData('estimated_completion_at', initialDate);
     }
@@ -254,6 +260,7 @@ export default function Reports({ user, status, csrfToken, urls, reports, filter
                                         min={getCurrentDateTimeLocal()}
                                         value={processForm.data.estimated_completion_at}
                                         onChange={e => processForm.setData('estimated_completion_at', e.target.value)}
+                                        onClick={openPicker}
                                         className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none"
                                         required
                                     />
@@ -284,6 +291,7 @@ export default function Reports({ user, status, csrfToken, urls, reports, filter
                                         min={getCurrentDateTimeLocal()}
                                         value={extendForm.data.estimated_completion_at}
                                         onChange={e => extendForm.setData('estimated_completion_at', e.target.value)}
+                                        onClick={openPicker}
                                         className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none bg-white text-gray-800"
                                         required
                                     />

@@ -5,8 +5,6 @@ import FilterTable from '../../components/FilterTable';
 import MetricCard from '../../components/MetricCard';
 import StatusBadge, { getStatusColor } from '../../components/StatusBadge';
 import PopCard from '../../components/PopCard';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
 
 const metrics = [
     { summaryKey: 'total', label: 'Total Reservasi', icon: 'calendar' },
@@ -146,7 +144,7 @@ export default function Reservations({ user, status, csrfToken, urls, reservatio
                                         </button>
                                     ) : reservation.status === 'ditolak' ? (
                                         <span className="text-xs text-gray-400 italic">
-                                            {reservation.rejection_reason ?? 'Tidak ada alasan'}
+                                            {reservation.rejection_reason ?? 'Ditolak oleh oprator'}
                                         </span>
                                     ) : (
                                         <span className="text-xs text-gray-400 italic">Aksi tidak tersedia</span>
