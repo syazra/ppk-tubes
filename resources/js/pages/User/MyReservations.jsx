@@ -604,12 +604,7 @@ export default function MyReservations({ user, csrfToken, urls, reservations, fi
 									</p>
 								</div>
 
-								<div>
-									<p className="text-gray-500">Tujuan</p>
-									<p className="font-semibold">
-										{selectedReservation.activity_name}
-									</p>
-								</div>
+							
 							</div>
 
 							{/* QR + Download */}

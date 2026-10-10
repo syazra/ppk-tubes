@@ -43,7 +43,7 @@ export default function ReservationForm({
 	const initialRoomId = oldInput.room_id ?? initialFacility?.id ?? '';
 	const form = useForm({
 		room_id: initialRoomId ? String(initialRoomId) : '',
-		reservation_type: oldInput.reservation_type ?? 'individu',
+		reservation_type: oldInput.reservation_type ?? 'Individu',
 		institution: oldInput.institution ?? '',
 		activity_name: oldInput.activity_name ?? '',
 		participant_count: oldInput.participant_count ?? '',
@@ -204,9 +204,9 @@ export default function ReservationForm({
 									form.setData(data => ({
 										...data,
 										reservation_type: type,
-										institution: type === 'individu' ? '' : data.institution,
-										activity_name: type === 'individu' ? '' : data.activity_name,
-										proposal: type === 'individu' ? null : data.proposal,
+										institution: type === 'Individu' ? '' : data.institution,
+										activity_name: type === 'Individu' ? '' : data.activity_name,
+										proposal: type === 'Individu' ? null : data.proposal,
 									}));
 								}}
 								className={fieldClassName}
@@ -218,7 +218,7 @@ export default function ReservationForm({
 
 							<FieldError>{form.errors.reservation_type}</FieldError>
 						</div>
-						{form.data.reservation_type === 'individu' && (
+						{form.data.reservation_type === 'Individu' && (
 							<div>
 									<label
 										htmlFor="activity_name"
