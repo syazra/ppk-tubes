@@ -49,19 +49,16 @@ class ReservationSeeder extends Seeder
                 $activity = $activities[intdiv($i, $rooms->count()) + $i % count($activities)] ?? $activities[$i % count($activities)];
                 $desc = $activity.' ('.$groups[$i % count($groups)].')';
 
-                Reservation::firstOrCreate([
-                    'user_id' => $user->id,
-                    'room_id' => $room->id,
-                    'activity_name' => 'Kegiatan belajar bersama di '.$room->name,
-                ], [
-                    'date_to_reserv' => $today->copy()->subDays(1 + $index % 14)->toDateString(),
-                    'start_time' => '08:00:00',
-                    'end_time' => '10:00:00',
-                    'status' => 'disetujui',
-                    'rejection_reason' => null,
-                ]);
+                $past = $i % 3 === 0;
+                $date = $past
+                    ? $today->copy()->subDays(1 + $i % 14)
+                    : $today->copy()->addDays(1 + $i % 14);
+                [$start, $end] = $times[$i % count($times)];
 
-                $status = $past ? $pastStatuses[intdiv($i, 2) % count($pastStatuses)] : $futureStatuses[intdiv($i, 2) % count($futureStatuses)];
+                $status = $past
+                    ? $pastStatuses[intdiv($i, 2) % count($pastStatuses)]
+                    : $futureStatuses[intdiv($i, 2) % count($futureStatuses)];
+
                 $repair = ! $past && ! $room->is_avail;
                 if ($repair) {
                     $status = 'ditolak';
@@ -69,20 +66,27 @@ class ReservationSeeder extends Seeder
 
                 $reservation = Reservation::firstOrCreate([
                     'room_id' => $room->id,
-                    'activity_name' => 'Diskusi dan persiapan kegiatan di '.$room->name,
+                    'desc' => $desc,
                 ], [
                     'user_id' => $user->id,
+                    'activity_name' => $activity,
                     'date_to_reserv' => $date->toDateString(),
                     'start_time' => $start,
                     'end_time' => $end,
                     'status' => $status,
                     'rejection_reason' => $status === 'ditolak'
-                        ? ($repair ? 'Fasilitas sedang dalam perbaikan' : DemoActivityPools::REJECTIONS_RESERVATION[$i % count(DemoActivityPools::REJECTIONS_RESERVATION)])
+                        ? ($repair
+                            ? 'Fasilitas sedang dalam perbaikan'
+                            : DemoActivityPools::REJECTIONS_RESERVATION[$i % count(DemoActivityPools::REJECTIONS_RESERVATION)])
                         : null,
                 ]);
 
                 if ($reservation->wasRecentlyCreated) {
-                    $submitted = ($past ? $date->copy()->subDays(3 + $i % 4) : $today->copy()->subDays(1 + $i % 10))->setTime(9, 0);
+                    $submitted = ($past
+                        ? $date->copy()->subDays(3 + $i % 4)
+                        : $today->copy()->subDays(1 + $i % 10)
+                    )->setTime(9, 0);
+
                     $reservation->forceFill([
                         'created_at' => $submitted,
                         'updated_at' => $status === 'menunggu' ? $submitted : $submitted->copy()->addHours(4 + $i % 6),
