@@ -39,9 +39,7 @@ class ReportSeeder extends Seeder
             foreach ($examples as $index => [$name, $status, $description]) {
                 $room = Room::where('name', $name)->orderBy('id')->firstOrFail();
                 $user = $users[$index % $users->count()];
-                $themedDescription = DemoActivityText::REPORT_EXAMPLES[$description];
-                DemoActivityText::upgrade('reports', $room->id, [$description => $themedDescription]);
-                $description = $themedDescription;
+                $description = DemoActivityText::REPORT_EXAMPLES[$description];
                 $report = Report::firstOrCreate([
                     'room_id' => $room->id,
                     'desc' => $description,
@@ -69,39 +67,51 @@ class ReportSeeder extends Seeder
                 }
             }
 
-            foreach (Room::orderBy('id')->get() as $index => $room) {
-                $issueMap = DemoActivityText::REPORTS[$room->type];
-                DemoActivityText::upgrade('reports', $room->id, $issueMap);
-                $issues = array_values($issueMap);
-                foreach ($issues as $sample => $issue) {
-                    $status = ['baru', 'selesai', 'ditolak', 'dibatalkan'][($index + $sample) % 4];
-                    // Keep active demo rooms bookable; ongoing repairs use the four existing inactive rooms.
-                    if (! $room->is_avail && $sample === 0) {
-                        $status = 'diproses';
-                    }
-                    $submitted = $now->copy()->subDays(3 + ($index * 4 + $sample) % 85)->setTime(8 + $sample * 2, 15);
-                    $updated = in_array($status, ['baru', 'diproses'], true)
-                        ? ($status === 'baru' ? $submitted : $now->copy()->subDay())
-                        : $submitted->copy()->addDays(1 + $sample % 2);
-                    $report = Report::firstOrCreate([
-                        'room_id' => $room->id,
-                        'desc' => $issue,
-                    ], [
-                        'user_id' => $users[($index * 4 + $sample + 11) % $users->count()]->id,
-                        'status' => $status,
-                        'estimated_completion_at' => match ($status) {
-                            'diproses' => $now->copy()->addDays(2 + $index % 10)->setTime(17, 0),
-                            'selesai' => $updated,
-                            default => null,
-                        },
-                        'rejection_reason' => $status === 'ditolak' ? ['Pemeriksaan kustodian menunjukkan perkakas masih bekerja sebagaimana mestinya.', 'Keluhan serupa telah ditangani berdasarkan gulungan aduan terdahulu.', 'Gangguan berasal dari jimat milik pelapor; pesona ruangan tetap utuh.'][($index + $sample) % 3] : null,
-                        'resolution' => $status === 'selesai' ? ['Kait yang longgar dikencangkan lalu diuji bersama penghuni menara.', 'Bagian yang retak diganti oleh pandai besi; segel penjaga kembali utuh.', 'Perkakas dibersihkan dan rune diselaraskan; ruangan siap digunakan kembali.'][($index + $sample) % 3] : null,
-                    ]);
-                    if ($report->wasRecentlyCreated) {
-                        $report->forceFill(['created_at' => $submitted, 'updated_at' => $updated])->save();
-                    }
+            $extra = $this->targetCount($users->count(), Room::count()) - count($examples);
+            $rooms = Room::orderBy('id')->get();
+            $statuses = ['baru', 'selesai', 'ditolak', 'dibatalkan', 'baru'];
+
+            for ($i = 0; $i < $extra; $i++) {
+                $room = $rooms[($i * 5 + 2) % $rooms->count()];
+                $issues = DemoActivityPools::REPORTS[$room->type];
+                $issue = $issues[($i + intdiv($i, $rooms->count())) % count($issues)];
+                $status = $statuses[$i % count($statuses)];
+                $submitted = $now->copy()->subDays(3 + ($i * 7) % 60)->setTime(8 + $i % 8, 15);
+                $updated = $status === 'baru' ? $submitted : $submitted->copy()->addDays(1 + $i % 3);
+
+                $report = Report::firstOrCreate([
+                    'room_id' => $room->id,
+                    'desc' => $issue,
+                ], [
+                    'user_id' => $users[($i * 11 + 7) % $users->count()]->id,
+                    'status' => $status,
+                    'estimated_completion_at' => $status === 'selesai' ? $updated : null,
+                    'rejection_reason' => $status === 'ditolak'
+                        ? DemoActivityPools::REJECTIONS_REPORT[$i % count(DemoActivityPools::REJECTIONS_REPORT)]
+                        : null,
+                    'resolution' => $status === 'selesai'
+                        ? DemoActivityPools::RESOLUTIONS[$i % count(DemoActivityPools::RESOLUTIONS)]
+                        : null,
+                ]);
+                if ($report->wasRecentlyCreated) {
+                    $report->forceFill(['created_at' => $submitted, 'updated_at' => $updated])->save();
                 }
             }
         });
+    }
+
+    /**
+     * Roughly one report per eight eligible users (minimum: the fixed showcase examples),
+     * never more than one per room. Override with the DEMO_REPORTS environment variable.
+     */
+    private function targetCount(int $userCount, int $roomCount): int
+    {
+        $minimum = 12;
+        $override = env('DEMO_REPORTS');
+        if (is_numeric($override)) {
+            return max($minimum, (int) $override);
+        }
+
+        return max($minimum, min((int) round($userCount / 8), $roomCount));
     }
 }

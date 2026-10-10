@@ -46,10 +46,13 @@ class RoomImageSeederTest extends TestCase
         }
 
         // Exhaust each pool before reusing photos for facilities in that class.
-        foreach (['Aula' => 3, 'Lapangan' => 11, 'Ruang Kelas' => 2, 'Laboratorium' => 8] as $type => $uniquePhotos) {
-            $paths = Room::with('images')->where('type', $type)->get()
-                ->map(fn (Room $room) => $room->images->first()->path);
-            $this->assertCount($uniquePhotos, $paths->unique());
+        foreach ($folders as $type => $folder) {
+            $pool = collect(glob(database_path('seeders/photos/'.$folder.'/*.*')))
+                ->filter(fn ($file) => in_array(strtolower(pathinfo($file, PATHINFO_EXTENSION)), ['jpg', 'png', 'webp', 'avif'], true))
+                ->count();
+            $rooms = Room::with('images')->where('type', $type)->get();
+            $paths = $rooms->map(fn (Room $room) => $room->images->first()->path);
+            $this->assertCount(min($rooms->count(), $pool), $paths->unique());
         }
     }
 

@@ -17,14 +17,13 @@ class UserSeederTest extends TestCase
         $this->seed(UserSeeder::class);
 
         $expectedAccounts = [
-            ['id' => 1, 'email' => 'operator@operator.kampus.ac.id', 'role' => 'operator'],
-            ['id' => 2, 'email' => 'admin@admin.kampus.ac.id', 'role' => 'admin'],
-            ['id' => 3, 'email' => 'student@students.kampus.ac.id', 'role' => 'user'],
-            ['id' => 4, 'email' => 'lecturer@lecturer.kampus.ac.id', 'role' => 'user'],
-            ['id' => 5, 'email' => 'nama@operator.kampus.ac.id', 'role' => 'operator'],
-            ['id' => 6, 'email' => 'nama@admin.kampus.ac.id', 'role' => 'admin'],
-            ['id' => 7, 'email' => 'nama@students.kampus.ac.id', 'role' => 'user'],
-            ['id' => 8, 'email' => 'nama@lecturer.kampus.ac.id', 'role' => 'user'],
+            ['id' => 1, 'email' => 'arispujiw@admin.kampus.ac.id', 'role' => 'admin'],
+            ['id' => 2, 'email' => 'annisaisti@operator.kampus.ac.id', 'role' => 'operator'],
+            ['id' => 3, 'email' => 'anangardiyanto@operator.kampus.ac.id', 'role' => 'operator'],
+            ['id' => 4, 'email' => 'ruthseptriana@students.kampus.ac.id', 'role' => 'user'],
+            ['id' => 8, 'email' => 'sandykurniawan@lecturer.kampus.ac.id', 'role' => 'user'],
+            ['id' => 10, 'email' => 'benynugroho@staff.kampus.ac.id', 'role' => 'user'],
+            ['id' => 31, 'email' => 'frodobaggins@students.kampus.ac.id', 'role' => 'user'],
         ];
 
         foreach ($expectedAccounts as $expected) {
@@ -37,12 +36,42 @@ class UserSeederTest extends TestCase
         }
     }
 
+    public function test_user_seeder_creates_at_least_100_unique_mahasiswa(): void
+    {
+        $this->seed(UserSeeder::class);
+
+        $mahasiswa = User::where('account_type', 'mahasiswa')->get();
+
+        $this->assertGreaterThanOrEqual(100, $mahasiswa->count());
+        $this->assertSame($mahasiswa->count(), $mahasiswa->pluck('email')->unique()->count());
+        $this->assertSame($mahasiswa->count(), $mahasiswa->pluck('identity_number')->unique()->count());
+    }
+
+    public function test_user_seeder_creates_ten_themed_dosen_and_ten_staf_with_unique_identities(): void
+    {
+        $this->seed(UserSeeder::class);
+
+        foreach (['dosen' => 'lecturer', 'staf' => 'staff'] as $type => $domain) {
+            $accounts = User::where('account_type', $type)->where('id', '>', 280)->get();
+
+            $this->assertCount(10, $accounts);
+            $this->assertSame('user', $accounts->first()->role);
+            foreach ($accounts as $account) {
+                $this->assertStringEndsWith('@'.$domain.'.kampus.ac.id', $account->email);
+                $this->assertSame(18, strlen($account->identity_number));
+            }
+        }
+
+        $this->assertSame(User::count(), User::pluck('identity_number')->unique()->count());
+        $this->assertSame(User::count(), User::pluck('email')->unique()->count());
+    }
+
     public function test_seeded_users_can_authenticate(): void
     {
         $this->seed(UserSeeder::class);
 
         $response = $this->post('/login', [
-            'email' => 'admin@admin.kampus.ac.id',
+            'email' => 'arispujiw@admin.kampus.ac.id',
             'password' => 'password',
         ]);
 
