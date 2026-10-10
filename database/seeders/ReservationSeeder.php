@@ -49,11 +49,17 @@ class ReservationSeeder extends Seeder
                 $activity = $activities[intdiv($i, $rooms->count()) + $i % count($activities)] ?? $activities[$i % count($activities)];
                 $desc = $activity.' ('.$groups[$i % count($groups)].')';
 
-                $past = $i % 2 === 0;
-                $date = $past
-                    ? $today->copy()->subDays(2 + ($i * 5) % 60)
-                    : $today->copy()->addDays(1 + ($i * 3) % 45);
-                [$start, $end] = $times[$i % count($times)];
+                Reservation::firstOrCreate([
+                    'user_id' => $user->id,
+                    'room_id' => $room->id,
+                    'activity_name' => 'Kegiatan belajar bersama di '.$room->name,
+                ], [
+                    'date_to_reserv' => $today->copy()->subDays(1 + $index % 14)->toDateString(),
+                    'start_time' => '08:00:00',
+                    'end_time' => '10:00:00',
+                    'status' => 'disetujui',
+                    'rejection_reason' => null,
+                ]);
 
                 $status = $past ? $pastStatuses[intdiv($i, 2) % count($pastStatuses)] : $futureStatuses[intdiv($i, 2) % count($futureStatuses)];
                 $repair = ! $past && ! $room->is_avail;
@@ -63,7 +69,7 @@ class ReservationSeeder extends Seeder
 
                 $reservation = Reservation::firstOrCreate([
                     'room_id' => $room->id,
-                    'desc' => $desc,
+                    'activity_name' => 'Diskusi dan persiapan kegiatan di '.$room->name,
                 ], [
                     'user_id' => $user->id,
                     'date_to_reserv' => $date->toDateString(),

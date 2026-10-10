@@ -21,7 +21,16 @@ return new class extends Migration
                 ->cascadeOnDelete();
 
 
-            $table->text('desc');
+            // Jenis peminjaman
+            $table->enum('reservation_type', ['Individu', 'Instansi'])
+        ->default('Individu');
+
+            //Informasi pengajuan
+            $table->string('institution')->nullable();
+            $table->string('activity_name');
+            $table->string('proposal_path')->nullable();
+            $table->unsignedInteger('participant_count')->nullable();
+            $table->text('desc')->nullable();
 
 
             $table->date('date_to_reserv');

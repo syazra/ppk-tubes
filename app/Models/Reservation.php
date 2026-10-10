@@ -9,12 +9,16 @@ class Reservation extends Model
     protected $fillable = [
         'user_id',
         'room_id',
+        'reservation_type',
+        'institution',
+        'activity_name',
+        'proposal_path',
+        'participant_count',
         'desc',
         'date_to_reserv',
         'start_time',
         'end_time',
         'status',
-        'rejection_reason',
     ];
 
 
