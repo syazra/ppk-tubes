@@ -9,6 +9,7 @@ import PublicNavbar from '../components/PublicNavbar';
 import IntroOverlay, { INTRO_DELAY, useIntro } from '../components/IntroOverlay';
 import UserPagePreview from '../components/UserPagePreview';
 import MagneticLink from '../components/MagneticLink';
+import { waitForPageReady } from '../lib/pageReady';
 
 const styles = `
 @font-face { font-family: 'Buana Ogg'; src: url('${oggRegular}') format('opentype'); font-weight: 400; font-style: normal; font-display: swap; }
@@ -195,10 +196,21 @@ const steps = [
 ];
 export default function Landing({ loginUrl, createReservationUrl, reservationActionLabel, reportUrl, reportActionLabel, facilityUrl, aboutUrl, facilityTypes = [], facilityLocations = [] }) {
     const intro = useIntro();
+    const [previewReady, setPreviewReady] = useState(false);
+    const [landingReady, setLandingReady] = useState(false);
     const [searching, setSearching] = useState(false);
     const rootRef = useRef(null);
     const navRef = useRef(null);
     const progressRef = useRef(null);
+
+    useEffect(() => {
+        if (!intro) return;
+        const controller = new AbortController();
+        waitForPageReady(rootRef.current, { signal: controller.signal }).then(ready => {
+            if (ready) setLandingReady(true);
+        });
+        return () => controller.abort();
+    }, [intro]);
 
     useEffect(() => {
         const previousLanguage = document.documentElement.lang;
@@ -329,7 +341,7 @@ export default function Landing({ loginUrl, createReservationUrl, reservationAct
             </Head>
             <style>{styles}</style>
             <div className="cs" lang="id" id="atas" ref={rootRef} data-intro={intro ? 'play' : 'skip'} style={intro ? { '--intro': `${INTRO_DELAY}s` } : undefined}>
-                {intro && <IntroOverlay />}
+                {intro && <IntroOverlay ready={previewReady && landingReady} />}
                 <a className="cs-skip" href="#konten">Langsung ke konten</a>
                 <PublicNavbar urls={{ landing: '/', facilities: facilityUrl || '/fasilitas', about: aboutUrl || '/tentang', login: loginUrl || '/login' }} active="landing" headerRef={navRef}>
                     <div className="cs-reading-progress" ref={progressRef} aria-hidden="true" />
@@ -349,7 +361,7 @@ export default function Landing({ loginUrl, createReservationUrl, reservationAct
                                 <p className="cs-hero-note"><Icon name="landing-shield" variant="landing" />Gunakan akun yang diberikan pengelola kampus.</p>
                             </div>
                             <div className="cs-art">
-                                <UserPagePreview createReservationUrl={createReservationUrl || '/reservasi/form'} reservationActionLabel={reservationActionLabel} />
+                                <UserPagePreview createReservationUrl={createReservationUrl || '/reservasi/form'} reservationActionLabel={reservationActionLabel} onReady={setPreviewReady} />
                             </div>
                         </div>
                     </section>

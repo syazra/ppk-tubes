@@ -1,5 +1,6 @@
 import { usePage } from '@inertiajs/react';
 import { createContext, useState } from 'react';
+import PageLoadingBoundary from './PageLoadingBoundary';
 
 export const IntroNavigationContext = createContext(true);
 
@@ -18,5 +19,5 @@ export default function IntroNavigation({ children }) {
 
     const allowIntro = !(publicPages.has(navigation.previousComponent) && publicPages.has(page.component));
 
-    return <IntroNavigationContext.Provider value={allowIntro}>{children}</IntroNavigationContext.Provider>;
+    return <IntroNavigationContext.Provider value={allowIntro}><PageLoadingBoundary page={page} previousComponent={navigation.previousComponent}>{children}</PageLoadingBoundary></IntroNavigationContext.Provider>;
 }

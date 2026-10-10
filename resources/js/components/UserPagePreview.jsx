@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { lazy, Suspense, useEffect, useId, useRef, useState } from 'react';
 import Dashboard from '../pages/User/Dashboard';
 import Icon from './Icons';
+import { waitForPageReady } from '../lib/pageReady';
 import '../../css/user-page-preview.css';
 
 const MyReservations = lazy(() => import('../pages/User/MyReservations'));
@@ -23,8 +24,9 @@ const frameDocument = '<!doctype html><html lang="id"><head><meta charset="utf-8
 
 // A portal preserves Inertia context while the iframe isolates CSS and viewport breakpoints.
 // Both views render the production pages themselves; only their input data is a fixture.
-function UserPageFrame({ view, expanded = false }) {
+function UserPageFrame({ view, expanded = false, onReady }) {
     const [frameDoc, setFrameDoc] = useState(null);
+    const [styledDocument, setStyledDocument] = useState(null);
     const [scale, setScale] = useState(0);
     const viewportRef = useRef(null);
 
@@ -57,6 +59,7 @@ function UserPageFrame({ view, expanded = false }) {
             }
         };
         syncStyles();
+        setStyledDocument(frameDoc);
         const observer = new MutationObserver(syncStyles);
         observer.observe(document.head, { childList: true, subtree: true, characterData: true });
         frameDoc.documentElement.style.overflow = expanded ? 'auto' : 'hidden';
@@ -64,19 +67,31 @@ function UserPageFrame({ view, expanded = false }) {
         return () => { observer.disconnect(); copiedStyles.forEach(clone => clone.remove()); };
     }, [frameDoc, expanded]);
 
-    const commonProps = { preview: true, user: exampleUser, urls: exampleUrls };
     const root = frameDoc?.getElementById('preview-root');
 
     return <div ref={viewportRef} className={`up-viewport${expanded ? ' up-viewport-expanded' : ''}`}>
         <iframe title={`Pratinjau halaman pengguna: ${views.find(item => item.key === view).label}`} srcDoc={frameDocument} sandbox="allow-same-origin" tabIndex={-1} onLoad={event => setFrameDoc(event.currentTarget.contentDocument)} style={expanded ? undefined : { transform: `scale(${scale})`, visibility: scale ? 'visible' : 'hidden' }} />
-        {root && createPortal(<div inert>
+        {root && styledDocument === frameDoc && createPortal(<div inert>
             <Suspense fallback={<p style={{ padding: 32, color: '#163f35' }}>Memuat pratinjau…</p>}>
-                {view === 'dashboard'
-                    ? <Dashboard {...commonProps} recentReservations={exampleReservations.slice(0, 2)} recentReports={exampleReports} />
-                    : <MyReservations {...commonProps} reservations={examplePagination} filters={exampleFilters} />}
+                <PreviewContent view={view} frameDoc={frameDoc} onReady={onReady} />
             </Suspense>
         </div>, root)}
     </div>;
+}
+
+function PreviewContent({ view, frameDoc, onReady }) {
+    useEffect(() => {
+        const controller = new AbortController();
+        waitForPageReady(frameDoc.getElementById('preview-root'), { browser: frameDoc.defaultView, signal: controller.signal }).then(ready => {
+            if (ready) onReady?.(true);
+        });
+        return () => controller.abort();
+    }, [view, frameDoc, onReady]);
+
+    const commonProps = { preview: true, user: exampleUser, urls: exampleUrls };
+    return view === 'dashboard'
+        ? <Dashboard {...commonProps} recentReservations={exampleReservations.slice(0, 2)} recentReports={exampleReports} />
+        : <MyReservations {...commonProps} reservations={examplePagination} filters={exampleFilters} />;
 }
 
 function ViewPicker({ view, onChange }) {
@@ -85,7 +100,7 @@ function ViewPicker({ view, onChange }) {
     </div>;
 }
 
-export default function UserPagePreview({ createReservationUrl, reservationActionLabel }) {
+export default function UserPagePreview({ createReservationUrl, reservationActionLabel, onReady }) {
     const [view, setView] = useState('dashboard');
     const [expanded, setExpanded] = useState(false);
     const dialogRef = useRef(null);
@@ -102,7 +117,7 @@ export default function UserPagePreview({ createReservationUrl, reservationActio
     return <figure className="up cs-reservation-preview">
         <div className="up-toolbar"><span className="up-label">Pratinjau halaman pengguna</span><button className="up-expand" type="button" aria-haspopup="dialog" onClick={() => setExpanded(true)}><Icon name="panel" className="up-icon" /><span>Perbesar</span></button></div>
         <ViewPicker view={view} onChange={setView} />
-        <UserPageFrame view={view} />
+        <UserPageFrame view={view} onReady={onReady} />
         <figcaption className="up-caption"><p>Tampilan Buana dengan data contoh.</p><Link href={createReservationUrl}>{reservationActionLabel}<Icon name="arrow" className="up-icon" /></Link></figcaption>
         <dialog ref={dialogRef} className="up-dialog" aria-labelledby={dialogTitleId} onClose={() => setExpanded(false)} onClick={event => { if (event.target === event.currentTarget) dialogRef.current.close(); }}>
             {expanded && <div className="up-dialog-content">

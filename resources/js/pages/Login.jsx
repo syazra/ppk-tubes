@@ -6,7 +6,8 @@ import oggRegular from '../../fonts/ogg-regular.otf';
 import oggItalic from '../../fonts/ogg-regular-italic.otf';
 import Icon from '../components/Icons';
 import AmbientParticles from '../components/AmbientParticles';
-import IntroOverlay, { INTRO_DELAY, fogImage, useIntro } from '../components/IntroOverlay';
+import { fogImage } from '../components/IntroOverlay';
+import { usePageReady } from '../components/PageLoadingBoundary';
 
 const styles = `
 @font-face { font-family: 'Buana Ogg'; src: url('${oggRegular}') format('opentype'); font-weight: 400; font-style: normal; font-display: swap; }
@@ -121,9 +122,8 @@ function FieldError({ id, message }) {
 
 export default function Login({ status, landingUrl = '/', demoAccounts = [] }) {
     const reduced = useReducedMotion();
-    const intro = useIntro();
-    const introDelay = intro && !reduced ? INTRO_DELAY : 0;
-    const container = { hidden: {}, show: { transition: { staggerChildren: reduced ? 0 : 0.07, delayChildren: reduced ? 0 : 0.15 + introDelay } } };
+    const pageReady = usePageReady();
+    const container = { hidden: {}, show: { transition: { staggerChildren: reduced ? 0 : 0.07, delayChildren: reduced ? 0 : 0.15 } } };
     const item = reduced ? { hidden: { opacity: 1, y: 0 }, show: { opacity: 1, y: 0, transition: { duration: 0 } } } : animatedItem;
     const { data, setData, post, processing, errors, clearErrors, reset } = useForm({ email: '', password: '', remember: false });
     const [showPassword, setShowPassword] = useState(false);
@@ -181,7 +181,6 @@ export default function Login({ status, landingUrl = '/', demoAccounts = [] }) {
                 <link rel="preload" href={oggRegular} as="font" type="font/otf" crossOrigin="anonymous" />
             </Head>
             <style>{styles}</style>
-            {intro && <IntroOverlay variant="radial" />}
             <div className="lg" lang="id">
                 <div className="lg-orb lg-orb-1" aria-hidden="true" />
                 <div className="lg-orb lg-orb-2" aria-hidden="true" />
@@ -192,16 +191,16 @@ export default function Login({ status, landingUrl = '/', demoAccounts = [] }) {
                 <div className="lg-mist" aria-hidden="true" />
                 <AmbientParticles />
 
-                <motion.div className="lg-back-wrap" initial={reduced ? false : { opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} transition={reduced ? { duration: 0 } : { delay: 0.4 + introDelay }}>
+                <motion.div className="lg-back-wrap" initial={reduced ? false : { opacity: 0, x: -12 }} animate={{ opacity: pageReady ? 1 : 0, x: 0 }} transition={reduced ? { duration: 0 } : { delay: 0.4 }}>
                     <Link href={landingUrl} className="lg-back"><Icon name="landing-arrow" variant="landing" className="" />Kembali ke beranda</Link>
                 </motion.div>
 
                 <div className="lg-stage" onPointerMove={onPointerMove} onPointerLeave={onPointerLeave}>
-                    <motion.div initial={reduced ? false : { opacity: 0, y: 40, scale: 0.94 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={reduced ? { duration: 0 } : { type: 'spring', stiffness: 120, damping: 18, delay: introDelay }}>
+                    <motion.div initial={reduced ? false : { opacity: 0, y: 40, scale: 0.94 }} animate={{ opacity: pageReady ? 1 : 0, y: 0, scale: 1 }} transition={reduced ? { duration: 0 } : { type: 'spring', stiffness: 120, damping: 18 }}>
                         <motion.div key={shakeKey} animate={cardAnimation} transition={{ duration: reduced ? 0 : 0.45 }}>
                             <motion.main className="lg-card" style={reduced ? undefined : { rotateX, rotateY }}>
                                 <motion.div className="lg-shine" style={{ background: reduced ? 'radial-gradient(420px circle at 50% 50%, #ffffff55, transparent 60%)' : glare }} aria-hidden="true" />
-                                <motion.div variants={container} initial={reduced ? false : 'hidden'} animate="show" style={{ position: 'relative' }}>
+                                <motion.div variants={container} initial={reduced ? false : 'hidden'} animate={pageReady ? 'show' : 'hidden'} style={{ position: 'relative' }}>
                                     <motion.header variants={item}>
                                         <div className="lg-brand"><Brand /></div>
                                         <h1 className="lg-title">Selamat datang kembali</h1>

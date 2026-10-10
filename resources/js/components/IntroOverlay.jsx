@@ -1,5 +1,5 @@
-import { motion } from 'motion/react';
-import { useContext, useState } from 'react';
+import { motion, useReducedMotion } from 'motion/react';
+import { useContext, useRef, useState } from 'react';
 import { IntroNavigationContext } from './IntroNavigation';
 
 // Seconds before page content should start animating in (overlay is covering the page until then).
@@ -15,6 +15,12 @@ export function useIntro() {
 }
 
 const panelStyle = { position: 'absolute', left: 0, right: 0, height: '50%', background: '#062e29', overflow: 'hidden' };
+const radialStyle = { position: 'fixed', inset: 0, zIndex: 1000, background: 'radial-gradient(circle at 50% 50%, #0d5a4c 0%, #0a3f36 45%, #062e29 100%)' };
+
+export function RadialLoadingOverlay() {
+    const reduced = useReducedMotion();
+    return <motion.div role="status" aria-live="polite" data-page-loader style={{ ...radialStyle, display: 'grid', placeItems: 'center', color: '#f8f9f3', fontFamily: 'Figtree, sans-serif', fontSize: 14 }} initial={{ opacity: 1, scale: 1 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: reduced ? 1 : 1.15, pointerEvents: 'none' }} transition={{ duration: reduced ? 0 : .5, ease: [.4, 0, .2, 1] }}>Memuat halaman…</motion.div>;
+}
 
 // Tileable fractal-noise SVG tinted white, used as a fog texture.
 export function fogImage(seed) {
@@ -33,7 +39,7 @@ function RadialIntro() {
     return (
         <motion.div
             aria-hidden="true"
-            style={{ position: 'fixed', inset: 0, zIndex: 1000, pointerEvents: 'none', background: 'radial-gradient(circle at 50% 50%, #0d5a4c 0%, #0a3f36 45%, #062e29 100%)' }}
+            style={{ ...radialStyle, pointerEvents: 'none' }}
             initial={{ opacity: 1, scale: 1 }}
             animate={{ opacity: 0, scale: 1.15 }}
             transition={{ delay: 0.3, duration: INTRO_DELAY, ease: [0.4, 0, 0.2, 1] }}
@@ -45,31 +51,33 @@ function RadialIntro() {
  * Full-screen intro: the logo draws itself on a dark panel, then the panel splits
  * open top/bottom to reveal the page.
  */
-export default function IntroOverlay({ variant = 'curtain' }) {
+export default function IntroOverlay({ variant = 'curtain', ready = true }) {
     if (variant === 'radial') return <RadialIntro />;
-    return <CurtainIntro />;
+    return <CurtainIntro ready={ready} />;
 }
 
-function CurtainIntro() {
+function CurtainIntro({ ready }) {
     const [done, setDone] = useState(false);
+    const startedAt = useRef(Date.now());
     if (done) return null;
 
     const ease = [0.76, 0, 0.24, 1];
-    const reveal = { delay: INTRO_DELAY - 0.1, duration: 0.75, ease };
+    const remainingDelay = Math.max(0, INTRO_DELAY - 0.1 - (Date.now() - startedAt.current) / 1000);
+    const reveal = { delay: ready ? remainingDelay : 0, duration: 0.75, ease };
 
     return (
         <div aria-hidden="true" style={{ position: 'fixed', inset: 0, zIndex: 1000, pointerEvents: 'none' }}>
-            <motion.div style={{ ...panelStyle, top: 0 }} initial={{ y: 0 }} animate={{ y: '-100%' }} transition={reveal} onAnimationComplete={() => setDone(true)}>
+            <motion.div style={{ ...panelStyle, top: 0 }} initial={{ y: 0 }} animate={{ y: ready ? '-100%' : 0 }} transition={reveal} onAnimationComplete={() => { if (ready) setDone(true); }}>
                 <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at 50% 100%, #24594b80, transparent 70%)' }} />
             </motion.div>
-            <motion.div style={{ ...panelStyle, bottom: 0 }} initial={{ y: 0 }} animate={{ y: '100%' }} transition={reveal}>
+            <motion.div style={{ ...panelStyle, bottom: 0 }} initial={{ y: 0 }} animate={{ y: ready ? '100%' : 0 }} transition={reveal}>
                 <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at 50% 0%, #24594b80, transparent 70%)' }} />
             </motion.div>
             <motion.div
                 style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 18, color: '#d3e9a6' }}
                 initial={{ opacity: 1, scale: 1 }}
-                animate={{ opacity: 0, scale: 1.08 }}
-                transition={{ delay: INTRO_DELAY - 0.25, duration: 0.35, ease: 'easeIn' }}
+                animate={{ opacity: ready ? 0 : 1, scale: ready ? 1.08 : 1 }}
+                transition={{ delay: ready ? Math.max(0, remainingDelay - .15) : 0, duration: 0.35, ease: 'easeIn' }}
             >
                 <svg width="72" height="72" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round">
                     <motion.path d={BRAND_PATH} initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 1 }} transition={{ duration: 1, ease: 'easeInOut' }} />
