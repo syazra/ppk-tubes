@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Report;
 use App\Models\Reservation;
 use App\Models\Room;
+use App\Models\User;
 use Carbon\Carbon;
 use Database\Seeders\DatabaseSeeder;
 use Database\Seeders\ReportSeeder;
@@ -28,8 +29,8 @@ class DemoActivitySeederTest extends TestCase
 
         $this->assertDatabaseCount('rooms', 37);
         $this->assertDatabaseCount('room_images', 37);
-        $this->assertDatabaseCount('reports', 12);
-        $this->assertDatabaseCount('reservations', 74);
+        $this->assertDatabaseCount('reports', 160);
+        $this->assertDatabaseCount('reservations', 370);
         $this->assertSame(0, Room::where('location', 'like', 'Gedung %')->orWhere('location', 'like', 'Area %')->count());
         $this->assertSame(1, Room::where('name', 'Laboratorium Teknomansi Aether')->count());
         $this->assertSame(['baru', 'dibatalkan', 'diproses', 'ditolak', 'selesai'], Report::distinct()->orderBy('status')->pluck('status')->all());
@@ -38,6 +39,8 @@ class DemoActivitySeederTest extends TestCase
 
         foreach (Report::with('room', 'user')->get() as $report) {
             $this->assertSame('user', $report->user->role);
+            $this->assertTrue($report->updated_at->gte($report->created_at));
+            $this->assertTrue($report->created_at->isPast());
             if ($report->status === 'diproses') {
                 $this->assertFalse($report->room->is_avail);
                 $this->assertTrue(Carbon::parse($report->estimated_completion_at)->isFuture());
@@ -52,12 +55,28 @@ class DemoActivitySeederTest extends TestCase
 
         $reservations = Reservation::with('room', 'user')->get();
         $this->assertSame(['dosen', 'mahasiswa', 'staf'], $reservations->pluck('user.account_type')->unique()->sort()->values()->all());
-        $this->assertSame(37, $reservations->filter(fn ($reservation) => $reservation->date_to_reserv < '2026-10-10')->count());
-        $this->assertSame(37, $reservations->filter(fn ($reservation) => $reservation->date_to_reserv > '2026-10-10')->count());
+        $this->assertSame(185, $reservations->filter(fn ($reservation) => $reservation->date_to_reserv < '2026-10-10')->count());
+        $this->assertSame(185, $reservations->filter(fn ($reservation) => $reservation->date_to_reserv > '2026-10-10')->count());
+        $this->assertSame(27, $reservations->pluck('user_id')->unique()->count());
+        $this->assertSame(27, Report::distinct()->count('user_id'));
+        foreach (User::where('role', 'user')->get() as $user) {
+            $this->assertGreaterThanOrEqual(10, Reservation::where('user_id', $user->id)->count());
+            $this->assertGreaterThanOrEqual(5, Report::where('user_id', $user->id)->count());
+        }
+        foreach (Room::all() as $room) {
+            $this->assertSame(10, Reservation::where('room_id', $room->id)->count());
+            $this->assertGreaterThanOrEqual(8, Reservation::where('room_id', $room->id)->distinct()->count('user_id'));
+            $this->assertGreaterThanOrEqual(4, Report::where('room_id', $room->id)->distinct()->count('user_id'));
+        }
+        $this->assertGreaterThan(30, $reservations->pluck('date_to_reserv')->unique()->count());
+        $this->assertGreaterThanOrEqual(4, $reservations->pluck('start_time')->unique()->count());
+        $this->assertGreaterThan(30, Report::distinct()->count('created_at'));
 
         foreach ($reservations as $reservation) {
             $this->assertSame('user', $reservation->user->role);
             $this->assertLessThan($reservation->end_time, $reservation->start_time);
+            $this->assertLessThanOrEqual($reservation->date_to_reserv, $reservation->created_at->toDateString());
+            $this->assertTrue($reservation->updated_at->gte($reservation->created_at));
             if ($reservation->date_to_reserv > '2026-10-10' && ! $reservation->room->is_avail) {
                 $this->assertSame('ditolak', $reservation->status);
                 $this->assertSame('Fasilitas sedang dalam perbaikan', $reservation->rejection_reason);
@@ -86,12 +105,14 @@ class DemoActivitySeederTest extends TestCase
             'status' => 'menunggu',
         ]);
         $before = [Room::all()->toArray(), Report::all()->toArray(), Reservation::all()->toArray()];
+        // Changing the eligible user pool must not reassign or duplicate seeded activity.
+        User::factory()->create(['role' => 'user', 'account_type' => 'mahasiswa']);
         $this->travel(2)->days();
 
         $this->seed([ReportSeeder::class, ReservationSeeder::class]);
 
         $this->assertSame($before, [Room::all()->toArray(), Report::all()->toArray(), Reservation::all()->toArray()]);
-        $this->assertDatabaseCount('reservations', 75);
+        $this->assertDatabaseCount('reservations', 371);
         $this->assertTrue($report->room->fresh()->is_avail);
     }
 

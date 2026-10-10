@@ -87,16 +87,27 @@ menjalankannya untuk database baru.
 
 ## Data Contoh Laporan dan Reservasi
 
-Seeder utama menyediakan 12 laporan dalam seluruh status (`baru`, `diproses`,
-`selesai`, `ditolak`, dan `dibatalkan`). Empat laporan yang sedang diproses membuat
+Seeder utama menyediakan 160 laporan dalam seluruh status (`baru`, `diproses`,
+`selesai`, `ditolak`, dan `dibatalkan`): 12 contoh awal ditambah empat keluhan untuk
+setiap fasilitas. Keluhan disesuaikan dengan jenis fasilitas, mencakup peralatan,
+penerangan, pintu, ventilasi, kursi, drainase, serta perlengkapan olahraga. Empat
+fasilitas dengan laporan yang sedang diproses membuat
 Laboratorium Teknomansi Aether, Ruang Rune Kuno, Ruang Dewan Putih, dan Lapangan Pelennor nonaktif.
 Laporan diproses dilengkapi estimasi perbaikan; laporan selesai dan ditolak memiliki
 catatan penyelesaian atau alasan penolakan.
 
-Setiap fasilitas memperoleh dua reservasi contoh: satu riwayat yang disetujui dan
-satu pengajuan mendatang dalam berbagai status, sehingga 37 fasilitas menghasilkan
-74 reservasi. Pengajuan mendatang untuk fasilitas nonaktif berstatus ditolak.
-Tanggal mengikuti waktu seeding dan pemohon berasal dari akun mahasiswa, dosen, dan staf.
+Setiap fasilitas memperoleh sepuluh reservasi contoh: lima riwayat dan lima
+pengajuan mendatang, sehingga 37 fasilitas menghasilkan 370 reservasi. Kegiatan
+meliputi seminar, praktikum, olahraga, bimbingan, latihan seni, serta rapat komunitas,
+sesuai jenis fasilitas. Jam mulai dan durasi bervariasi; tanggal mencakup hampir tiga
+bulan ke belakang dan dua bulan ke depan dari waktu seeding. Seluruh status reservasi
+terwakili; pengajuan mendatang untuk fasilitas nonaktif berstatus ditolak.
+
+Kedua seeder memakai seluruh akun berperan `user` dengan jenis mahasiswa, dosen,
+atau staf, termasuk 27 akun dalam pack demo. Setiap akun demo mempunyai minimal
+sepuluh reservasi dan lima laporan. Setiap fasilitas memiliki setidaknya delapan
+pemohon reservasi dan empat pelapor berbeda. Waktu pengajuan, alasan penolakan,
+estimasi, dan catatan perbaikan juga bervariasi.
 
 Untuk menambah contoh ke database yang sudah memiliki akun demo dan fasilitas:
 
@@ -107,7 +118,9 @@ php artisan db:seed --class=ReservationSeeder
 
 Jalankan laporan sebelum reservasi agar status fasilitas diperhitungkan.
 Kedua seeder ini dapat dijalankan ulang tanpa menggandakan contoh atau menimpa
-keputusan operator. Data lama tetap tersimpan. Untuk database baru, cukup jalankan
+keputusan operator, tanggal, atau pemohon/pelapor, termasuk ketika akun baru ditambahkan.
+Data lama tetap tersimpan, sehingga jumlah pada database lama bisa lebih besar dari
+jumlah contoh di atas. Untuk database baru, cukup jalankan
 `php artisan db:seed` setelah migrasi; jangan menjalankan ulang seeder utama pada
 database yang sudah berisi fasilitas karena `RoomSeeder` membuat fasilitas baru.
 
