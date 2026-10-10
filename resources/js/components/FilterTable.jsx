@@ -136,7 +136,7 @@ export default function FilterTable({
     }
 
     return (
-        <section className="mb-8 max-w-7xl px-6 lg:px-8">
+        <section className="mb-8 max-w-full px-6 lg:px-8">
             <div className="rounded-lg border border-green-light-03 bg-white-01 p-6 shadow-sm">
                 {/* subjudul */}
                 <div className="mb-5">
