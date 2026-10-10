@@ -8,6 +8,7 @@ use App\Models\Room;
 use App\Models\User;
 use Carbon\Carbon;
 use Database\Seeders\DatabaseSeeder;
+use Database\Seeders\DemoActivityText;
 use Database\Seeders\ReportSeeder;
 use Database\Seeders\ReservationSeeder;
 use Database\Seeders\RoomSeeder;
@@ -71,6 +72,13 @@ class DemoActivitySeederTest extends TestCase
         $this->assertGreaterThan(30, $reservations->pluck('date_to_reserv')->unique()->count());
         $this->assertGreaterThanOrEqual(4, $reservations->pluck('start_time')->unique()->count());
         $this->assertGreaterThan(30, Report::distinct()->count('created_at'));
+        $sampleText = mb_strtolower(implode(' ', array_merge(
+            Report::pluck('desc')->all(), Report::pluck('rejection_reason')->all(), Report::pluck('resolution')->all(),
+            Reservation::pluck('desc')->all(), Reservation::pluck('rejection_reason')->all(),
+        )));
+        foreach (['mikrofon', 'speaker', 'proyektor', 'workshop', 'pemrograman', 'analisis data', 'kabel', 'stopkontak', 'agenda kampus'] as $modernTerm) {
+            $this->assertStringNotContainsString($modernTerm, $sampleText);
+        }
 
         foreach ($reservations as $reservation) {
             $this->assertSame('user', $reservation->user->role);
@@ -134,5 +142,41 @@ class DemoActivitySeederTest extends TestCase
             $this->assertDatabaseCount('reports', 0);
             $this->assertTrue($room->fresh()->is_avail);
         }
+    }
+
+    public function test_old_sample_text_is_upgraded_without_changing_metadata_or_custom_notes(): void
+    {
+        $this->seed([UserSeeder::class, RoomSeeder::class, ReportSeeder::class, ReservationSeeder::class]);
+        $oldReport = array_key_first(DemoActivityText::REPORTS['Ruang Kelas']);
+        $newReport = DemoActivityText::REPORTS['Ruang Kelas'][$oldReport];
+        $report = Report::where('desc', $newReport)->firstOrFail();
+        $report->update([
+            'desc' => $oldReport, 'status' => 'selesai',
+            'rejection_reason' => 'Catatan khusus penjaga, pertahankan.',
+            'resolution' => 'Komponen diperbaiki dan fasilitas telah diuji kembali.',
+        ]);
+        $expectedReport = $report->fresh()->getAttributes();
+        $expectedReport['desc'] = $newReport;
+        $expectedReport['resolution'] = DemoActivityText::NOTES['resolution']['Komponen diperbaiki dan fasilitas telah diuji kembali.'];
+
+        $reservation = Reservation::where('desc', 'Pembacaan pertanda pada kristal scrying')->firstOrFail();
+        $reservation->update(['desc' => 'Workshop analisis data', 'status' => 'dibatalkan', 'rejection_reason' => 'Catatan khusus pemohon, pertahankan.']);
+        $expectedReservation = $reservation->fresh()->getAttributes();
+        $expectedReservation['desc'] = 'Pembacaan pertanda pada kristal scrying';
+        $custom = Reservation::create([
+            'room_id' => $reservation->room_id, 'user_id' => $reservation->user_id,
+            'desc' => 'Workshop desain milik pengguna', 'date_to_reserv' => now()->addDays(30)->toDateString(),
+            'start_time' => '16:00:00', 'end_time' => '17:00:00', 'status' => 'menunggu',
+        ]);
+        $expectedCustom = $custom->fresh()->getAttributes();
+        $this->travel(2)->days();
+
+        $this->seed([ReportSeeder::class, ReservationSeeder::class]);
+
+        $this->assertSame($expectedReport, $report->fresh()->getAttributes());
+        $this->assertSame($expectedReservation, $reservation->fresh()->getAttributes());
+        $this->assertSame($expectedCustom, $custom->fresh()->getAttributes());
+        $this->assertDatabaseCount('reports', 160);
+        $this->assertDatabaseCount('reservations', 371);
     }
 }

@@ -39,6 +39,9 @@ class ReportSeeder extends Seeder
             foreach ($examples as $index => [$name, $status, $description]) {
                 $room = Room::where('name', $name)->orderBy('id')->firstOrFail();
                 $user = $users[$index % $users->count()];
+                $themedDescription = DemoActivityText::REPORT_EXAMPLES[$description];
+                DemoActivityText::upgrade('reports', $room->id, [$description => $themedDescription]);
+                $description = $themedDescription;
                 $report = Report::firstOrCreate([
                     'room_id' => $room->id,
                     'desc' => $description,
@@ -50,8 +53,8 @@ class ReportSeeder extends Seeder
                         'selesai' => $now->copy()->subDay()->setTime(17, 0),
                         default => null,
                     },
-                    'rejection_reason' => $status === 'ditolak' ? 'Hasil pemeriksaan menunjukkan fasilitas berfungsi normal.' : null,
-                    'resolution' => $status === 'selesai' ? 'Komponen diperbaiki dan fasilitas telah diuji kembali.' : null,
+                    'rejection_reason' => $status === 'ditolak' ? 'Pemeriksaan kustodian menunjukkan pesona fasilitas masih utuh.' : null,
+                    'resolution' => $status === 'selesai' ? 'Kustodian memperbaiki perkakas dan menguji kembali pesona ruangan.' : null,
                 ]);
 
                 // Preserve operator decisions when the sample seeders are rerun.
@@ -67,12 +70,9 @@ class ReportSeeder extends Seeder
             }
 
             foreach (Room::orderBy('id')->get() as $index => $room) {
-                $issues = match ($room->type) {
-                    'Aula' => ['Speaker sisi kiri mengeluarkan dengung saat mikrofon dinyalakan.', 'Engsel pintu utama berbunyi dan sulit ditutup rapat.', 'Tirai panggung macet pada rel bagian kanan.', 'Lampu sorot dekat panggung berkedip saat digunakan.'],
-                    'Laboratorium' => ['Sambungan kabel alat praktikum longgar dan perlu diperiksa.', 'Keran meja praktikum menetes setelah ditutup.', 'Ventilasi ruang alat mengeluarkan bunyi tidak biasa.', 'Rak penyimpanan instrumen miring dan penguncinya longgar.'],
-                    'Lapangan' => ['Garis batas lapangan memudar setelah hujan.', 'Saluran drainase sisi lapangan tersumbat daun.', 'Tiang jaring pembatas longgar saat terkena angin.', 'Lampu penerangan sisi lapangan tidak menyala.'],
-                    default => ['Kursi pada baris belakang goyah saat diduduki.', 'Kabel proyektor tidak tersambung dengan stabil.', 'Pengunci jendela sisi kanan tidak berfungsi.', 'Lampu dekat papan tulis berkedip saat pelajaran.'],
-                };
+                $issueMap = DemoActivityText::REPORTS[$room->type];
+                DemoActivityText::upgrade('reports', $room->id, $issueMap);
+                $issues = array_values($issueMap);
                 foreach ($issues as $sample => $issue) {
                     $status = ['baru', 'selesai', 'ditolak', 'dibatalkan'][($index + $sample) % 4];
                     // Keep active demo rooms bookable; ongoing repairs use the four existing inactive rooms.
@@ -94,8 +94,8 @@ class ReportSeeder extends Seeder
                             'selesai' => $updated,
                             default => null,
                         },
-                        'rejection_reason' => $status === 'ditolak' ? ['Peralatan berfungsi normal setelah pemeriksaan.', 'Keluhan sama sudah ditangani melalui laporan sebelumnya.', 'Kendala berasal dari perangkat pribadi, bukan fasilitas kampus.'][($index + $sample) % 3] : null,
-                        'resolution' => $status === 'selesai' ? ['Komponen longgar dikencangkan dan diuji bersama pengguna.', 'Bagian yang rusak diganti; pemeriksaan akhir menunjukkan fungsi normal.', 'Peralatan dibersihkan, disetel ulang, dan siap digunakan kembali.'][($index + $sample) % 3] : null,
+                        'rejection_reason' => $status === 'ditolak' ? ['Pemeriksaan kustodian menunjukkan perkakas masih bekerja sebagaimana mestinya.', 'Keluhan serupa telah ditangani berdasarkan gulungan aduan terdahulu.', 'Gangguan berasal dari jimat milik pelapor; pesona ruangan tetap utuh.'][($index + $sample) % 3] : null,
+                        'resolution' => $status === 'selesai' ? ['Kait yang longgar dikencangkan lalu diuji bersama penghuni menara.', 'Bagian yang retak diganti oleh pandai besi; segel penjaga kembali utuh.', 'Perkakas dibersihkan dan rune diselaraskan; ruangan siap digunakan kembali.'][($index + $sample) % 3] : null,
                     ]);
                     if ($report->wasRecentlyCreated) {
                         $report->forceFill(['created_at' => $submitted, 'updated_at' => $updated])->save();

@@ -98,7 +98,8 @@ catatan penyelesaian atau alasan penolakan.
 
 Setiap fasilitas memperoleh sepuluh reservasi contoh: lima riwayat dan lima
 pengajuan mendatang, sehingga 37 fasilitas menghasilkan 370 reservasi. Kegiatan
-meliputi seminar, praktikum, olahraga, bimbingan, latihan seni, serta rapat komunitas,
+meliputi sidang serikat, peracikan eliksir, latihan kesatria, kajian rune, nyanyian bard,
+dan musyawarah penjaga menara,
 sesuai jenis fasilitas. Jam mulai dan durasi bervariasi; tanggal mencakup hampir tiga
 bulan ke belakang dan dua bulan ke depan dari waktu seeding. Seluruh status reservasi
 terwakili; pengajuan mendatang untuk fasilitas nonaktif berstatus ditolak.
@@ -123,6 +124,13 @@ Data lama tetap tersimpan, sehingga jumlah pada database lama bisa lebih besar d
 jumlah contoh di atas. Untuk database baru, cukup jalankan
 `php artisan db:seed` setelah migrasi; jangan menjalankan ulang seeder utama pada
 database yang sudah berisi fasilitas karena `RoomSeeder` membuat fasilitas baru.
+
+Deskripsi kegiatan, keluhan, alasan penolakan, dan catatan perbaikan memakai tema
+fantasy/gothic: grimoire, kristal aether, alkimia, lentera, serta perkakas benteng.
+Saat kedua seeder dijalankan pada database lama, teks contoh modern yang dikenali
+diganti dengan versi bertema tanpa membuat baris baru atau mengubah ID, pemohon,
+pelapor, tanggal, status, maupun waktu pembaruan. Catatan khusus operator dan teks
+buatan pengguna tetap dipertahankan.
 
 ## Validasi dan Foto pada Form Admin
 
