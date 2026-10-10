@@ -178,7 +178,7 @@ export default function Reservations({ user, status, csrfToken, urls, reservatio
                                 </div>
                                 <div>
                                     <p className="text-gray-500">Peminjam</p>
-                                    <p className="font-semibold">{selectedReservation.user?.name ?? '-'}</p>
+                                    <p className="font-semibold">{selectedReservation.user?.email ?? '-'}</p>
                                 </div>
                                 <div>
                                     <p className="text-gray-500">Fasilitas</p>
