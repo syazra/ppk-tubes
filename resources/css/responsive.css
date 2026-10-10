@@ -15,7 +15,7 @@
     .app-main { padding: 36px 40px; }
     .app-navbar { padding-inline: 40px; }
     .app-metric-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-    .app-insights-grid { grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr); }
+    .app-insights-grid { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); }
 }
 
 @media (max-width: 639px) {

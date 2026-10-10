@@ -10,7 +10,7 @@ import StatusBadge, { getStatusColor } from '../../components/StatusBadge';
 const statusLabels = {
     baru: 'Baru',
     menunggu: 'Menunggu',
-    diproses: 'Sedang diproses',
+    diproses: 'Diproses',
     selesai: 'Selesai',
     disetujui: 'Disetujui',
     ditolak: 'Ditolak',
@@ -33,7 +33,6 @@ function formatTime(value) {
 // Ringkasan metrik untuk dasbor admin
 const metrics = [
     { summaryKey: 'students', label: 'Total Mahasiswa', icon: 'users' },
-    // { summaryKey: 'pending_reservations', label: 'Reservasi Menunggu', icon: 'clock' },
     { summaryKey: 'monthly_reservations', label: 'Reservasi Bulan Ini', icon: 'calendar' },
     { summaryKey: 'monthly_reports', label: 'Laporan Bulan Ini', icon: 'tool' },
     { summaryKey: 'active_rooms', label: 'Ruangan Aktif', icon: 'room' },

@@ -9,9 +9,9 @@ import leafDecoration from '../../../../background-preview.png';
 import reservationImage from '../../../../background-preview.png';
 
 const statusLabels = {
-	baru: 'Menunggu diproses',
+	baru: 'Menunggu',
 	menunggu: 'Menunggu',
-	diproses: 'Sedang diproses',
+	diproses: 'Diproses',
 	selesai: 'Selesai',
 	disetujui: 'Disetujui',
 	ditolak: 'Ditolak',
